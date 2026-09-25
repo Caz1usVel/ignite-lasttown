@@ -1,0 +1,37 @@
+export const DEG = Math.PI / 180;
+
+export function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+export function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+export function randRange(rng, lo, hi) {
+  return lo + (hi - lo) * rng();
+}
+
+// シード付き乱数（テストとリプレイ用）
+export function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// 前作から移植：amt>0 で白に寄せ、amt<0 で暗くする
+export function lightenColor(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const mix = (c) => Math.max(0, Math.min(255, Math.round(c + (255 - c) * amt)));
+  const darken = (c) => Math.max(0, Math.min(255, Math.round(c * (1 + amt))));
+  r = amt >= 0 ? mix(r) : darken(r);
+  g = amt >= 0 ? mix(g) : darken(g);
+  b = amt >= 0 ? mix(b) : darken(b);
+  return `rgb(${r},${g},${b})`;
+}
