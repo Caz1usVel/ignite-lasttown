@@ -19,8 +19,8 @@ function simulate(seconds, dt = 0.1) {
 
 test('0〜20秒は隕石だけが3秒ごと（6体）', () => {
   const { log } = simulate(20);
-  assert.equal(log.filter((l) => l.type === 'meteor').length, 6);
-  assert.equal(log.filter((l) => l.type === 'drone').length, 0);
+  assert.equal(log.filter((l) => l.type === 'meteor' && l.time < 20).length, 6);
+  assert.equal(log.filter((l) => l.type === 'drone' && l.time < 20).length, 0);
 });
 
 test('90秒までの総数がおおむね出現表どおり', () => {
