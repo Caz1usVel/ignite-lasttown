@@ -83,3 +83,10 @@ test('params で強化型のパラメータを上書きできる', () => {
 test('未知のボスは例外', () => {
   assert.throws(() => createBoss('bossZ'));
 });
+
+test('createBoss：params の color が p.color に入り、基準値には color が無い', () => {
+  assert.equal('color' in BOSS_A_BASE, false);
+  assert.equal(createBoss('bossA').p.color, undefined);
+  assert.equal(createBoss('bossA', { color: '#ff8f6b' }).p.color, '#ff8f6b');
+  assert.equal('color' in BOSS_A_BASE, false); // 基準値は書き換わらない
+});

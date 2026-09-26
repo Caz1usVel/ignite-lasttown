@@ -10,6 +10,7 @@ export const COLORS = {
   meteor: '#b08a6a',
   drone: '#9be8ff',
   minion: '#ff9ecb',
+  formation: '#7fe0ff',
   boss: '#8f7cff',
   bullet: '#fff6c8',
   eye: '#1b1f3a',
@@ -122,6 +123,7 @@ export function drawEnemy(g, e, x, y, time) {
   if (e.type === 'meteor') drawMeteor(g, e, x, y);
   else if (e.type === 'drone') drawDrone(g, e, x, y, COLORS.drone);
   else if (e.type === 'bossMinion') drawDrone(g, e, x, y, COLORS.minion);
+  else if (e.type === 'formationDrone') drawDrone(g, e, x, y, COLORS.formation);
   else if (e.type === 'enemyShot') drawShot(g, e, x, y, time);
   if (time - (e.flashT ?? -1) < 0.08) {
     g.fillStyle = 'rgba(255,255,255,0.6)';
@@ -134,6 +136,7 @@ export function drawEnemy(g, e, x, y, time) {
 export function drawBoss(g, boss, x, y, time) {
   const r = boss.radius;
   const flash = time - (boss.flashT ?? -1) < 0.1;
+  const bodyColor = boss.p.color ?? COLORS.boss; // 強化型は色で見分ける
   g.save();
   g.translate(x, y);
   const glow = g.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.6);
@@ -144,9 +147,9 @@ export function drawBoss(g, boss, x, y, time) {
   g.arc(0, 0, r * 1.6, 0, Math.PI * 2);
   g.fill();
 
-  ellipse(g, 0, r * 0.15, r * 1.15, r * 0.45, lightenColor(COLORS.boss, -0.35)); // 下のリング
-  ellipse(g, 0, 0, r, r * 0.6, flash ? '#ffffff' : COLORS.boss);                // 本体
-  g.fillStyle = lightenColor(COLORS.boss, 0.55);                               // ドーム
+  ellipse(g, 0, r * 0.15, r * 1.15, r * 0.45, lightenColor(bodyColor, -0.35)); // 下のリング
+  ellipse(g, 0, 0, r, r * 0.6, flash ? '#ffffff' : bodyColor);                // 本体
+  g.fillStyle = lightenColor(bodyColor, 0.55);                               // ドーム
   g.beginPath();
   g.ellipse(0, -r * 0.25, r * 0.5, r * 0.4, 0, Math.PI, 0);
   g.fill();
