@@ -54,6 +54,42 @@ function approachSpeed(rng) {
   return CONFIG.SPAWN_DIST / (CONFIG.APPROACH_TIME * (1 + jitter));
 }
 
+// 種類ごとの初期化（createEnemy が呼ぶ）。乱数を引く順番は、これまでと同じにする。
+const ENEMY_INITS = {
+  drone(e, angle, rng) {
+    e.phase = 'approach';
+    e.holdDist = randRange(rng, DRONE.holdMin, DRONE.holdMax);
+    e.baseAngle = angle;
+    e.hoverT = 0;
+    e.fireT = DRONE.fireInterval;
+  },
+  burrower(e, angle, rng, opts) {
+    e.dist = opts.dist ?? randRange(rng, BURROWER.distMin, BURROWER.distMax);
+    e.phase = 'burrowed';
+    e.hp = BURROWER.burrowedHp;
+    e.radius = BURROWER.burrowedRadius;
+    e.burrowT = BURROWER.burrowTime + randRange(rng, -BURROWER.burrowJitter, BURROWER.burrowJitter);
+  },
+  thrower(e, angle, rng) {
+    e.phase = 'approach';
+    e.holdDist = randRange(rng, THROWER.holdMin, THROWER.holdMax);
+    e.baseAngle = angle;
+    e.hoverT = 0;
+    e.fireT = THROWER.fireInterval;
+  },
+  charger(e, angle, rng, opts) {
+    e.dist = opts.dist ?? CHARGER.dist;
+    e.phase = 'wait';
+    e.waitT = CHARGER.waitTime;
+  },
+  shard(e, angle, rng, opts) {
+    e.baseAngle = angle;
+    e.offset = opts.offset ?? 0;
+    e.startDist = e.dist;
+    e.angle = angle + e.offset; // 生成の瞬間は、基準からオフセットだけずれた位置
+  },
+};
+
 export function createEnemy(type, angle, rng, opts = {}) {
   const def = ENEMY_DEFS[type];
   if (!def) throw new Error(`unknown enemy type: ${type}`);
@@ -68,38 +104,7 @@ export function createEnemy(type, angle, rng, opts = {}) {
     dead: false,
     spin: rng() * Math.PI * 2,
   };
-  if (type === 'drone') {
-    e.phase = 'approach';
-    e.holdDist = randRange(rng, DRONE.holdMin, DRONE.holdMax);
-    e.baseAngle = angle;
-    e.hoverT = 0;
-    e.fireT = DRONE.fireInterval;
-  }
-  if (type === 'burrower') {
-    e.dist = opts.dist ?? randRange(rng, BURROWER.distMin, BURROWER.distMax);
-    e.phase = 'burrowed';
-    e.hp = BURROWER.burrowedHp;
-    e.radius = BURROWER.burrowedRadius;
-    e.burrowT = BURROWER.burrowTime + randRange(rng, -BURROWER.burrowJitter, BURROWER.burrowJitter);
-  }
-  if (type === 'thrower') {
-    e.phase = 'approach';
-    e.holdDist = randRange(rng, THROWER.holdMin, THROWER.holdMax);
-    e.baseAngle = angle;
-    e.hoverT = 0;
-    e.fireT = THROWER.fireInterval;
-  }
-  if (type === 'charger') {
-    e.dist = opts.dist ?? CHARGER.dist;
-    e.phase = 'wait';
-    e.waitT = CHARGER.waitTime;
-  }
-  if (type === 'shard') {
-    e.baseAngle = angle;
-    e.offset = opts.offset ?? 0;
-    e.startDist = e.dist;
-    e.angle = angle + e.offset; // 生成の瞬間は、基準からオフセットだけずれた位置
-  }
+  ENEMY_INITS[type]?.(e, angle, rng, opts);
   return e;
 }
 

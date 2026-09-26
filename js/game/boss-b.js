@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { randRange, clamp } from '../core/util.js';
+import { randRange, clamp, pickAngleOutside } from '../core/util.js';
 import { createEnemy, ENEMY_SHOT_SPEED } from './enemies.js';
 
 // ボスB：瞬間突進（視界の外に再出現して、中心へ突進する）が識別攻撃。
@@ -62,21 +62,7 @@ export function createBossB(params = {}) {
 
 // 再出現の角度：視界（fov/2 + margin）の外側から、-90〜+90度で選ぶ
 export function pickHiddenAngle(heading, fov, margin, rng) {
-  const half = fov / 2 + margin;
-  const L = CONFIG.HEADING_LIMIT;
-  const spans = [
-    { lo: -L, hi: heading - half },
-    { lo: heading + half, hi: L },
-  ].filter((s) => s.hi > s.lo);
-  if (spans.length === 0) return heading >= 0 ? -L : L;
-  const total = spans.reduce((sum, s) => sum + (s.hi - s.lo), 0);
-  let r = rng() * total;
-  for (const s of spans) {
-    const len = s.hi - s.lo;
-    if (r < len) return s.lo + r;
-    r -= len;
-  }
-  return spans[spans.length - 1].hi;
+  return pickAngleOutside(heading, fov / 2 + margin, rng);
 }
 
 function enterRoar(boss) {

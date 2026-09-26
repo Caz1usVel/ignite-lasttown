@@ -48,7 +48,7 @@ test('2面：出現をシミュレートすると、編隊が3〜5機ずつ何�
     const fresh = state.enemies.slice(before).filter((e) => e.type === 'formationDrone');
     if (fresh.length) groups.push(fresh.length);
   }
-  assert.ok(groups.length >= 6, `groups=${groups.length}`);
+  assert.ok(groups.length >= 5, `groups=${groups.length}`);
   for (const n of groups) assert.ok(n >= 3 && n <= 5, `size ${n}`);
 });
 

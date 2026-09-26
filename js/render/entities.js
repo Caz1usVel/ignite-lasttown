@@ -292,7 +292,7 @@ export function drawEnemy(g, e, x, y, time) {
 function drawBossA(g, boss, x, y, time) {
   const r = boss.radius;
   const flash = time - (boss.flashT ?? -1) < 0.1;
-  const bodyColor = boss.p.color ?? COLORS.boss; // 強化型は色で見分ける
+  const bodyColor = boss.color ?? boss.p.color ?? COLORS.boss; // 強化型は色で見分ける
   g.save();
   g.translate(x, y);
   const glow = g.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.6);
@@ -322,7 +322,7 @@ function drawBossA(g, boss, x, y, time) {
 function drawBossB(g, boss, x, y, time) {
   if (boss.hidden) return;
   const r = boss.radius;
-  const bodyColor = boss.p.color ?? COLORS.bossB;
+  const bodyColor = boss.color ?? boss.p.color ?? COLORS.bossB;
   const flash = time - (boss.flashT ?? -1) < 0.1;
   const warn = boss.phase === 'telegraph';
   const roar = boss.phase === 'roar';
@@ -369,9 +369,16 @@ function drawBossB(g, boss, x, y, time) {
   g.restore();
 }
 
+// ボスの種類 → 描画関数。表に無い種類は、目立つ代わりの図形（見えないボスが当たってくるのを防ぐ）
+const BOSS_DRAWERS = {
+  bossA: drawBossA,
+  bossB: drawBossB,
+};
+
 export function drawBoss(g, boss, x, y, time) {
-  if (boss.type === 'bossB') drawBossB(g, boss, x, y, time);
-  else drawBossA(g, boss, x, y, time);
+  const draw = BOSS_DRAWERS[boss.type];
+  if (draw) draw(g, boss, x, y, time);
+  else drawUnknown(g, { radius: boss.radius ?? 56 }, x, y);
 }
 
 export function drawBullet(g, b, heading, fov) {

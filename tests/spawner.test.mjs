@@ -31,8 +31,9 @@ test('90秒までの総数がおおむね出現表どおり', () => {
   const meteors = log.filter((l) => l.type === 'meteor').length;
   const drones = log.filter((l) => l.type === 'drone').length;
   const k = CONFIG.SPAWN_SCALE;
-  const expMeteors = 20 / (3.0 * k) + 40 / (2.0 * k) + 30 / (1.5 * k); // 区間ごとの間隔 × SPAWN_SCALE
-  const expDrones = 40 / (8 * k) + 30 / (6 * k);
+  // 区間ごとの間隔 × SPAWN_SCALE。タイマーは区間ごとに新しく数えるので、区間ごとに切り捨てる
+  const expMeteors = Math.floor(20 / (3.0 * k)) + Math.floor(40 / (2.0 * k)) + Math.floor(30 / (1.5 * k));
+  const expDrones = Math.floor(40 / (8 * k)) + Math.floor(30 / (6 * k));
   assert.ok(Math.abs(meteors - expMeteors) <= 2, `meteors=${meteors} expected≈${expMeteors}`);
   assert.ok(Math.abs(drones - expDrones) <= 2, `drones=${drones} expected≈${expDrones}`);
 });
@@ -179,4 +180,35 @@ test('validateStage：誤ったステージデータは例外になる', () => {
   const ufo = ok();
   ufo.segments[0].spawns = { ufo: 2 };
   assert.throws(() => validateStage(ufo), /ufo/);
+});
+
+test('区間ごとのタイマー：区間に入ってから every 秒後が最初の出現で、前の区間の余りを引き継がない', () => {
+  const stage = {
+    id: 9,
+    segments: [
+      { from: 0, to: 10, spawns: { meteor: 4 } },   // 4, 8 に出る（余り 2 秒）
+      { from: 10, to: 30, spawns: { meteor: 6 } },  // 引き継ぐと 12 に出るが、新しく始めるので 16, 22, 28
+    ],
+    spawnEnd: 30,
+    boss: { type: 'bossA', params: {} },
+  };
+  const { groups } = simulateStage(stage, 29.9);
+  const times = groups.map((g) => Math.round(g.time));
+  assert.deepEqual(times, [4, 8, 16, 22, 28]);
+});
+
+test('同じ種類が離れた区間に現れても、前に現れたときの余りを持ち越さない', () => {
+  const stage = {
+    id: 9,
+    segments: [
+      { from: 0, to: 10, spawns: { meteor: 4 } },
+      { from: 10, to: 20, spawns: { drone: 5 } },
+      { from: 20, to: 40, spawns: { meteor: 7 } }, // 20 + 7 = 27 が最初
+    ],
+    spawnEnd: 40,
+    boss: { type: 'bossA', params: {} },
+  };
+  const { groups } = simulateStage(stage, 39.9);
+  const meteorTimes = groups.filter((g) => g.types.includes('meteor')).map((g) => Math.round(g.time));
+  assert.deepEqual(meteorTimes, [4, 8, 27, 34]);
 });

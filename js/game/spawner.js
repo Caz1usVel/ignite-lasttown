@@ -65,12 +65,14 @@ export function updateSpawner(sp, state, dt) {
   if (sp.time < stage.spawnEnd) {
     const seg = stage.segments.find((s) => sp.time >= s.from && sp.time < s.to);
     if (!seg) return;
+    const segIndex = stage.segments.indexOf(seg);
     for (const [type, raw] of Object.entries(seg.spawns)) {
       const { every: baseEvery, group } = readEntry(type, raw);
       const every = baseEvery * sp.scale; // 物量の調整（仕様書 §2）
-      sp.timers[type] = (sp.timers[type] ?? 0) + dt;
-      while (sp.timers[type] >= every) {
-        sp.timers[type] -= every;
+      const key = `${segIndex}:${type}`; // 区間ごとに新しく数える（前の区間の余りを引き継がない）
+      sp.timers[key] = (sp.timers[key] ?? 0) + dt;
+      while (sp.timers[key] >= every) {
+        sp.timers[key] -= every;
         if (group) {
           const n = randInt(state.rng, group.lo, group.hi);
           state.enemies.push(...createFormation(type, n, group.minSep, state.rng));

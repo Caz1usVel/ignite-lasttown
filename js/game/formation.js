@@ -1,7 +1,7 @@
 import { CONFIG } from '../core/config.js';
 import { randRange } from '../core/util.js';
 import { createEnemy } from './enemies.js';
-import { pickSpreadAngles } from './boss.js';
+import { pickSpreadAngles } from './boss-a.js';
 
 const MEMBER_JITTER = 0.03; // 機ごとの接近時間のばらつき（編隊の基準ジッタに足す）
 

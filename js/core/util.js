@@ -17,6 +17,24 @@ export function randInt(rng, lo, hi) {
   return lo + Math.floor(rng() * (hi - lo + 1));
 }
 
+// 中心 center から half 度以上離れた、-limit〜+limit の角度を、区間の長さで重み付けして一様に選ぶ。
+// 区間が無ければ、center ≥ 0 なら -limit、そうでなければ +limit を返す。
+export function pickAngleOutside(center, half, rng, limit = 90) {
+  const spans = [
+    { lo: -limit, hi: center - half },
+    { lo: center + half, hi: limit },
+  ].filter((s) => s.hi > s.lo);
+  if (spans.length === 0) return center >= 0 ? -limit : limit;
+  const total = spans.reduce((sum, s) => sum + (s.hi - s.lo), 0);
+  let r = rng() * total;
+  for (const s of spans) {
+    const len = s.hi - s.lo;
+    if (r < len) return s.lo + r;
+    r -= len;
+  }
+  return spans[spans.length - 1].hi;
+}
+
 // シード付き乱数（テストとリプレイ用）
 export function mulberry32(seed) {
   let a = seed >>> 0;

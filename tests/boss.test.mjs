@@ -154,3 +154,21 @@ test('updateBoss は登録表を引いて更新する', () => {
   updateBoss(b, s, 1);
   assert.ok(b.dist < before);
 });
+
+test('登録表：各ボスに既定の色があり、createBoss が boss.color を付ける（p.color は params のまま）', () => {
+  assert.equal(BOSSES.bossA.color, '#8f7cff');
+  assert.equal(BOSSES.bossB.color, '#c2418f');
+  const a = createBoss('bossA');
+  assert.equal(a.color, '#8f7cff');
+  assert.equal(a.p.color, undefined);
+  const a2 = createBoss('bossA', { color: '#ff8f6b' });
+  assert.equal(a2.color, '#ff8f6b');
+  assert.equal(a2.p.color, '#ff8f6b');
+  assert.equal(createBoss('bossB').color, '#c2418f');
+});
+
+test('boss.js は BOSS_A_BASE と pickSpreadAngles を再エクスポートしている（boss-a.js と同じもの）', async () => {
+  const a = await import('../js/game/boss-a.js');
+  assert.equal(BOSS_A_BASE, a.BOSS_A_BASE);
+  assert.equal(pickSpreadAngles, a.pickSpreadAngles);
+});
