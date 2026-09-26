@@ -43,7 +43,7 @@ export function createStageSelectScene(app) {
     }
 
     const fmtTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-    const line = (label, e) => `${label}\n${e &&e.best > 0 ? `最高 ${e.best.toLocaleString()}（${fmtTime(e.time)}）` : 'まだ記録なし'}`;
+    const line = (label, e) => `${label}\n${e && e.best > 0 ? `最高 ${e.best.toLocaleString()}（${fmtTime(e.time)}）` : 'まだ記録なし'}`;
     dom.endlessBtn.textContent = line('通常エンドレス', save.endless?.normal);
     const hardOpen = isHardEndlessUnlocked(save);
     dom.hardEndlessBtn.disabled = !hardOpen;

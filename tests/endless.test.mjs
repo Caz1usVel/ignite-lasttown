@@ -248,3 +248,22 @@ test('ボスを倒したフレームに体力が0なら、bossDown のあと、�
   assert.ok(ev2.some((e) => e.type === 'gameover'));
   assert.equal(s.outcome, 'gameover');
 });
+
+test('ボス撃破の kill イベントの対象は、state.boss が null になっても、ボス（ENEMY_DEFS に無い種類）と判別できる', () => {
+  const s = createPlayState(S('normal'), mulberry32(2));
+  s.boss = createBoss('bossA', endlessBossParams('bossA', 0));
+  s.spawner.endless.hadBoss = true;
+  s.boss.arrived = true;
+  s.boss.angle = 0;
+  s.boss.dist = 300;
+  s.boss.hp = 1;
+  const boss = s.boss;
+  s.bullets.push({ angle: 0, prevDist: 290, dist: 290, speed: 900, radius: 6, dead: false, pierceLeft: 0 });
+  const ev = stepGame(s, 0.05, noInput);
+  const kill = ev.find((e) => e.type === 'kill');
+  assert.ok(kill, 'kill event');
+  assert.equal(s.boss, null);
+  assert.equal(kill.target, boss);
+  assert.equal(ENEMY_DEFS[kill.target.type], undefined); // play.js は、これでボスと判別する
+  assert.equal(typeof kill.target.p.score, 'number');
+});

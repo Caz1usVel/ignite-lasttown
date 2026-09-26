@@ -49,10 +49,12 @@ export function createPlayScene(app) {
           spawnBurst(fx, ev.x, ev.y, '#fff6c8', 4);
           break;
         case 'kill': {
-          const isBoss = ev.target === state.boss;
-          const score = isBoss ? state.boss.p.score : ENEMY_DEFS[ev.target.type].score;
+          // エンドレスでは、同じフレームで state.boss が null になる。対象そのものから、ボスかどうかを決める
+          const target = ev.target;
+          const isBoss = !ENEMY_DEFS[target.type];
+          const score = isBoss ? target.p.score : ENEMY_DEFS[target.type].score;
           if (isBoss) audio.se.bossKill(); else audio.se.kill();
-          spawnBurst(fx, ev.x, ev.y, isBoss ? (state.boss.color ?? COLORS.boss) : '#ffd866', isBoss ? 60 : 12);
+          spawnBurst(fx, ev.x, ev.y, isBoss ? (target.color ?? COLORS.boss) : '#ffd866', isBoss ? 60 : 12);
           if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, '#ffd866');
           break;
         }
@@ -71,7 +73,6 @@ export function createPlayScene(app) {
           spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y, '#ff7a52', 24);
           break;
         case 'bossDown':
-          audio.se.bossKill();
           spawnBurst(fx, CONFIG.CENTER_X, 300, '#ffd866', 40);
           spawnPopup(fx, CONFIG.CENTER_X, 260, 'ボス撃破！', '#ffd866');
           break;
