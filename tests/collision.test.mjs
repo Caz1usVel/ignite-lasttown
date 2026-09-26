@@ -167,3 +167,21 @@ test('pierceLeft が無い弾は貫通0として扱う', () => {
   assert.equal(a.dead, true);
   assert.equal(b.dead, false);
 });
+
+test('小数のダメージが積もっても、HP÷ダメージ回で倒せる（攻撃力Lv3で HP8 は5発）', () => {
+  const run = (n) => {
+    const s = mkState();
+    s.turret.damage = 1 + 0.2 * 3;
+    const m = createEnemy('meteor', 0, rng, { dist: 100, speed: 0 });
+    m.hp = 8;
+    s.enemies.push(m);
+    for (let i = 0; i < n; i++) s.bullets.push(bullet(0, 60, 160));
+    return { ev: resolveBulletHits(s), m };
+  };
+  const four = run(4);
+  assert.equal(four.m.dead, false);
+  const five = run(5);
+  assert.equal(five.ev.length, 5);
+  assert.equal(five.ev[4].type, 'kill');
+  assert.equal(five.m.dead, true);
+});

@@ -1,6 +1,7 @@
 import { CONFIG } from '../core/config.js';
 import { worldToScreen } from '../core/view.js';
 
+const KILL_EPS = 1e-9; // 小数ダメージの積み重ねで HP が 1e-16 ほど残っても倒したことにする
 const SWEEP_STEP = 12; // 弾の移動区間をこの間隔でサンプリングする
 
 export function circlesOverlap(ax, ay, ar, bx, by, br) {
@@ -35,7 +36,7 @@ export function resolveBulletHits(state) {
         if (!circlesOverlap(p.x, p.y, b.radius, q.x, q.y, t.radius * CONFIG.HITBOX_RATIO)) continue;
 
         t.hp -= damage;
-        const killed = t.hp <= 0;
+        const killed = t.hp <= KILL_EPS;
         if (killed) t.dead = true;
         events.push({ type: killed ? 'kill' : 'hit', target: t, x: q.x, y: q.y });
 
