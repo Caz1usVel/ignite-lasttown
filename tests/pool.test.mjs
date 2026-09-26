@@ -15,7 +15,7 @@ const mkStage = (spawns, extra = {}) => ({
 // 出現した敵の種類を、出現順に返す（編隊は formationDrone 1回として数える）
 function drawTypes(stage, seconds, seed = 3) {
   const state = { enemies: [], boss: null, rng: mulberry32(seed) };
-  const sp = createSpawner(stage, 1);
+  const sp = createSpawner(stage, 1, Infinity);
   const seen = [];
   let last = 0;
   for (let i = 0; i < Math.round(seconds / 0.1); i++) {
@@ -50,7 +50,7 @@ test('pool：周ごとの順番はシャッフルされる（毎回同じ順で�
 test('pool：every に scale を掛ける', () => {
   const stage = mkStage({ pool: { every: 2, pool: TYPES } });
   const state = { enemies: [], boss: null, rng: mulberry32(1) };
-  const sp = createSpawner(stage, 1.5); // 3 秒ごと
+  const sp = createSpawner(stage, 1.5, Infinity); // 3 秒ごと
   for (let i = 0; i < 100; i++) updateSpawner(sp, state, 0.1); // 10 秒
   assert.equal(state.enemies.length, 3);
 });
@@ -65,7 +65,7 @@ test('validateStage：pool の formation.count は長さ 2 の配列だけ受け
 test('pool：formationDrone が出たら、formation の設定で編隊（count 機）を出す', () => {
   const stage = mkStage({ pool: { every: 2, pool: ['formationDrone', 'meteor'], formation: { count: [3, 4], minSep: 25 } } });
   const state = { enemies: [], boss: null, rng: mulberry32(5) };
-  const sp = createSpawner(stage, 1);
+  const sp = createSpawner(stage, 1, Infinity);
   for (let i = 0; i < 20 * 10; i++) updateSpawner(sp, state, 0.1); // 20 秒 = 10 回
   const drones = state.enemies.filter((e) => e.type === 'formationDrone');
   const meteors = state.enemies.filter((e) => e.type === 'meteor');

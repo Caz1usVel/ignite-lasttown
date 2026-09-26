@@ -1,3 +1,4 @@
+import { CONFIG } from '../js/core/config.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { STAGE1 } from '../js/data/stage1.js';
@@ -40,7 +41,7 @@ test('2面：ボスAの強化型は初期型より強く、それ以外は初期
 
 test('2面：出現をシミュレートすると、編隊が3〜5機ずつ何度も出る', () => {
   const state = { enemies: [], boss: null, rng: mulberry32(5) };
-  const sp = createSpawner(STAGE2);
+  const sp = createSpawner(STAGE2, CONFIG.SPAWN_SCALE, Infinity);
   const groups = [];
   for (let i = 0; i < Math.round(STAGE2.spawnEnd / 0.1); i++) {
     const before = state.enemies.length;

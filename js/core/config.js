@@ -14,6 +14,7 @@ export const CONFIG = Object.freeze({
   SPAWN_DIST: 460,
   APPROACH_TIME: 10,    // 秒（縦を引き伸ばして見つけやすくしたので、14秒から10秒に戻した）
   APPROACH_JITTER: 0.15,
+  MAX_ACTIVE: 5,        // 同時に画面にいる敵（本体）の上限。いっぱいの間は新しく出ない
   SPAWN_SCALE: 1.35,    // 全ステージの出現間隔に掛ける（実プレイで「物量が多い」ため、薄くした）
 
   BULLET_SPEED_PC: 900,      // 飛ぶ速さだけを上げた（連射速度は据え置き）

@@ -4,8 +4,15 @@ import { createEnemy, ENEMY_DEFS } from './enemies.js';
 import { createFormation } from './formation.js';
 import { createBoss } from './boss.js';
 
-export function createSpawner(stage, scale = CONFIG.SPAWN_SCALE) {
-  return { stage, scale, time: 0, timers: {}, bags: {}, bossSpawned: false };
+export function createSpawner(stage, scale = CONFIG.SPAWN_SCALE, maxActive = CONFIG.MAX_ACTIVE) {
+  return { stage, scale, maxActive, time: 0, timers: {}, bags: {}, bossSpawned: false };
+}
+
+// 画面に同時にいる「敵の本体」の数（敵弾・妨害電波・偽像は数えない）
+function activeCount(state) {
+  let n = 0;
+  for (const e of state.enemies) if (!e.dead && ENEMY_DEFS[e.type].countsAsKill) n++;
+  return n;
 }
 
 // 出現表の1項目を読む。
@@ -90,6 +97,11 @@ export function updateSpawner(sp, state, dt) {
       const key = `${segIndex}:${type}`; // 区間ごとに新しく数える（前の区間の余りを引き継がない）
       sp.timers[key] = (sp.timers[key] ?? 0) + dt;
       while (sp.timers[key] >= every) {
+        const room = sp.maxActive - activeCount(state);
+        if (room <= 0) { // 同時に出せる数の上限：空くまで待つ（溜め込まず、空いたらすぐ出す）
+          sp.timers[key] = every;
+          break;
+        }
         sp.timers[key] -= every;
         if (pool) {
           // 袋方式：空なら全種類をシャッフルして詰め、1つずつ取り出す（1周するまで同じ種類は出ない）
@@ -97,14 +109,14 @@ export function updateSpawner(sp, state, dt) {
           if (!bag || bag.length === 0) bag = sp.bags[key] = shuffled(pool, state.rng);
           const picked = bag.pop();
           if (picked === 'formationDrone') {
-            const n = randInt(state.rng, formationGroup.lo, formationGroup.hi);
+            const n = Math.min(randInt(state.rng, formationGroup.lo, formationGroup.hi), room);
             state.enemies.push(...createFormation('formationDrone', n, formationGroup.minSep, state.rng));
           } else {
             const angle = randRange(state.rng, -CONFIG.HEADING_LIMIT, CONFIG.HEADING_LIMIT);
             state.enemies.push(createEnemy(picked, angle, state.rng));
           }
         } else if (group) {
-          const n = randInt(state.rng, group.lo, group.hi);
+          const n = Math.min(randInt(state.rng, group.lo, group.hi), room);
           state.enemies.push(...createFormation(type, n, group.minSep, state.rng));
         } else {
           const angle = randRange(state.rng, -CONFIG.HEADING_LIMIT, CONFIG.HEADING_LIMIT);

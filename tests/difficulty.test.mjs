@@ -52,7 +52,7 @@ test('出現の物量：SPAWN_SCALE(1.35) を出現間隔に掛ける', () => {
   const stage = { id: 9, segments: [{ from: 0, to: 1000, spawns: { meteor: 4, formationDrone: { every: 10, count: 3, minSep: 25 } } }], spawnEnd: 1000, boss: { type: 'bossA', params: {} } };
   const count = (scale, seconds) => {
     const state = { enemies: [], boss: null, rng: mulberry32(5) };
-    const sp = scale === undefined ? createSpawner(stage) : createSpawner(stage, scale);
+    const sp = scale === undefined ? createSpawner(stage, CONFIG.SPAWN_SCALE, Infinity) : createSpawner(stage, scale, Infinity);
     for (let i = 0; i < Math.round(seconds / 0.1); i++) updateSpawner(sp, state, 0.1);
     return {
       meteors: state.enemies.filter((e) => e.type === 'meteor').length,

@@ -5,11 +5,12 @@ import { STAGES } from '../js/data/stages.js';
 import { STAGE1 } from '../js/data/stage1.js';
 import { mulberry32 } from '../js/core/util.js';
 import { CONFIG } from '../js/core/config.js';
+import { createEnemy, ENEMY_DEFS } from '../js/game/enemies.js';
 
 // 敵を動かさず、出現だけを数える
 function simulate(seconds, dt = 0.1) {
   const state = { enemies: [], boss: null, rng: mulberry32(5) };
-  const sp = createSpawner(STAGE1);
+  const sp = createSpawner(STAGE1, CONFIG.SPAWN_SCALE, Infinity);
   const log = [];
   for (let i = 0; i < Math.round(seconds / dt); i++) {
     const before = state.enemies.length;
@@ -71,7 +72,7 @@ const groupStage = (spawns) => ({
 // 敵を動かさず、出現だけを時刻ごとにまとめて返す
 function simulateStage(stage, seconds, dt = 0.1) {
   const state = { enemies: [], boss: null, rng: mulberry32(5) };
-  const sp = createSpawner(stage, 1); // 既存の算術を保つため scale = 1
+  const sp = createSpawner(stage, 1, Infinity); // 既存の算術を保つため scale = 1
   const groups = []; // { time, types: string[], angles: number[] }
   for (let i = 0; i < Math.round(seconds / dt); i++) {
     const before = state.enemies.length;
@@ -211,4 +212,40 @@ test('同じ種類が離れた区間に現れても、前に現れたときの�
   const { groups } = simulateStage(stage, 39.9);
   const meteorTimes = groups.filter((g) => g.types.includes('meteor')).map((g) => Math.round(g.time));
   assert.deepEqual(meteorTimes, [4, 8, 27, 34]);
+});
+
+// ---- 同時に出る敵の上限（MAX_ACTIVE） ----
+const busyStage = (spawns) => ({ id: 9, segments: [{ from: 0, to: 1000, spawns }], spawnEnd: 1000, boss: { type: 'bossA', params: {} } });
+const alive = (state) => state.enemies.filter((e) => !e.dead && ENEMY_DEFS[e.type].countsAsKill).length;
+
+test('同時に出る敵は MAX_ACTIVE(5) まで。倒す（消える）と、空いた分だけ新しく出る', () => {
+  assert.equal(CONFIG.MAX_ACTIVE, 5);
+  const state = { enemies: [], boss: null, rng: mulberry32(2) };
+  const sp = createSpawner(busyStage({ meteor: 1, drone: 1 }), 1);
+  let maxSeen = 0;
+  for (let i = 0; i < 600; i++) { // 60 秒、誰も倒さない
+    updateSpawner(sp, state, 0.1);
+    maxSeen = Math.max(maxSeen, alive(state));
+  }
+  assert.equal(maxSeen, 5);
+  assert.equal(alive(state), 5);
+  state.enemies[0].dead = true;
+  state.enemies[1].dead = true;
+  for (let i = 0; i < 20; i++) updateSpawner(sp, state, 0.1);
+  assert.equal(alive(state), 5); // 空いた2つがすぐ埋まる
+});
+
+test('上限：編隊は空いている数に切り詰める。敵弾・偽像・妨害電波は数えない', () => {
+  const state = { enemies: [], boss: null, rng: mulberry32(4) };
+  const sp = createSpawner(busyStage({ formationDrone: { every: 2, count: 4, minSep: 20 } }), 1);
+  for (let i = 0; i < 25; i++) updateSpawner(sp, state, 0.1); // 1 回目：4 機
+  assert.equal(alive(state), 4);
+  for (let i = 0; i < 25; i++) updateSpawner(sp, state, 0.1); // 2 回目：空きは 1
+  assert.equal(alive(state), 5);
+  const shots = ['enemyShot', 'jamShot', 'decoy'].map((t) => createEnemy(t, 0, state.rng, { dist: 300 }));
+  state.enemies.push(...shots);
+  assert.equal(alive(state), 5); // 数えない
+  state.enemies.filter((e) => e.type === 'formationDrone').forEach((e) => { e.dead = true; });
+  for (let i = 0; i < 25; i++) updateSpawner(sp, state, 0.1);
+  assert.equal(alive(state), 4); // 敵弾などがいても、本体は 4 機出る
 });
