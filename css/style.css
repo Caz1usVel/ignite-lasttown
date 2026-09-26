@@ -218,3 +218,36 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
   font-weight: 700;
 }
 .slider-row input { flex: 1; accent-color: var(--star-gold); }
+
+/* 縦が足りない画面（スマホの横向きなど）で、オーバーレイの中身が切れないようにする */
+.overlay { overflow-y: auto; }
+@supports (justify-content: safe center) {
+  .overlay { justify-content: safe center; }
+}
+
+#stageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 12px;
+  width: min(560px, 92vw);
+}
+.stage-tile {
+  touch-action: manipulation;
+  font-family: var(--font);
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  border-radius: 16px;
+  border: 2px solid rgba(191, 230, 255, 0.4);
+  background: rgba(20, 26, 61, 0.92);
+  cursor: pointer;
+}
+.stage-tile:hover:not(:disabled) { border-color: var(--star-gold); }
+.stage-tile:disabled { opacity: 0.45; cursor: default; }
+.stage-tile.cleared { border-color: rgba(182, 255, 176, 0.7); }
+.tile-num { font-weight: 800; font-size: 1.3rem; color: var(--star-gold); }
+.tile-status { font-size: 0.85rem; color: var(--text-dim); }
+.tile-best { font-size: 0.8rem; color: var(--text-dim); min-height: 1.1em; }

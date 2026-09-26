@@ -4,13 +4,19 @@ import { drawBackground } from '../render/background.js';
 export function createTitleScene(app) {
   const { dom } = app;
   dom.titleLogo.textContent = GAME_TITLE;
-  dom.startSoloBtn.addEventListener('click', () => app.startGame('solo'));
-  dom.startDuoBtn.addEventListener('click', () => app.startGame('duo'));
+  // ソロと2人協力は操作の分担が違うだけ。どちらもステージ選択へ進み、mode はヒント表示にだけ使う
+  dom.startSoloBtn.addEventListener('click', () => {
+    app.mode = 'solo';
+    app.setScene('stageselect');
+  });
+  dom.startDuoBtn.addEventListener('click', () => {
+    app.mode = 'duo';
+    app.setScene('stageselect');
+  });
   dom.titleSettingsBtn.addEventListener('click', () => app.settings.open());
 
   return {
     enter() {
-      dom.titleBest.textContent = app.save.highScore.toLocaleString();
       dom.hud.classList.add('hidden');
       dom.hint.classList.add('hidden');
       dom.touchControls.classList.add('hidden');

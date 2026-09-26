@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { STAGE1 } from '../data/stage1.js';
+import { getStage } from '../data/stages.js';
 import { createPlayState } from '../game/state.js';
 import { stepGame } from '../game/step.js';
 import { ENEMY_DEFS } from '../game/enemies.js';
@@ -20,6 +20,7 @@ export function createPlayScene(app) {
   let state = null;
   let fx = null;
   let mode = 'solo';
+  let stageId = 1;
   let endTimer = 0;
 
   function updateHud() {
@@ -67,7 +68,8 @@ export function createPlayScene(app) {
     enter(params = {}) {
       if (!params.resume) {
         mode = params.mode ?? mode;
-        state = createPlayState(STAGE1);
+        stageId = params.stageId ?? stageId;
+        state = createPlayState(getStage(stageId));
         fx = createEffects();
         endTimer = 0;
         dom.hint.textContent = input.isTouch() ? HINTS.touch : HINTS[mode];
@@ -97,7 +99,7 @@ export function createPlayScene(app) {
       if (state.outcome) {
         endTimer -= dt;
         if (endTimer <= 0) {
-          app.setScene('result', { outcome: state.outcome, score: state.score, kills: state.kills, mode });
+          app.setScene('result', { outcome: state.outcome, score: state.score, kills: state.kills, mode, stageId });
         }
       }
     },

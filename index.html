@@ -39,7 +39,12 @@
       <button class="btn btn-sub" id="startDuoBtn">ふたりで（PC）</button>
       <button class="link-btn" id="titleSettingsBtn">設定</button>
     </div>
-    <p class="best">ハイスコア <span id="titleBest">0</span></p>
+  </div>
+
+  <div id="stageSelectScreen" class="overlay hidden">
+    <h2>ステージ選択</h2>
+    <div id="stageGrid"></div>
+    <button class="link-btn" id="stageBackBtn">タイトルへ</button>
   </div>
 
   <div id="pauseScreen" class="overlay hidden">
@@ -56,12 +61,13 @@
     <dl class="result-stats">
       <dt>スコア</dt><dd id="resultScore">0</dd>
       <dt>撃破数</dt><dd id="resultKills">0</dd>
-      <dt>ハイスコア</dt><dd id="resultBest">0</dd>
+      <dt>最高スコア</dt><dd id="resultBest">0</dd>
     </dl>
     <p id="resultNewBest" class="new-best hidden">ハイスコア更新！</p>
     <div class="btn-col">
-      <button class="btn" id="retryBtn">もう一度</button>
-      <button class="link-btn" id="resultTitleBtn">タイトルへ</button>
+      <button class="btn" id="nextStageBtn">次のステージへ</button>
+      <button class="btn btn-sub" id="retryBtn">もう一度</button>
+      <button class="link-btn" id="resultStageSelectBtn">ステージ選択へ</button>
     </div>
   </div>
 

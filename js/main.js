@@ -7,6 +7,7 @@ import { initSettings } from './scenes/settings.js';
 import { createTitleScene } from './scenes/title.js';
 import { createInput } from './core/input.js';
 import { createPlayScene } from './scenes/play.js';
+import { createStageSelectScene } from './scenes/stageselect.js';
 import { createResultScene } from './scenes/result.js';
 import { createPauseScene } from './scenes/pause.js';
 
@@ -14,10 +15,11 @@ const IDS = [
   'stage', 'game',
   'hud', 'hudLives', 'hudScore', 'hudTime', 'pauseBtn', 'hint',
   'touchControls', 'turnLeftBtn', 'turnRightBtn',
-  'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleSettingsBtn', 'titleBest',
+  'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleSettingsBtn',
+  'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
   'resultScreen', 'resultTitle', 'resultScore', 'resultKills', 'resultBest', 'resultNewBest',
-  'retryBtn', 'resultTitleBtn',
+  'nextStageBtn', 'retryBtn', 'resultStageSelectBtn',
   'settingsScreen', 'bgmVol', 'seVol', 'muteBtn', 'settingsBackBtn',
 ];
 const dom = Object.fromEntries(IDS.map((id) => [id, document.getElementById(id)]));
@@ -34,11 +36,12 @@ const app = {
   sceneName: null,
   persist: () => writeSave(save),
   setScene,
-  startGame: (mode) => setScene('play', { mode }),
+  mode: 'solo', // 'solo' | 'duo'（タイトルで選ぶ）
 };
 app.input = createInput(dom.game, app.viewport, dom.turnLeftBtn, dom.turnRightBtn);
 app.settings = initSettings(app);
 app.scenes.title = createTitleScene(app);
+app.scenes.stageselect = createStageSelectScene(app);
 app.scenes.play = createPlayScene(app);
 app.scenes.result = createResultScene(app);
 app.scenes.pause = createPauseScene(app);
