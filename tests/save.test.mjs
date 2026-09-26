@@ -50,3 +50,26 @@ test('storage が無い環境（Node）でも落ちない', () => {
   assert.equal(loadSave().highScore, 0);
   assert.equal(writeSave(loadSave()), false);
 });
+
+test('範囲外の音量は 0..1 にクランプする', () => {
+  const st = memStorage();
+  st.setItem(SAVE_KEY, JSON.stringify({ version: 1, settings: { bgmVol: 5, seVol: -1 }, highScore: 0 }));
+  const d = loadSave(st);
+  assert.equal(d.settings.bgmVol, 1);
+  assert.equal(d.settings.seVol, 0);
+});
+
+test('数値でない音量は既定値になる', () => {
+  const st = memStorage();
+  st.setItem(SAVE_KEY, JSON.stringify({ version: 1, settings: { bgmVol: 'loud', seVol: null }, highScore: 0 }));
+  const d = loadSave(st);
+  assert.equal(d.settings.bgmVol, 0.6);
+  assert.equal(d.settings.seVol, 0.7);
+});
+
+test('真偽値でない muted は既定値になる', () => {
+  const st = memStorage();
+  st.setItem(SAVE_KEY, JSON.stringify({ version: 1, settings: { muted: 'yes' }, highScore: 0 }));
+  const d = loadSave(st);
+  assert.equal(d.settings.muted, false);
+});

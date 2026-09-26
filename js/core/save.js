@@ -19,6 +19,19 @@ function defaultStorage() {
   }
 }
 
+function clampVol(v, fallback) {
+  return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback;
+}
+
+function sanitizeSettings(base, s) {
+  const merged = { ...base, ...s };
+  return {
+    muted: typeof merged.muted === 'boolean' ? merged.muted : base.muted,
+    bgmVol: clampVol(merged.bgmVol, base.bgmVol),
+    seVol: clampVol(merged.seVol, base.seVol),
+  };
+}
+
 export function loadSave(storage = defaultStorage()) {
   try {
     const raw = storage?.getItem(SAVE_KEY);
@@ -29,7 +42,7 @@ export function loadSave(storage = defaultStorage()) {
     return {
       ...base,
       highScore: Number.isFinite(d.highScore) ? d.highScore : 0,
-      settings: { ...base.settings, ...d.settings },
+      settings: sanitizeSettings(base.settings, d.settings),
     };
   } catch {
     return defaults();
