@@ -21,6 +21,7 @@ test('BOSS_B_BASE：仕様の値で、凍結されている', () => {
   assert.equal(BOSS_B_BASE.hp, 50);
   assert.equal(BOSS_B_BASE.dist, 340);
   assert.equal(BOSS_B_BASE.moveSpeed, 28);
+  assert.equal(BOSS_B_BASE.firstDashDelay, 2);
   assert.equal(BOSS_B_BASE.dashInterval, 9);
   assert.equal(BOSS_B_BASE.dashCount, 1);
   assert.equal(BOSS_B_BASE.telegraph, 1.0);
@@ -205,6 +206,38 @@ test('咆哮：2.2秒間は damageMult が 1.5 で、その間は動かない。
   step(b, s, 0.3);
   assert.equal(b.phase, 'idle');
   assert.equal(b.damageMult, 1);
+});
+
+test('最初の突進：到着から firstDashDelay（2秒）後に予兆。到着後の2回目以降（咆哮のあと）は dashInterval', () => {
+  const s = mkState();
+  const b = createBossB();
+  assert.equal(BOSS_B_BASE.firstDashDelay, 2);
+  toIdle(b, s);
+  b.scatterT = 1e9; // 散布は邪魔なので止める
+  const t0 = b.t;
+  assert.equal(until(b, s, 'telegraph'), true);
+  assert.ok(Math.abs(b.t - t0 - (2 - 0.1)) < 0.1, `first telegraph after ${b.t - t0}`); // toIdle は着いてから約0.1秒進めてある
+  until(b, s, 'dash');
+  b.damageTaken += 8;
+  step(b, s, DT);
+  assert.equal(b.phase, 'roar');
+  b.scatterT = 1e9;
+  assert.equal(until(b, s, 'idle'), true);
+  assert.equal(b.dashT, b.p.dashInterval);
+});
+
+test('突進の中断：再出現（settle）の間に与えたダメージも数える。再出現の前のダメージは数えない', () => {
+  const s = mkState();
+  const b = createBossB();
+  toIdle(b, s);
+  until(b, s, 'vanish');
+  b.damageTaken += 50;          // 消えている間（再出現の前）のダメージ
+  until(b, s, 'settle');
+  b.damageTaken += 8;           // 再出現してからのダメージ
+  assert.equal(until(b, s, 'dash'), true);
+  assert.equal(b.phase, 'dash');
+  step(b, s, DT);
+  assert.equal(b.phase, 'roar');
 });
 
 test('連続突進（強化型 dashCount 2）：1回目が届いたら0.6秒の予兆で2回目、咆哮は最後のあとだけ', () => {

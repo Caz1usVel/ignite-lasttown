@@ -11,7 +11,8 @@ export const BOSS_B_BASE = Object.freeze({
   moveSpeed: 28,        // 進入速度
   angleRange: 50,       // 待機中の左右の往復（±度）
   drift: 8,             // 度/秒
-  dashInterval: 9,      // 待機に入ってから次の突進の予兆まで（秒）
+  firstDashDelay: 2,    // 到着してから、最初の突進の予兆まで（秒）
+  dashInterval: 9,      // 咆哮のあと待機に戻ってから、次の突進の予兆まで（秒）
   dashCount: 1,         // 連続突進の回数
   chainGap: 0.6,        // 連続突進の2回目の予兆までの間（秒）
   telegraph: 1.0,       // 予兆（点滅）
@@ -50,7 +51,7 @@ export function createBossB(params = {}) {
     hidden: false,
     dashesLeft: 0,
     dashSpeed: 0,
-    dashStartDamage: 0,
+    dashStartDamage: 0,   // 再出現した時点の damageTaken
     damageTaken: 0,      // 受けたダメージの合計（collision.js が加算する）
     damageMult: 1,       // 咆哮の間だけ roarMult
     dashT: p.dashInterval,
@@ -109,7 +110,7 @@ export function updateBossB(boss, state, dt) {
     if (boss.dist <= boss.targetDist) {
       boss.arrived = true;
       boss.phase = 'idle';
-      boss.dashT = p.dashInterval;
+      boss.dashT = p.firstDashDelay;
       boss.scatterT = p.scatterInterval;
     }
     return;
@@ -148,6 +149,7 @@ export function updateBossB(boss, state, dt) {
         boss.angle = pickHiddenAngle(heading, fov, p.reappearMargin, state.rng);
         boss.dist = p.reappearDist;
         boss.hidden = false;
+        boss.dashStartDamage = boss.damageTaken; // 再出現してからのダメージを、中断の判定に数える
         boss.phase = 'settle';
         boss.phaseT = p.settle;
       }
@@ -157,7 +159,6 @@ export function updateBossB(boss, state, dt) {
       if (boss.phaseT <= 0) {
         boss.phase = 'dash';
         boss.dashSpeed = boss.dist / p.dashTime;
-        boss.dashStartDamage = boss.damageTaken;
       }
       break;
     case 'dash': {

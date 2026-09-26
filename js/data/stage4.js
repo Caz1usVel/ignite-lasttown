@@ -14,6 +14,6 @@ export const STAGE4 = Object.freeze({
   // ボスBの強化型：HP・連続突進・突進の速さ・散布の間隔を強め、色で見分ける
   boss: {
     type: 'bossB',
-    params: { hp: 80, dashInterval: 6.5, dashCount: 2, dashTime: 2.6, dashBreak: 12, scatterInterval: 5, color: '#ff7a3d' },
+    params: { hp: 80, dashInterval: 6.5, dashCount: 2, dashTime: 2.3, dashBreak: 8, scatterInterval: 5, color: '#ff7a3d' },
   },
 });
