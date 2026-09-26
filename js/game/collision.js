@@ -37,6 +37,12 @@ export function resolveBulletHits(state) {
         const hitRadius = t.radius * CONFIG.HITBOX_RATIO * (t === state.boss ? 1 : visualScale(t.dist));
         if (!circlesOverlap(p.x, p.y, b.radius, q.x, q.y, hitRadius)) continue;
 
+        if (t.shielded) {
+          // 閉じているシールドは、弾を吸収する（ダメージも貫通も無し）
+          events.push({ type: 'block', target: t, x: q.x, y: q.y });
+          b.dead = true;
+          break sweep;
+        }
         const dmg = damage * (t.damageMult ?? 1); // 咆哮硬直などで受けるダメージが増える
         t.hp -= dmg;
         if (typeof t.damageTaken === 'number') t.damageTaken += dmg; // ボスBの突進の中断の判定に使う
@@ -60,12 +66,25 @@ export function resolveBulletHits(state) {
 export function resolveCoreHits(state) {
   let reached = 0;
   for (const e of state.enemies) {
-    if (!e.dead && e.dist <= CONFIG.HIT_RADIUS_CORE) {
+    if (!e.dead && e.type !== 'jamShot' && e.dist <= CONFIG.HIT_RADIUS_CORE) {
       e.dead = true;
       reached++;
     }
   }
   return reached;
+}
+
+// 妨害電波（jamShot）が中心に届いた：残機は減らさず、攻撃を一定時間使えなくする
+export function resolveJamHits(state) {
+  let n = 0;
+  for (const e of state.enemies) {
+    if (!e.dead && e.type === 'jamShot' && e.dist <= CONFIG.HIT_RADIUS_CORE) {
+      e.dead = true;
+      n++;
+    }
+  }
+  if (n > 0) state.turret.jam = CONFIG.JAM_TIME;
+  return n;
 }
 
 // 被弾時の仕切り直し：中心に近い敵・敵弾を外側へ押し戻す

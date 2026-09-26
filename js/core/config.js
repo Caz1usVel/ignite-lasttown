@@ -28,6 +28,7 @@ export const CONFIG = Object.freeze({
   KNOCKBACK_DIST: 80,
   HITBOX_RATIO: 0.65,
   FAR_SCALE: 0.6,       // 遠い敵ほど大きく描く（出現距離で 1+FAR_SCALE 倍、当たり判定も同じ倍率）
+  JAM_TIME: 1.5,        // 妨害電波が届いたとき、攻撃できなくなる時間（秒）
 
   DT_MAX: 0.05,
   DPR_MAX: 2,

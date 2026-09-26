@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { randRange, clamp } from '../core/util.js';
+import { randRange, clamp, pickAngleOutside } from '../core/util.js';
 
 export const ENEMY_DEFS = {
   meteor:     { hp: 1, radius: 22, score: 100, countsAsKill: true,  behavior: 'straight' },
@@ -11,6 +11,10 @@ export const ENEMY_DEFS = {
   thrower:  { hp: 3, radius: 26, score: 250, countsAsKill: true,  behavior: 'thrower' },
   charger:  { hp: 2, radius: 24, score: 200, countsAsKill: true,  behavior: 'charger' },
   shard:    { hp: 1, radius: 10, score: 10,  countsAsKill: false, behavior: 'arc' },
+  shielder:   { hp: 1, radius: 26, score: 200, countsAsKill: true,  behavior: 'shielder' },
+  teleporter: { hp: 2, radius: 22, score: 250, countsAsKill: true,  behavior: 'teleporter' },
+  jammer:     { hp: 2, radius: 24, score: 250, countsAsKill: true,  behavior: 'jammer' },
+  jamShot:    { hp: 1, radius: 12, score: 10,  countsAsKill: false, behavior: 'straight' },
 };
 
 export const DRONE = {
@@ -47,6 +51,31 @@ export const CHARGER = {
   dist: 440,
   waitTime: 1.5,          // 予兆（点滅）の時間
   dashTime: 3.0,          // 突進で中心へ届くまで（接近時間の基準の影響は受けない）
+};
+
+// 妨害テーマ
+export const SHIELDER = {
+  holdMin: 320,
+  holdMax: 380,
+  hoverTime: 14,
+  cycle: 3.0,        // シールドの周期（秒）
+  closedTime: 2.2,   // 周期の最初の、閉じている時間（残りが開いている時間）
+  blinkTime: 0.3,    // 開く前の点滅（予兆）
+};
+export const TELEPORTER = {
+  interval: 3.0,
+  jitter: 0.5,
+  warn: 0.4,         // 移動の前の点滅（予兆）
+  minDelta: 30,      // 移動先の角度が、今の角度から離れる最小の量（度）
+  flash: 0.3,        // 移動した直後の演出
+};
+export const JAMMER = {
+  holdMin: 300,
+  holdMax: 360,
+  sway: 4,
+  swayHz: 0.3,
+  fireInterval: 5.0,
+  hoverTime: 14,
 };
 
 function approachSpeed(rng) {
@@ -87,6 +116,26 @@ const ENEMY_INITS = {
     e.offset = opts.offset ?? 0;
     e.startDist = e.dist;
     e.angle = angle + e.offset; // 生成の瞬間は、基準からオフセットだけずれた位置
+  },
+  shielder(e, angle, rng) {
+    e.phase = 'approach';
+    e.holdDist = randRange(rng, SHIELDER.holdMin, SHIELDER.holdMax);
+    e.hoverT = 0;
+    e.cycleT = 0;
+    e.shielded = true;   // 接近の間は、常に閉じている
+    e.blink = false;
+  },
+  teleporter(e, angle, rng) {
+    e.tpT = TELEPORTER.interval + randRange(rng, -TELEPORTER.jitter, TELEPORTER.jitter);
+    e.warn = false;
+    e.warpFlash = 0;
+  },
+  jammer(e, angle, rng) {
+    e.phase = 'approach';
+    e.holdDist = randRange(rng, JAMMER.holdMin, JAMMER.holdMax);
+    e.baseAngle = angle;
+    e.hoverT = 0;
+    e.fireT = JAMMER.fireInterval;
   },
 };
 
@@ -207,6 +256,70 @@ const BEHAVIORS = {
   arc(e, state, dt) {
     e.dist -= e.speed * dt;
     e.angle = e.baseAngle + e.offset * Math.max(0, e.dist / e.startDist);
+  },
+
+  // 保持距離まで進んで静止。シールドが周期的に開閉する。14秒後に前進（周期は続く）
+  shielder(e, state, dt) {
+    if (e.phase === 'approach') {
+      e.dist -= e.speed * dt;
+      if (e.dist <= e.holdDist) {
+        e.dist = e.holdDist;
+        e.phase = 'hover';
+        e.cycleT = 0;
+      }
+      return;
+    }
+    if (e.phase === 'hover') {
+      e.hoverT += dt;
+      if (e.hoverT >= SHIELDER.hoverTime) e.phase = 'advance';
+    } else {
+      e.dist -= e.speed * dt; // advance
+    }
+    e.cycleT = (e.cycleT + dt) % SHIELDER.cycle;
+    e.shielded = e.cycleT < SHIELDER.closedTime;
+    e.blink = e.shielded && e.cycleT >= SHIELDER.closedTime - SHIELDER.blinkTime;
+  },
+
+  // 通常の速さで前進しながら、一定の間隔で、角度だけ離れた場所へ瞬間移動する
+  teleporter(e, state, dt) {
+    e.dist -= e.speed * dt;
+    e.tpT -= dt;
+    if (e.warpFlash > 0) e.warpFlash = Math.max(0, e.warpFlash - dt);
+    e.warn = e.tpT > 0 && e.tpT <= TELEPORTER.warn;
+    if (e.tpT <= 0) {
+      e.angle = pickAngleOutside(e.angle, TELEPORTER.minDelta, state.rng);
+      e.tpT += TELEPORTER.interval + randRange(state.rng, -TELEPORTER.jitter, TELEPORTER.jitter);
+      e.warpFlash = TELEPORTER.flash;
+      e.warn = false;
+    }
+  },
+
+  // 保持距離まで進んで静止 → 妨害電波（jamShot）を放ち続ける → 前進
+  jammer(e, state, dt) {
+    if (e.phase === 'approach') {
+      e.dist -= e.speed * dt;
+      if (e.dist <= e.holdDist) {
+        e.dist = e.holdDist;
+        e.phase = 'hover';
+        e.baseAngle = e.angle;
+      }
+      return;
+    }
+    if (e.phase === 'hover') {
+      e.hoverT += dt;
+      e.angle = e.baseAngle + JAMMER.sway * Math.sin(e.hoverT * JAMMER.swayHz * Math.PI * 2);
+      e.fireT -= dt;
+      if (e.fireT <= 0) {
+        e.fireT += JAMMER.fireInterval;
+        state.enemies.push(createEnemy('jamShot', e.angle, state.rng, {
+          dist: e.dist - e.radius,
+          speed: ENEMY_SHOT_SPEED,
+        }));
+      }
+      if (e.hoverT >= JAMMER.hoverTime) e.phase = 'advance';
+      return;
+    }
+    e.dist -= e.speed * dt; // advance
   },
 };
 

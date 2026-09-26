@@ -4,7 +4,7 @@ import { spawnBullet, updateBullets } from './bullets.js';
 import { updateEnemies, removeDead, ENEMY_DEFS } from './enemies.js';
 import { updateBoss } from './boss.js';
 import { updateSpawner } from './spawner.js';
-import { resolveBulletHits, resolveCoreHits, applyKnockback } from './collision.js';
+import { resolveBulletHits, resolveCoreHits, resolveJamHits, applyKnockback } from './collision.js';
 import { makeOffer, OFFER_EVERY } from './powerups.js';
 
 // 1フレーム分ゲームを進め、起きたことをイベント配列で返す（音・エフェクトはシーン側で処理する）
@@ -40,6 +40,7 @@ export function stepGame(state, dt, controls) {
     }
   }
 
+  if (resolveJamHits(state) > 0) events.push({ type: 'jam' }); // 妨害電波が届いた（残機は減らない）
   let coreHits = resolveCoreHits(state);
   if (state.boss?.hitCore) { // ボスの突進が中心に届いた
     state.boss.hitCore = false;
