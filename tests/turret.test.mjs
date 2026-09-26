@@ -39,3 +39,27 @@ test('被弾で残機-1、無敵中は減らない、1.5秒で無敵が切れる
   assert.equal(damageTurret(t), true);
   assert.equal(t.lives, 1);
 });
+
+const countShots = (fireRate, hz, seconds, idleSeconds = 0) => {
+  const t = createTurret();
+  t.fireRate = fireRate;
+  const dt = 1 / hz;
+  for (let i = 0; i < Math.round(idleSeconds * hz); i++) updateTurret(t, dt, 0);
+  let shots = 0;
+  for (let i = 0; i < Math.round(seconds * hz); i++) {
+    updateTurret(t, dt, 0);
+    if (tryFire(t)) shots++;
+  }
+  return shots;
+};
+
+test('連射速度どおりに撃てる（10秒間押しっぱなし）', () => {
+  assert.ok(Math.abs(countShots(4, 60, 10) - 40) <= 1);
+  assert.ok(Math.abs(countShots(4.6, 60, 10) - 46) <= 1);
+  assert.ok(Math.abs(countShots(7, 60, 10) - 70) <= 1);
+  assert.ok(Math.abs(countShots(4.6, 120, 10) - 46) <= 1);
+});
+
+test('撃たずに待っても、あとでまとめ撃ちにならない', () => {
+  assert.ok(Math.abs(countShots(4, 60, 1, 3) - 4) <= 1);
+});

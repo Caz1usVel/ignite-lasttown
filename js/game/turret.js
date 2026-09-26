@@ -23,13 +23,15 @@ export function updateTurret(t, dt, turnAxis) {
     -CONFIG.HEADING_LIMIT,
     CONFIG.HEADING_LIMIT,
   );
-  t.cooldown = Math.max(0, t.cooldown - dt);
+  const next = t.cooldown - dt;
+  // 発射の余りを次に持ち越す（最大1フレーム分）。撃っていない間に「貯金」はしない
+  t.cooldown = t.cooldown > 0 ? Math.max(next, -dt) : 0;
   t.invincible = Math.max(0, t.invincible - dt);
 }
 
 export function tryFire(t) {
   if (t.cooldown > COOLDOWN_EPS) return false;
-  t.cooldown = 1 / t.fireRate;
+  t.cooldown += 1 / t.fireRate;
   return true;
 }
 
