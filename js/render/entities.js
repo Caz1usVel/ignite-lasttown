@@ -11,6 +11,11 @@ export const COLORS = {
   drone: '#9be8ff',
   minion: '#ff9ecb',
   formation: '#8dffb0',
+  burrower: '#b58a5a',
+  thrower: '#e0a458',
+  shard: '#ffb84d',
+  charger: '#ff6b6b',
+  bossB: '#c2418f',
   boss: '#8f7cff',
   bullet: '#fff6c8',
   eye: '#1b1f3a',
@@ -119,6 +124,140 @@ function drawShot(g, e, x, y, time) {
   g.fill();
 }
 
+// 突き上げ敵：盛り上がり（土の山）→ 隆起（とげとげの岩の生き物）
+function drawBurrower(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  if (e.phase === 'burrowed') {
+    const shake = e.burrowT < 0.8 ? Math.sin(time * 60) * 2.5 : 0; // 隆起が近いと、ぐらぐら揺れる
+    g.translate(shake, 0);
+    g.fillStyle = lightenColor(COLORS.burrower, -0.2);
+    g.beginPath();
+    g.ellipse(0, r * 0.4, r * 1.3, r * 0.9, 0, Math.PI, 0);
+    g.fill();
+    for (let i = 0; i < 3; i++) { // 舞う土煙
+      const px = (i - 1) * r * 0.7;
+      const py = -r * 0.3 - Math.abs(Math.sin(time * 6 + i * 2)) * r * 0.6;
+      ellipse(g, px, py, 2.6, 2.6, '#e6d3b0');
+    }
+  } else {
+    g.fillStyle = lightenColor(COLORS.burrower, -0.35);
+    for (let i = 0; i < 7; i++) { // とげ
+      const a = (i / 7) * Math.PI * 2 + e.spin;
+      g.beginPath();
+      g.moveTo(Math.cos(a - 0.22) * r * 0.8, Math.sin(a - 0.22) * r * 0.8);
+      g.lineTo(Math.cos(a) * r * 1.35, Math.sin(a) * r * 1.35);
+      g.lineTo(Math.cos(a + 0.22) * r * 0.8, Math.sin(a + 0.22) * r * 0.8);
+      g.closePath();
+      g.fill();
+    }
+    ellipse(g, 0, 0, r, r * 0.92, COLORS.burrower);
+    ellipse(g, 0, r * 0.2, r * 0.6, r * 0.4, lightenColor(COLORS.burrower, 0.35));
+    for (const s of [-1, 1]) {
+      ellipse(g, s * r * 0.35, -r * 0.2, r * 0.16, r * 0.2, '#fff3c4');
+      ellipse(g, s * r * 0.35, -r * 0.16, r * 0.07, r * 0.1, COLORS.eye);
+    }
+  }
+  g.restore();
+}
+
+// 破片飛ばし敵：砲台のような体。破片を投げる直前は、口が光る
+function drawThrower(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  ellipse(g, 0, r * 0.2, r * 1.15, r * 0.5, lightenColor(COLORS.thrower, -0.35));
+  ellipse(g, 0, 0, r * 0.95, r * 0.78, COLORS.thrower);
+  const charging = e.phase === 'hover' && e.fireT < 0.6;
+  ellipse(g, 0, r * 0.38, r * 0.36, r * 0.24, charging ? '#fff3c4' : COLORS.eye);
+  if (charging) {
+    const glow = g.createRadialGradient(0, r * 0.38, 0, 0, r * 0.38, r * 0.9);
+    glow.addColorStop(0, 'rgba(255,243,196,0.7)');
+    glow.addColorStop(1, 'rgba(255,243,196,0)');
+    g.fillStyle = glow;
+    g.beginPath();
+    g.arc(0, r * 0.38, r * 0.9, 0, Math.PI * 2);
+    g.fill();
+  }
+  for (const s of [-1, 1]) {
+    ellipse(g, s * r * 0.36, -r * 0.2, r * 0.14, r * 0.18, '#ffffff');
+    ellipse(g, s * r * 0.36, -r * 0.17, r * 0.06, r * 0.09, COLORS.eye);
+  }
+  g.restore();
+}
+
+// 破片：くるくる回る小さなひし形
+function drawShard(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  g.rotate(e.spin + time * 6);
+  g.fillStyle = COLORS.shard;
+  g.beginPath();
+  g.moveTo(0, -r * 1.3);
+  g.lineTo(r * 0.8, 0);
+  g.lineTo(0, r * 1.3);
+  g.lineTo(-r * 0.8, 0);
+  g.closePath();
+  g.fill();
+  g.fillStyle = 'rgba(255,255,255,0.6)';
+  g.beginPath();
+  g.moveTo(0, -r * 1.3);
+  g.lineTo(r * 0.3, 0);
+  g.lineTo(0, -r * 0.1);
+  g.closePath();
+  g.fill();
+  g.restore();
+}
+
+// 突進敵：静止している間（予兆）は赤く点滅して「！」を出す。突進中は、勢いの線を引く
+function drawCharger(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  if (e.phase === 'wait') {
+    const pulse = 0.5 + 0.5 * Math.sin(time * 24);
+    const glow = g.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 2.2);
+    glow.addColorStop(0, `rgba(255,80,80,${(0.35 + 0.35 * pulse).toFixed(2)})`);
+    glow.addColorStop(1, 'rgba(255,80,80,0)');
+    g.fillStyle = glow;
+    g.beginPath();
+    g.arc(0, 0, r * 2.2, 0, Math.PI * 2);
+    g.fill();
+  } else {
+    g.strokeStyle = 'rgba(255,160,160,0.55)';
+    g.lineWidth = 3;
+    for (const s of [-1, 0, 1]) {
+      g.beginPath();
+      g.moveTo(s * r * 0.5, -r * 1.2);
+      g.lineTo(s * r * 0.5, -r * 2.4);
+      g.stroke();
+    }
+  }
+  g.fillStyle = lightenColor(COLORS.charger, -0.3);
+  for (const s of [-1, 1]) { // 角
+    g.beginPath();
+    g.moveTo(s * r * 0.3, -r * 0.7);
+    g.lineTo(s * r * 0.75, -r * 1.3);
+    g.lineTo(s * r * 0.75, -r * 0.4);
+    g.closePath();
+    g.fill();
+  }
+  ellipse(g, 0, 0, r, r * 0.9, e.phase === 'wait' && Math.floor(time * 12) % 2 === 0 ? '#ffffff' : COLORS.charger);
+  for (const s of [-1, 1]) { // 怒った目
+    ellipse(g, s * r * 0.36, -r * 0.1, r * 0.2, r * 0.14, '#fff3c4');
+    ellipse(g, s * r * 0.36, -r * 0.08, r * 0.08, r * 0.08, COLORS.eye);
+  }
+  if (e.phase === 'wait') {
+    g.fillStyle = '#ffffff';
+    g.font = "800 22px 'M PLUS Rounded 1c', sans-serif";
+    g.textAlign = 'center';
+    g.fillText('！', 0, -r * 1.5);
+  }
+  g.restore();
+}
+
 function drawUnknown(g, e, x, y) {
   g.save();
   g.translate(x, y);
@@ -136,6 +275,10 @@ export function drawEnemy(g, e, x, y, time) {
   else if (e.type === 'drone') drawDrone(g, e, x, y, COLORS.drone);
   else if (e.type === 'bossMinion') drawDrone(g, e, x, y, COLORS.minion);
   else if (e.type === 'formationDrone') drawDrone(g, e, x, y, COLORS.formation);
+  else if (e.type === 'burrower') drawBurrower(g, e, x, y, time);
+  else if (e.type === 'thrower') drawThrower(g, e, x, y, time);
+  else if (e.type === 'shard') drawShard(g, e, x, y, time);
+  else if (e.type === 'charger') drawCharger(g, e, x, y, time);
   else if (e.type === 'enemyShot') drawShot(g, e, x, y, time);
   else drawUnknown(g, e, x, y); // 未知の種類でも、見えない敵が当たってこないように目立たせる
   if (time - (e.flashT ?? -1) < 0.08) {
@@ -146,7 +289,7 @@ export function drawEnemy(g, e, x, y, time) {
   }
 }
 
-export function drawBoss(g, boss, x, y, time) {
+function drawBossA(g, boss, x, y, time) {
   const r = boss.radius;
   const flash = time - (boss.flashT ?? -1) < 0.1;
   const bodyColor = boss.p.color ?? COLORS.boss; // 強化型は色で見分ける
@@ -173,6 +316,62 @@ export function drawBoss(g, boss, x, y, time) {
   ellipse(g, 0, -r * 0.05, r * 0.2, r * 0.24, COLORS.eye);
   ellipse(g, 0, -r * 0.05, r * 0.09, r * 0.09, '#ff7a52');
   g.restore();
+}
+
+// ボスB：角のある大きな体。予兆の間は赤く点滅し、咆哮の間は口を開けて膨らむ。消えている間は描かない
+function drawBossB(g, boss, x, y, time) {
+  if (boss.hidden) return;
+  const r = boss.radius;
+  const bodyColor = boss.p.color ?? COLORS.bossB;
+  const flash = time - (boss.flashT ?? -1) < 0.1;
+  const warn = boss.phase === 'telegraph';
+  const roar = boss.phase === 'roar';
+  g.save();
+  g.translate(x, y);
+
+  const glow = g.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.7);
+  glow.addColorStop(0, hexToRgba(bodyColor, 0.35));
+  glow.addColorStop(1, hexToRgba(bodyColor, 0));
+  g.fillStyle = glow;
+  g.beginPath();
+  g.arc(0, 0, r * 1.7, 0, Math.PI * 2);
+  g.fill();
+
+  const pulse = warn ? 1 + 0.06 * Math.sin(time * 40) : roar ? 1.08 : 1;
+  g.scale(pulse, pulse);
+
+  g.fillStyle = lightenColor(bodyColor, -0.4); // 角
+  for (const s of [-1, 1]) {
+    g.beginPath();
+    g.moveTo(s * r * 0.35, -r * 0.55);
+    g.lineTo(s * r * 0.9, -r * 1.05);
+    g.lineTo(s * r * 0.62, -r * 0.3);
+    g.closePath();
+    g.fill();
+  }
+  const blink = warn && Math.floor(time * 16) % 2 === 0;
+  ellipse(g, 0, 0, r, r * 0.8, flash ? '#ffffff' : blink ? '#ff4d4d' : bodyColor);
+  ellipse(g, 0, r * 0.22, r * 0.62, r * 0.4, lightenColor(bodyColor, 0.45));
+  for (const s of [-1, 1]) { // 光る目
+    ellipse(g, s * r * 0.3, -r * 0.2, r * 0.14, r * 0.18, '#ffeb99');
+    ellipse(g, s * r * 0.3, -r * 0.17, r * 0.06, r * 0.09, COLORS.eye);
+  }
+  if (roar) {
+    ellipse(g, 0, r * 0.32, r * 0.34, r * 0.26, COLORS.eye);
+  } else {
+    g.strokeStyle = COLORS.eye;
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(-r * 0.25, r * 0.3);
+    g.lineTo(r * 0.25, r * 0.3);
+    g.stroke();
+  }
+  g.restore();
+}
+
+export function drawBoss(g, boss, x, y, time) {
+  if (boss.type === 'bossB') drawBossB(g, boss, x, y, time);
+  else drawBossA(g, boss, x, y, time);
 }
 
 export function drawBullet(g, b, heading, fov) {
@@ -227,4 +426,10 @@ export function drawBossBar(g, boss, time = 0) {
   g.font = "700 18px 'M PLUS Rounded 1c', sans-serif";
   g.textAlign = 'center';
   g.fillText(boss.name ?? 'ボス', 500, y - 8);
+  // ボスBの突進の予兆：消えてから再出現するまで、警告を点滅させる
+  if (boss.phase === 'telegraph' || boss.phase === 'vanish' || boss.phase === 'settle') {
+    g.fillStyle = Math.floor(time * 8) % 2 === 0 ? '#ff6b6b' : '#ffd866';
+    g.font = "800 22px 'M PLUS Rounded 1c', sans-serif";
+    g.fillText('⚠ 視界の外から突進！', 500, y - 36);
+  }
 }
