@@ -1,5 +1,6 @@
 import { CONFIG } from '../core/config.js';
 import { getStage, stageLabel } from '../data/stages.js';
+import { createEndlessStage } from '../game/endless.js';
 import { createPlayState } from '../game/state.js';
 import { stepGame } from '../game/step.js';
 import { POWERUPS, POWERUP_IDS } from '../game/powerups.js';
@@ -22,6 +23,7 @@ export function createPlayScene(app) {
   let fx = null;
   let mode = 'solo';
   let stageId = 1;
+  let endless = null;
   let endTimer = 0;
 
   function updateHud() {
@@ -68,6 +70,11 @@ export function createPlayScene(app) {
           audio.se.damage();
           spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y, '#ff7a52', 24);
           break;
+        case 'bossDown':
+          audio.se.bossKill();
+          spawnBurst(fx, CONFIG.CENTER_X, 300, '#ffd866', 40);
+          spawnPopup(fx, CONFIG.CENTER_X, 260, 'ボス撃破！', '#ffd866');
+          break;
         case 'clear':
           audio.se.clear();
           endTimer = END_DELAY;
@@ -95,11 +102,13 @@ export function createPlayScene(app) {
     enter(params = {}) {
       if (!params.resume) {
         mode = params.mode ?? mode;
-        stageId = params.stageId ?? stageId;
-        state = createPlayState(getStage(stageId));
+        endless = params.endless ?? null;
+        if (!endless) stageId = params.stageId ?? stageId;
+        const stage = endless ? createEndlessStage(endless) : getStage(stageId);
+        state = createPlayState(stage);
         fx = createEffects();
         endTimer = 0;
-        dom.hint.textContent = stageLabel(getStage(stageId)) + (input.isTouch() ? HINTS.touch : HINTS[mode]);
+        dom.hint.textContent = stageLabel(stage) + (input.isTouch() ? HINTS.touch : HINTS[mode]);
         dom.hint.classList.remove('hidden');
       }
       input.reset();
@@ -130,7 +139,7 @@ export function createPlayScene(app) {
       if (state.outcome) {
         endTimer -= dt;
         if (endTimer <= 0) {
-          app.setScene('result', { outcome: state.outcome, score: state.score, kills: state.kills, mode, stageId });
+          app.setScene('result', { outcome: state.outcome, score: state.score, kills: state.kills, mode, stageId, endless, time: state.time });
         }
       }
     },

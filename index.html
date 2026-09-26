@@ -45,6 +45,10 @@
   <div id="stageSelectScreen" class="overlay hidden">
     <h2>ステージ選択</h2>
     <div id="stageGrid"></div>
+    <div class="endless-row">
+      <button type="button" class="btn btn-sub endless-btn" id="endlessBtn"></button>
+      <button type="button" class="btn btn-sub endless-btn" id="hardEndlessBtn"></button>
+    </div>
     <button class="link-btn" id="stageBackBtn">タイトルへ</button>
   </div>
 
@@ -83,6 +87,7 @@
     <dl class="result-stats">
       <dt>スコア</dt><dd id="resultScore">0</dd>
       <dt>撃破数</dt><dd id="resultKills">0</dd>
+      <dt id="resultTimeLabel" class="hidden">生存時間</dt><dd id="resultTime" class="hidden">0:00</dd>
       <dt>最高スコア</dt><dd id="resultBest">0</dd>
     </dl>
     <p id="resultNewBest" class="new-best hidden">最高スコア更新！</p>

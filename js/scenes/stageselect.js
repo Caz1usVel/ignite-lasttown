@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { isStageAvailable, isStageUnlocked, isStagePlayable } from '../core/progress.js';
+import { isStageAvailable, isStageUnlocked, isStagePlayable, isHardEndlessUnlocked } from '../core/progress.js';
 import { drawBackground } from '../render/background.js';
 
 function statusOf(save, id) {
@@ -11,6 +11,10 @@ function statusOf(save, id) {
 export function createStageSelectScene(app) {
   const { dom } = app;
   dom.stageBackBtn.addEventListener('click', () => app.setScene('title'));
+  dom.endlessBtn.addEventListener('click', () => app.setScene('play', { endless: 'normal', mode: app.mode }));
+  dom.hardEndlessBtn.addEventListener('click', () => {
+    if (isHardEndlessUnlocked(app.save)) app.setScene('play', { endless: 'hard', mode: app.mode });
+  });
 
   // 入るたびに、セーブの内容から作り直す
   function build() {
@@ -37,6 +41,13 @@ export function createStageSelectScene(app) {
       tile.addEventListener('click', () => app.setScene('play', { stageId: id, mode: app.mode }));
       dom.stageGrid.append(tile);
     }
+
+    const fmtTime = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    const line = (label, e) => `${label}\n${e &&e.best > 0 ? `最高 ${e.best.toLocaleString()}（${fmtTime(e.time)}）` : 'まだ記録なし'}`;
+    dom.endlessBtn.textContent = line('通常エンドレス', save.endless?.normal);
+    const hardOpen = isHardEndlessUnlocked(save);
+    dom.hardEndlessBtn.disabled = !hardOpen;
+    dom.hardEndlessBtn.textContent = hardOpen ? line('ハードエンドレス', save.endless?.hard) : 'ハードエンドレス\n全ステージクリアで解放';
   }
 
   return {

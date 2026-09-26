@@ -30,3 +30,23 @@ export function recordResult(save, id, outcome, score) {
   if (newBest) entry.best = score;
   return { newBest };
 }
+
+// ハードエンドレスは、全ステージのクリアで解放される
+export function isHardEndlessUnlocked(save) {
+  for (let id = 1; id <= CONFIG.STAGE_COUNT; id++) {
+    if (save.stages[id]?.cleared !== true) return false;
+  }
+  return true;
+}
+
+// エンドレスの結果を反映する（呼び出し側が persist する）。最高スコアを更新したときだけ、生存時間も更新する。
+export function recordEndlessResult(save, kind, score, time) {
+  save.endless ??= { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } };
+  const entry = (save.endless[kind] ??= { best: 0, time: 0 });
+  const newBest = score > entry.best;
+  if (newBest) {
+    entry.best = score;
+    entry.time = time;
+  }
+  return { newBest };
+}

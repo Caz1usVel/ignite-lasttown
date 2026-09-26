@@ -21,6 +21,7 @@ const IDS = [
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
   'resultScreen', 'resultTitle', 'resultScore', 'resultKills', 'resultBest', 'resultNewBest',
+  'endlessBtn', 'hardEndlessBtn', 'resultTimeLabel', 'resultTime',
   'nextStageBtn', 'retryBtn', 'resultStageSelectBtn',
   'settingsScreen', 'bgmVol', 'seVol', 'muteBtn', 'settingsBackBtn',
 ];

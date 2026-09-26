@@ -11,7 +11,7 @@ const throwingStorage = {
   getItem() { throw new Error('denied'); },
   setItem() { throw new Error('denied'); },
 };
-const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {} };
+const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } } };
 const put = (st, obj) => st.setItem(SAVE_KEY, JSON.stringify(obj));
 
 test('何も無ければ既定値（v2）', () => {
@@ -127,4 +127,24 @@ test('真偽値でない muted は既定値になる', () => {
   const st = memStorage();
   put(st, { version: 2, settings: { muted: 'yes' }, stages: {} });
   assert.equal(loadSave(st).settings.muted, false);
+});
+
+test('エンドレスの記録：既定は 0。保存・読み込みで保たれ、壊れた値は 0 に直る。v1 からの移行でも入る', () => {
+  const fresh = loadSave({ getItem: () => null, setItem() {} });
+  assert.deepEqual(fresh.endless, { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } });
+  const mem = {};
+  const storage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
+  const data = loadSave(storage);
+  data.endless.normal = { best: 1200, time: 245.5 };
+  data.endless.hard.best = 300;
+  writeSave(data, storage);
+  const back = loadSave(storage);
+  assert.deepEqual(back.endless.normal, { best: 1200, time: 245.5 });
+  assert.deepEqual(back.endless.hard, { best: 300, time: 0 });
+  const broken = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {}, endless: { normal: { best: -5, time: 'x' }, hard: 7, extra: 1 } }), setItem() {} };
+  assert.deepEqual(loadSave(broken).endless, { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } });
+  const v1 = { getItem: () => JSON.stringify({ version: 1, highScore: 400, settings: {} }), setItem() {} };
+  assert.deepEqual(loadSave(v1).endless, { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } });
+  const v2old = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: { 1: { cleared: true, best: 5 } } }), setItem() {} };
+  assert.deepEqual(loadSave(v2old).endless.normal, { best: 0, time: 0 });
 });

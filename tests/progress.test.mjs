@@ -93,3 +93,29 @@ test('recordResult：スコア0では最高スコア更新にならない', () =
   const s = mkSave();
   assert.deepEqual(recordResult(s, 1, 'gameover', 0), { newBest: false });
 });
+
+import { isHardEndlessUnlocked, recordEndlessResult } from '../js/core/progress.js';
+
+test('isHardEndlessUnlocked：全ステージクリアで解放', () => {
+  assert.equal(isHardEndlessUnlocked(mkSave()), false);
+  assert.equal(isHardEndlessUnlocked(cleared(1, 2, 3, 4, 5, 6)), false);
+  assert.equal(isHardEndlessUnlocked(cleared(1, 2, 3, 4, 5, 6, 7)), true);
+  const notClear = cleared(1, 2, 3, 4, 5, 6);
+  notClear.stages['7'] = { cleared: false, best: 900 };
+  assert.equal(isHardEndlessUnlocked(notClear), false);
+});
+
+test('recordEndlessResult：最高スコアを更新したときだけ、記録と生存時間を更新する', () => {
+  const s = { ...mkSave(), endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } } };
+  assert.deepEqual(recordEndlessResult(s, 'normal', 500, 120), { newBest: true });
+  assert.deepEqual(s.endless.normal, { best: 500, time: 120 });
+  assert.deepEqual(recordEndlessResult(s, 'normal', 400, 300), { newBest: false });
+  assert.deepEqual(s.endless.normal, { best: 500, time: 120 });
+  assert.deepEqual(recordEndlessResult(s, 'normal', 800, 60), { newBest: true });
+  assert.deepEqual(s.endless.normal, { best: 800, time: 60 });
+  assert.deepEqual(recordEndlessResult(s, 'hard', 0, 10), { newBest: false });
+  assert.deepEqual(s.endless.hard, { best: 0, time: 0 });
+  const old = mkSave();
+  assert.deepEqual(recordEndlessResult(old, 'hard', 50, 5), { newBest: true });
+  assert.deepEqual(old.endless.hard, { best: 50, time: 5 });
+});

@@ -118,6 +118,9 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
 .btn-sub:active {
   box-shadow: 0 2px 0 var(--creature-dark), 0 4px 10px rgba(0, 0, 0, 0.35);
 }
+.endless-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+.endless-btn { font-size: 0.95rem; padding: 10px 16px; line-height: 1.4; white-space: pre-line; }
+.btn:disabled { opacity: 0.45; cursor: default; }
 .link-btn {
   font-family: var(--font);
   background: none;

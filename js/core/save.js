@@ -6,8 +6,26 @@ export const SAVE_VERSION = 2;
 
 const DEFAULT_SETTINGS = Object.freeze({ muted: false, bgmVol: 0.6, seVol: 0.7 });
 
+function defaultEndless() {
+  return { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } };
+}
+
 function defaults() {
-  return { version: SAVE_VERSION, settings: { ...DEFAULT_SETTINGS }, stages: {} };
+  return { version: SAVE_VERSION, settings: { ...DEFAULT_SETTINGS }, stages: {}, endless: defaultEndless() };
+}
+
+function sanitizeEndless(raw) {
+  const out = defaultEndless();
+  if (!raw || typeof raw !== 'object') return out;
+  for (const kind of ['normal', 'hard']) {
+    const e = raw[kind];
+    if (!e || typeof e !== 'object') continue;
+    out[kind] = {
+      best: Number.isFinite(e.best) && e.best > 0 ? e.best : 0,
+      time: Number.isFinite(e.time) && e.time > 0 ? e.time : 0,
+    };
+  }
+  return out;
 }
 
 // localStorage へのアクセス自体が例外を投げる環境（Safariのプライベートモード等）がある
@@ -57,10 +75,10 @@ export function loadSave(storage = defaultStorage()) {
       // v1 → v2：設定を引き継ぎ、highScore は1面の最高スコアにする（v1にクリアの記録は無いので未クリア）
       const stages = {};
       if (Number.isFinite(d.highScore) && d.highScore > 0) stages['1'] = { cleared: false, best: d.highScore };
-      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages };
+      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless: defaultEndless() };
     }
     if (d?.version === SAVE_VERSION) {
-      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages: sanitizeStages(d.stages) };
+      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages: sanitizeStages(d.stages), endless: sanitizeEndless(d.endless) };
     }
     return defaults();
   } catch {
