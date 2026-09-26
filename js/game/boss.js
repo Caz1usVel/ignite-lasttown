@@ -1,6 +1,7 @@
 import { CONFIG } from '../core/config.js';
 import { randRange } from '../core/util.js';
 import { createEnemy, ENEMY_SHOT_SPEED } from './enemies.js';
+import { createBossB, updateBossB } from './boss-b.js';
 
 export const BOSS_A_BASE = Object.freeze({
   hp: 40,
@@ -118,6 +119,7 @@ const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 export const BOSSES = {
   bossA: { name: 'ボスA', create: createBossA, update: updateBossA },
+  bossB: { name: 'ボスB', create: createBossB, update: updateBossB },
 };
 
 export function createBoss(type, params = {}) {
