@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clamp, lerp, randRange, mulberry32, lightenColor } from '../js/core/util.js';
+import { clamp, lerp, randRange, randInt, mulberry32, lightenColor } from '../js/core/util.js';
 
 test('clamp は範囲内に収める', () => {
   assert.equal(clamp(5, 0, 3), 3);
@@ -32,4 +32,17 @@ test('randRange は lo..hi に収まる', () => {
 test('lightenColor は明るく／暗くする', () => {
   assert.equal(lightenColor('#000000', 0.5), 'rgb(128,128,128)');
   assert.equal(lightenColor('#ffffff', -0.5), 'rgb(128,128,128)');
+});
+
+test('randInt は両端を含む整数を返し、同じシードで同じ列になる', () => {
+  const a = mulberry32(7), b = mulberry32(7);
+  const seen = new Set();
+  for (let i = 0; i < 500; i++) {
+    const v = randInt(a, 3, 5);
+    assert.equal(v, randInt(b, 3, 5));
+    assert.ok(Number.isInteger(v) && v >= 3 && v <= 5);
+    seen.add(v);
+  }
+  assert.deepEqual([...seen].sort(), [3, 4, 5]);
+  assert.equal(randInt(mulberry32(1), 4, 4), 4);
 });

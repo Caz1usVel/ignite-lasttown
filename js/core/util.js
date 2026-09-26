@@ -12,6 +12,11 @@ export function randRange(rng, lo, hi) {
   return lo + (hi - lo) * rng();
 }
 
+// lo〜hi の整数を等確率で返す（両端を含む）
+export function randInt(rng, lo, hi) {
+  return lo + Math.floor(rng() * (hi - lo + 1));
+}
+
 // シード付き乱数（テストとリプレイ用）
 export function mulberry32(seed) {
   let a = seed >>> 0;

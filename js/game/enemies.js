@@ -6,6 +6,7 @@ export const ENEMY_DEFS = {
   drone:      { hp: 2, radius: 24, score: 200, countsAsKill: true,  behavior: 'drone' },
   enemyShot:  { hp: 1, radius: 9,  score: 10,  countsAsKill: false, behavior: 'straight' },
   bossMinion: { hp: 1, radius: 15, score: 50,  countsAsKill: true,  behavior: 'straight' },
+  formationDrone: { hp: 1, radius: 16, score: 50, countsAsKill: true, behavior: 'straight' },
 };
 
 export const DRONE = {
