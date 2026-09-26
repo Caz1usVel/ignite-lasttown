@@ -150,5 +150,9 @@ export function createPlayScene(app) {
     getState() {
       return state;
     },
+    // 今の走りの情報（エンドレスの途中でやめるときの記録用）
+    getRun() {
+      return state ? { endless, score: state.score, time: state.time, outcome: state.outcome } : null;
+    },
   };
 }

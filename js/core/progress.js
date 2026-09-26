@@ -51,3 +51,10 @@ export function recordEndlessResult(save, kind, score, time) {
   }
   return { newBest };
 }
+
+// エンドレスの途中でやめたとき（ポーズ→タイトル）、その時点の記録を残す。
+// 決着がついている（結果画面が記録する）場合や、エンドレスでない場合は、何もしない。
+export function bankEndlessRun(save, run) {
+  if (!run || !run.endless || run.outcome) return null;
+  return recordEndlessResult(save, run.endless, run.score, run.time);
+}

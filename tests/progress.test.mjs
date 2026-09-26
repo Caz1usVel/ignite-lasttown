@@ -119,3 +119,17 @@ test('recordEndlessResult：最高スコアを更新したときだけ、記録�
   assert.deepEqual(recordEndlessResult(old, 'hard', 50, 5), { newBest: true });
   assert.deepEqual(old.endless.hard, { best: 50, time: 5 });
 });
+
+import { bankEndlessRun } from '../js/core/progress.js';
+
+test('bankEndlessRun：エンドレスの途中でやめたときだけ、その時点の記録を残す', () => {
+  const s = { ...mkSave(), endless: { normal: { best: 100, time: 50 }, hard: { best: 0, time: 0 } } };
+  assert.deepEqual(bankEndlessRun(s, { endless: 'normal', score: 400, time: 130, outcome: null }), { newBest: true });
+  assert.deepEqual(s.endless.normal, { best: 400, time: 130 });
+  assert.deepEqual(bankEndlessRun(s, { endless: 'normal', score: 300, time: 500, outcome: null }), { newBest: false });
+  assert.deepEqual(s.endless.normal, { best: 400, time: 130 });
+  assert.equal(bankEndlessRun(s, { endless: 'normal', score: 9999, time: 1, outcome: 'gameover' }), null); // 結果画面が記録する
+  assert.equal(bankEndlessRun(s, { endless: null, score: 9999, time: 1, outcome: null }), null); // ステージ制
+  assert.equal(bankEndlessRun(s, null), null);
+  assert.equal(s.endless.normal.best, 400);
+});
