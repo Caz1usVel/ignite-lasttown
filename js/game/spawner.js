@@ -5,7 +5,7 @@ import { createFormation } from './formation.js';
 import { createBoss } from './boss.js';
 
 export function createSpawner(stage, scale = CONFIG.SPAWN_SCALE) {
-  return { stage, scale, time: 0, timers: {}, bossSpawned: false };
+  return { stage, scale, time: 0, timers: {}, bags: {}, bossSpawned: false };
 }
 
 // 出現表の1項目を読む。
@@ -13,6 +13,20 @@ export function createSpawner(stage, scale = CONFIG.SPAWN_SCALE) {
 //   { every, count, minSep }               … every 秒ごとに count 機をまとめて出す（count は正の整数、または [最小, 最大]）
 // ステージのデータの誤りは、その項目を処理するときに例外で知らせる。
 function readEntry(type, entry) {
+  if (entry && typeof entry === 'object' && 'pool' in entry) {
+    const { every, pool, formation } = entry;
+    if (!Number.isFinite(every) || every <= 0) throw new Error(`invalid spawn "every" for ${type}: ${every}`);
+    if (!Array.isArray(pool) || pool.length === 0) throw new Error(`invalid spawn "pool" for ${type}: must be a non-empty array`);
+    for (const t of pool) {
+      if (!Object.prototype.hasOwnProperty.call(ENEMY_DEFS, t)) throw new Error(`unknown enemy type in pool: ${t}`);
+    }
+    let group = null;
+    if (pool.includes('formationDrone')) {
+      if (!formation) throw new Error(`pool with formationDrone needs "formation" (${type})`);
+      group = readEntry('formationDrone', { every, count: formation.count, minSep: formation.minSep }).group;
+    }
+    return { every, group: null, pool, formationGroup: group };
+  }
   if (typeof entry === 'number') {
     if (!Number.isFinite(entry) || entry <= 0) throw new Error(`invalid spawn interval for ${type}: ${entry}`);
     return { every: entry, group: null };
@@ -42,7 +56,8 @@ export function validateStage(stage) {
     }
     if (!(seg.to > seg.from)) throw new Error(`${label}: segment ${i} must have to > from (${seg.from}..${seg.to})`);
     for (const [type, raw] of Object.entries(seg.spawns ?? {})) {
-      if (!Object.prototype.hasOwnProperty.call(ENEMY_DEFS, type)) throw new Error(`${label}: unknown enemy type in spawns: ${type}`);
+      const isPool = raw && typeof raw === 'object' && 'pool' in raw;
+      if (!isPool && !Object.prototype.hasOwnProperty.call(ENEMY_DEFS, type)) throw new Error(`${label}: unknown enemy type in spawns: ${type}`);
       readEntry(type, raw);
       if (raw && typeof raw === 'object' && Array.isArray(raw.count) && raw.count.length !== 2) {
         throw new Error(`${label}: "count" array for ${type} must have exactly 2 elements: ${JSON.stringify(raw.count)}`);
@@ -67,13 +82,25 @@ export function updateSpawner(sp, state, dt) {
     if (!seg) return;
     const segIndex = stage.segments.indexOf(seg);
     for (const [type, raw] of Object.entries(seg.spawns)) {
-      const { every: baseEvery, group } = readEntry(type, raw);
+      const { every: baseEvery, group, pool, formationGroup } = readEntry(type, raw);
       const every = baseEvery * sp.scale; // 物量の調整（仕様書 §2）
       const key = `${segIndex}:${type}`; // 区間ごとに新しく数える（前の区間の余りを引き継がない）
       sp.timers[key] = (sp.timers[key] ?? 0) + dt;
       while (sp.timers[key] >= every) {
         sp.timers[key] -= every;
-        if (group) {
+        if (pool) {
+          // 袋方式：空なら全種類をシャッフルして詰め、1つずつ取り出す（1周するまで同じ種類は出ない）
+          let bag = sp.bags[key];
+          if (!bag || bag.length === 0) bag = sp.bags[key] = shuffled(pool, state.rng);
+          const picked = bag.pop();
+          if (picked === 'formationDrone') {
+            const n = randInt(state.rng, formationGroup.lo, formationGroup.hi);
+            state.enemies.push(...createFormation('formationDrone', n, formationGroup.minSep, state.rng));
+          } else {
+            const angle = randRange(state.rng, -CONFIG.HEADING_LIMIT, CONFIG.HEADING_LIMIT);
+            state.enemies.push(createEnemy(picked, angle, state.rng));
+          }
+        } else if (group) {
           const n = randInt(state.rng, group.lo, group.hi);
           state.enemies.push(...createFormation(type, n, group.minSep, state.rng));
         } else {
@@ -89,4 +116,14 @@ export function updateSpawner(sp, state, dt) {
     state.boss = createBoss(stage.boss.type, stage.boss.params);
     sp.bossSpawned = true;
   }
+}
+
+// フィッシャー–イェーツ（元の配列は変えない）
+function shuffled(items, rng) {
+  const a = items.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(rng, 0, i);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
