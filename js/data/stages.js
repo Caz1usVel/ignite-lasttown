@@ -4,9 +4,10 @@ import { STAGE3 } from './stage3.js';
 import { STAGE4 } from './stage4.js';
 import { STAGE5 } from './stage5.js';
 import { STAGE6 } from './stage6.js';
+import { STAGE7 } from './stage7.js';
 
-// 面の登録。計画Bで7面のデータができたら、ここに1行足す。
-export const STAGES = Object.freeze({ 1: STAGE1, 2: STAGE2, 3: STAGE3, 4: STAGE4, 5: STAGE5, 6: STAGE6 });
+// 面の登録（1〜7面）
+export const STAGES = Object.freeze({ 1: STAGE1, 2: STAGE2, 3: STAGE3, 4: STAGE4, 5: STAGE5, 6: STAGE6, 7: STAGE7 });
 
 export function getStage(id) {
   return Object.prototype.hasOwnProperty.call(STAGES, id) ? STAGES[id] : null;

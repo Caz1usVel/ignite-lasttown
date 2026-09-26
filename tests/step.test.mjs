@@ -10,6 +10,7 @@ import { STAGE3 } from '../js/data/stage3.js';
 import { STAGE4 } from '../js/data/stage4.js';
 import { STAGE5 } from '../js/data/stage5.js';
 import { STAGE6 } from '../js/data/stage6.js';
+import { STAGE7 } from '../js/data/stage7.js';
 import { worldToScreen } from '../js/core/view.js';
 import { mulberry32 } from '../js/core/util.js';
 import { CONFIG } from '../js/core/config.js';
@@ -128,6 +129,7 @@ test('自動操縦で3面をクリアできる（複数のシード）', () => a
 test('自動操縦で4面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE4, 700, 'stage 4'));
 test('自動操縦で5面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE5, 700, 'stage 5'));
 test('自動操縦で6面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE6, 800, 'stage 6'));
+test('自動操縦で7面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE7, 1000, 'stage 7'));
 
 const meteorAhead = (s) => s.enemies.push(createEnemy('meteor', 0, s.rng, { dist: 300, speed: 0 }));
 
