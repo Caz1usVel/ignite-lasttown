@@ -7,15 +7,17 @@ import { createBoss } from '../js/game/boss.js';
 import { STAGE1 } from '../js/data/stage1.js';
 import { worldToScreen } from '../js/core/view.js';
 import { mulberry32 } from '../js/core/util.js';
+import { chooseOffer } from '../js/game/powerups.js';
 
 const EMPTY_STAGE = { id: 0, segments: [], spawnEnd: 1e9, boss: { type: 'bossA', params: {} } };
 const DT = 1 / 60;
 const idle = { turnAxis: 0, firing: false, aim: null, bulletSpeed: 600 };
 const fireUp = { turnAxis: 0, firing: true, aim: { x: 500, y: 100 }, bulletSpeed: 600 };
 
-function runUntil(state, controls, pred, maxSec = 10) {
+function runUntil(state, controls, pred, maxSec = 10, autoChoose = false) {
   const all = [];
   for (let i = 0; i < Math.round(maxSec / DT); i++) {
+    if (autoChoose && state.offer) chooseOffer(state, state.offer[0]);
     const ev = stepGame(state, DT, typeof controls === 'function' ? controls(state) : controls);
     all.push(...ev);
     if (pred(state, ev)) break;
@@ -99,6 +101,76 @@ test('自動操縦で1面をクリアできる', () => {
     const p = worldToScreen(aimAngle, target.dist, t.heading, t.fov);
     return { turnAxis, firing: p.visible, aim: p.visible ? { x: p.x, y: p.y } : null, bulletSpeed: 600 };
   };
-  runUntil(s, bot, (st) => st.outcome, 400);
+  runUntil(s, bot, (st) => st.outcome, 400, true); // 選択が出たら先頭の候補を自動で選ぶ
   assert.equal(s.outcome, 'clear', `time=${s.time.toFixed(1)} lives=${s.turret.lives} bossHp=${s.boss?.hp}`);
+});
+
+const meteorAhead = (s) => s.enemies.push(createEnemy('meteor', 0, s.rng, { dist: 300, speed: 0 }));
+
+test('createPlayState：パワーアップの初期状態', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  assert.deepEqual(s.powerups, { fireRate: 0, damage: 0, pierce: 0, turnSpeed: 0, fov: 0, life: 0 });
+  assert.equal(s.nextOfferAt, 10);
+  assert.equal(s.offer, null);
+});
+
+test('撃破が10に届くと選択が発生し、stepGame は止まる', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.kills = 9;
+  meteorAhead(s);
+  const ev = runUntil(s, fireUp, (st) => st.offer !== null, 3);
+  const offerEv = ev.find((e) => e.type === 'offer');
+  assert.ok(offerEv);
+  assert.equal(offerEv.choices.length, 2);
+  assert.deepEqual(s.offer, offerEv.choices);
+  assert.equal(s.nextOfferAt, 20);
+
+  const t = s.time;
+  assert.deepEqual(stepGame(s, DT, fireUp), []);
+  assert.equal(s.time, t); // 時間が進まない
+});
+
+test('選択を確定すると再開し、次の発生は20体', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.kills = 9;
+  meteorAhead(s);
+  runUntil(s, fireUp, (st) => st.offer !== null, 3);
+  const id = s.offer[0];
+  assert.equal(chooseOffer(s, id), true);
+  assert.equal(s.offer, null);
+  const t = s.time;
+  stepGame(s, DT, idle);
+  assert.ok(s.time > t);
+  s.kills = 19;
+  meteorAhead(s);
+  runUntil(s, fireUp, (st) => st.offer !== null, 3);
+  assert.equal(s.nextOfferAt, 30);
+});
+
+test('ボス撃破でクリアする瞬間には選択を出さない', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.kills = 9;
+  s.boss = createBoss('bossA', { hp: 1, drift: 0 });
+  s.boss.dist = 380;
+  runUntil(s, fireUp, (st) => st.outcome, 3);
+  assert.equal(s.outcome, 'clear');
+  assert.equal(s.offer, null);
+});
+
+test('残機以外がすべて上限なら、残機だけが提示される', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.powerups = { fireRate: 5, damage: 5, pierce: 3, turnSpeed: 4, fov: 3, life: 0 };
+  s.kills = 9;
+  meteorAhead(s);
+  runUntil(s, fireUp, (st) => st.offer !== null, 3);
+  assert.deepEqual(s.offer, ['life']);
+});
+
+test('選んだパワーアップが実際の射撃に効く（連射）', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.offer = ['fireRate', 'damage'];
+  chooseOffer(s, 'fireRate');
+  let shots = 0;
+  for (let i = 0; i < 60 * 5; i++) shots += stepGame(s, DT, fireUp).filter((e) => e.type === 'fire').length;
+  assert.ok(shots >= 21 && shots <= 24, `shots=${shots}`); // 基準値(4発/秒)なら20発。5秒 × 4.6発/秒 ≒ 22（フレーム単位の丸めで上下する）
 });

@@ -5,11 +5,12 @@ import { updateEnemies, removeDead, ENEMY_DEFS } from './enemies.js';
 import { updateBoss } from './boss.js';
 import { updateSpawner } from './spawner.js';
 import { resolveBulletHits, resolveCoreHits, applyKnockback } from './collision.js';
+import { makeOffer, OFFER_EVERY } from './powerups.js';
 
 // 1フレーム分ゲームを進め、起きたことをイベント配列で返す（音・エフェクトはシーン側で処理する）
 export function stepGame(state, dt, controls) {
   const events = [];
-  if (state.outcome) return events;
+  if (state.outcome || state.offer) return events; // 決着後・選択待ちの間は止める
   state.time += dt;
   const t = state.turret;
 
@@ -54,5 +55,16 @@ export function stepGame(state, dt, controls) {
     state.outcome = 'gameover';
     events.push({ type: 'gameover' });
   }
+
+  // 撃破10体ごとのパワーアップ選択。決着した瞬間には出さない
+  if (!state.outcome && state.kills >= state.nextOfferAt) {
+    const choices = makeOffer(state.powerups, state.rng);
+    state.nextOfferAt += OFFER_EVERY;
+    if (choices.length > 0) {
+      state.offer = choices;
+      events.push({ type: 'offer', choices });
+    }
+  }
+
   return events;
 }
