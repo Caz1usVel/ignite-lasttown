@@ -11,8 +11,8 @@ export const POWERUPS = Object.freeze({
   damage:    { id: 'damage',    name: '攻撃力アップ',   desc: '1発のダメージ +20%',       icon: '💥', max: 5,        weight: 10 },
   pierce:    { id: 'pierce',    name: '貫通弾',         desc: '倒した敵を貫通する（+1体）', icon: '🎯', max: 3,        weight: 10 },
   turnSpeed: { id: 'turnSpeed', name: '旋回速度アップ', desc: '旋回の速さ +15%',          icon: '🔄', max: 4,        weight: 10 },
-  fov:       { id: 'fov',       name: '視界拡大',       desc: '見える角度 +8度',          icon: '👁', max: 3,        weight: 5 },
-  life:      { id: 'life',      name: '残機+1',         desc: '残機が1つ増える',          icon: '❤', max: Infinity, weight: 2 },
+  fov:       { id: 'fov',       name: '視界拡大',       desc: '見える角度 +8度',          icon: '👁️', max: 3,        weight: 5 },
+  life:      { id: 'life',      name: '残機+1',         desc: '残機が1つ増える',          icon: '❤️', max: Infinity, weight: 2 },
 });
 
 export const POWERUP_IDS = Object.freeze(Object.keys(POWERUPS));

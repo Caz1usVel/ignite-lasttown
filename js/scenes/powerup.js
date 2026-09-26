@@ -19,6 +19,7 @@ export function createPowerupScene(app) {
 
   cards.forEach((card, i) => card.addEventListener('click', () => pick(i)));
   window.addEventListener('keydown', (e) => {
+    if (e.repeat) return;
     if (e.code === 'Digit1' || e.code === 'Numpad1') pick(0);
     else if (e.code === 'Digit2' || e.code === 'Numpad2') pick(1);
   });

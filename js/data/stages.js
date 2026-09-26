@@ -4,5 +4,5 @@ import { STAGE1 } from './stage1.js';
 export const STAGES = Object.freeze({ 1: STAGE1 });
 
 export function getStage(id) {
-  return Object.hasOwn(STAGES, id) ? STAGES[id] : null;
+  return Object.prototype.hasOwnProperty.call(STAGES, id) ? STAGES[id] : null;
 }
