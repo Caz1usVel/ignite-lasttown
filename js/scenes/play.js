@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { getStage } from '../data/stages.js';
+import { getStage, stageLabel } from '../data/stages.js';
 import { createPlayState } from '../game/state.js';
 import { stepGame } from '../game/step.js';
 import { POWERUPS, POWERUP_IDS } from '../game/powerups.js';
@@ -80,7 +80,7 @@ export function createPlayScene(app) {
         state = createPlayState(getStage(stageId));
         fx = createEffects();
         endTimer = 0;
-        dom.hint.textContent = input.isTouch() ? HINTS.touch : HINTS[mode];
+        dom.hint.textContent = stageLabel(getStage(stageId)) + (input.isTouch() ? HINTS.touch : HINTS[mode]);
         dom.hint.classList.remove('hidden');
       }
       input.reset();
