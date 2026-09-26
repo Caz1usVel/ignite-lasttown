@@ -37,14 +37,14 @@ formationDrone: { hp: 1, radius: 16, score: 50, countsAsKill: true, behavior: 's
 ```js
 createFormation(type, count, minSep, rng): Enemy[]
 ```
-- 角度：`pickSpreadAngles(count, minSep, rng)`（`boss.js`）で、-90〜+90度から、互いに `minSep` 度以上離れた角度を選ぶ
+- 角度：`pickSpreadAngles(count, minSep, rng)`（`boss.js`）で、-90〜+90度から、互いに `minSep` 度以上離れた角度を選ぶ。角度は「取り得るすべての配置から一様に選ぶ」（棄却サンプリングはしない。物理的に不可能な条件のときだけ等間隔）
 - 接近速度：編隊で1つの基準ジッタ `j = randRange(rng, -0.15, 0.15)` を決め、各機は `speed = SPAWN_DIST / (APPROACH_TIME × (1 + j + randRange(rng, -0.03, 0.03)))`。ほぼ同時に中心へ届くようにする
 - 各機は `createEnemy(type, angle, rng, { speed })` で作る（距離は `SPAWN_DIST`）
 - 循環参照を避けるため、`formation.js` は `boss.js` と `enemies.js` を読み込み、`spawner.js` が `formation.js` を読み込む
 
 ### 2.3 見た目
 - 偵察ドローンの図形（`drawDrone`）を使う。半径が小さいので小さく見える
-- 色は新しい `COLORS.formation = '#7fe0ff'`（偵察ドローンとは別の水色）にする
+- 色は新しい `COLORS.formation = '#8dffb0'`（偵察ドローンの水色と区別できる、ミントグリーン）にする
 
 ## 3. 出現表：まとめて出す書き方
 
@@ -123,3 +123,9 @@ export const STAGE2 = Object.freeze({
 - 2面の出現数値の実プレイ調整
 - 「旧テーマ混在」の頻度の考え方（③b以降）
 - 区間をまたぐタイマーの引き継ぎ（③bで実際に問題になるなら直す）
+- ③bで扱うこと：
+  - ボスの種類ごとの登録（create/update/draw）の仕組み
+  - ボスのオーラ色を色から導く
+  - color は #rrggbb のみ対応（lightenColor の制約）
+  - drawEnemy に未知の種類のフォールバック
+  - 区間をまたぐタイマーの扱い（種類ごとのタイマーは、区間に無い間は止まる。同じ種類の単体出現とまとめ出現は同じ区間に置けない）

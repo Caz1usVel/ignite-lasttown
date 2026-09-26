@@ -10,7 +10,7 @@ export const COLORS = {
   meteor: '#b08a6a',
   drone: '#9be8ff',
   minion: '#ff9ecb',
-  formation: '#7fe0ff',
+  formation: '#8dffb0',
   boss: '#8f7cff',
   bullet: '#fff6c8',
   eye: '#1b1f3a',
