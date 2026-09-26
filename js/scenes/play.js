@@ -82,10 +82,12 @@ export function createPlayScene(app) {
     },
     update(dt) {
       dom.touchControls.classList.toggle('hidden', !input.isTouch());
+      const tap = input.takeTap();
+      const held = input.isFiring();
       const events = stepGame(state, dt, {
         turnAxis: input.turnAxis(),
-        firing: input.isFiring(),
-        aim: input.aim(),
+        firing: held || tap !== null,
+        aim: held ? input.aim() : (tap ?? input.aim()),
         bulletSpeed: input.isTouch() ? CONFIG.BULLET_SPEED_MOBILE : CONFIG.BULLET_SPEED_PC,
       });
       handleEvents(events);

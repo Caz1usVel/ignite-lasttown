@@ -7,7 +7,8 @@ export function createInput(canvas, viewport, leftBtn, rightBtn) {
   const firePointers = new Map(); // pointerId -> 仮想座標
   const turnPointers = { left: new Set(), right: new Set() };
   let mouse = null;
-  let lastType = window.matchMedia?.('(pointer: coarse)').matches ? 'touch' : 'mouse';
+  let pendingTap = null;
+  let lastType = window.matchMedia?.('(pointer: coarse)')?.matches ? 'touch' : 'mouse';
 
   const input = {
     onPause: null,
@@ -30,11 +31,17 @@ export function createInput(canvas, viewport, leftBtn, rightBtn) {
     notePointer(e) {
       if (e.pointerType) lastType = e.pointerType;
     },
+    takeTap() {
+      const p = pendingTap;
+      pendingTap = null;
+      return p;
+    },
     reset() {
       keys.clear();
       firePointers.clear();
       turnPointers.left.clear();
       turnPointers.right.clear();
+      pendingTap = null;
       leftBtn.classList.remove('active');
       rightBtn.classList.remove('active');
     },
@@ -56,8 +63,10 @@ export function createInput(canvas, viewport, leftBtn, rightBtn) {
   canvas.addEventListener('pointerdown', (e) => {
     input.notePointer(e);
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    canvas.setPointerCapture?.(e.pointerId);
-    firePointers.set(e.pointerId, viewport.toVirtual(e.clientX, e.clientY));
+    try { canvas.setPointerCapture?.(e.pointerId); } catch { /* 既に離れたポインター等は無視 */ }
+    const p = viewport.toVirtual(e.clientX, e.clientY);
+    firePointers.set(e.pointerId, p);
+    pendingTap = p;
     e.preventDefault();
   });
   canvas.addEventListener('pointermove', (e) => {
@@ -73,7 +82,7 @@ export function createInput(canvas, viewport, leftBtn, rightBtn) {
   function bindTurn(btn, set) {
     btn.addEventListener('pointerdown', (e) => {
       input.notePointer(e);
-      btn.setPointerCapture?.(e.pointerId);
+      try { btn.setPointerCapture?.(e.pointerId); } catch { /* 既に離れたポインター等は無視 */ }
       set.add(e.pointerId);
       btn.classList.add('active');
       e.preventDefault();

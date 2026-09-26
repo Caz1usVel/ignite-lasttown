@@ -8,7 +8,8 @@ const R = CONFIG.SPAWN_DIST + 30;
 export function drawFov(g) {
   g.fillStyle = 'rgba(0,0,0,0.35)';
   g.beginPath();
-  g.rect(0, 0, CONFIG.VIRTUAL_SIZE, CONFIG.VIRTUAL_SIZE);
+  const M = CONFIG.VIRTUAL_SIZE * 3; // レターボックスの余白も暗くする
+  g.rect(-M, -M, CONFIG.VIRTUAL_SIZE + 2 * M, CONFIG.VIRTUAL_SIZE + 2 * M);
   g.moveTo(CX + R, CY);
   g.arc(CX, CY, R, 0, Math.PI, true);
   g.closePath();
