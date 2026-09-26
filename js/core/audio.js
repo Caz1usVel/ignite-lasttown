@@ -41,7 +41,7 @@ export function createAudio(settings) {
         master.connect(ctx.destination);
         applyVolumes();
       }
-      if (ctx.state === 'suspended') ctx.resume();
+      if (ctx.state !== 'running') ctx.resume();
       if (bgmSrc && bgm.paused) bgm.play().catch(() => {});
     },
     suspend() {

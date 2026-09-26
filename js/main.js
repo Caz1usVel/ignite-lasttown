@@ -56,6 +56,8 @@ document.addEventListener('pointerdown', (e) => {
   app.input.notePointer(e);
   app.audio.unlock();
 }, { capture: true });
+// iOSはpointerdownではユーザー操作と認められないことがあるため、pointerupでも解除する
+document.addEventListener('pointerup', () => app.audio.unlock(), { capture: true });
 window.addEventListener('keydown', () => app.audio.unlock(), { capture: true });
 
 // ループは常にこの1本だけ
@@ -63,9 +65,9 @@ let lastTime = null;
 function loop(ts) {
   const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, CONFIG.DT_MAX);
   lastTime = ts;
+  requestAnimationFrame(loop); // update/render が例外を投げてもループが止まらないよう先に予約する
   current.update(dt);
   current.render(g, dt);
-  requestAnimationFrame(loop);
 }
 
 function togglePause() {
@@ -75,7 +77,10 @@ function togglePause() {
   }
 }
 app.input.onPause = togglePause;
-dom.pauseBtn.addEventListener('click', togglePause);
+dom.pauseBtn.addEventListener('click', () => {
+  togglePause();
+  dom.pauseBtn.blur(); // フォーカスが残るとSpace/Enterで再トリガーしてしまう
+});
 
 // タブが非表示になったら自動でポーズし、音も止める。戻ったときの dt の跳ねを防ぐ。
 document.addEventListener('visibilitychange', () => {
