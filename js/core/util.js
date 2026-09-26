@@ -40,3 +40,9 @@ export function lightenColor(hex, amt) {
   b = amt >= 0 ? mix(b) : darken(b);
   return `rgb(${r},${g},${b})`;
 }
+
+// '#rrggbb' → 'rgba(r,g,b,alpha)'（ボスのオーラの色を、ボスの色から導くのに使う）
+export function hexToRgba(hex, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}

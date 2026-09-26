@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createBoss, updateBoss, pickSpreadAngles, BOSS_A_BASE } from '../js/game/boss.js';
+import { createBoss, updateBoss, pickSpreadAngles, BOSS_A_BASE, BOSSES } from '../js/game/boss.js';
 import { mulberry32 } from '../js/core/util.js';
 import { CONFIG } from '../js/core/config.js';
 
@@ -127,4 +127,27 @@ test('共通調整：ボスAの子機到達7秒・進入速度28', () => {
   assert.equal(BOSS_A_BASE.minionApproach, 7);
   assert.equal(BOSS_A_BASE.moveSpeed, 28);
   assert.equal(Object.isFrozen(BOSS_A_BASE), true);
+});
+
+test('登録表：bossA の名前と、createBoss が name を付ける', () => {
+  assert.equal(BOSSES.bossA.name, 'ボスA');
+  assert.equal(createBoss('bossA').name, 'ボスA');
+  assert.equal(createBoss('bossA', { hp: 60 }).name, 'ボスA');
+});
+
+test('createBoss：未知の種類と不正な color は例外', () => {
+  assert.throws(() => createBoss('bossZ'), /unknown boss type/);
+  assert.throws(() => createBoss('__proto__'), /unknown boss type/);
+  for (const c of ['red', '#f80', '#12345', '#1234567', 'ff8f6b', '#gggggg', 123]) {
+    assert.throws(() => createBoss('bossA', { color: c }), /invalid boss color/, String(c));
+  }
+  assert.equal(createBoss('bossA', { color: '#FF8F6B' }).p.color, '#FF8F6B');
+});
+
+test('updateBoss は登録表を引いて更新する', () => {
+  const s = mkState();
+  const b = createBoss('bossA');
+  const before = b.dist;
+  updateBoss(b, s, 1);
+  assert.ok(b.dist < before);
 });

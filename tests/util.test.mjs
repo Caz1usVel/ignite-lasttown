@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clamp, lerp, randRange, randInt, mulberry32, lightenColor } from '../js/core/util.js';
+import { clamp, lerp, randRange, randInt, mulberry32, lightenColor, hexToRgba } from '../js/core/util.js';
 
 test('clamp は範囲内に収める', () => {
   assert.equal(clamp(5, 0, 3), 3);
@@ -45,4 +45,10 @@ test('randInt は両端を含む整数を返し、同じシードで同じ列に
   }
   assert.deepEqual([...seen].sort(), [3, 4, 5]);
   assert.equal(randInt(mulberry32(1), 4, 4), 4);
+});
+
+test('hexToRgba は #rrggbb を rgba() にする', () => {
+  assert.equal(hexToRgba('#8f7cff', 0.35), 'rgba(143,124,255,0.35)');
+  assert.equal(hexToRgba('#000000', 0), 'rgba(0,0,0,0)');
+  assert.equal(hexToRgba('#ffffff', 1), 'rgba(255,255,255,1)');
 });

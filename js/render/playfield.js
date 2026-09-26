@@ -32,5 +32,5 @@ export function drawPlayfield(g, vp, stars, state, fx, dt) {
   drawEffects(g, fx);
   drawHeadingGauge(g, t.heading, t.fov);
   drawRadar(g, state);
-  if (boss) drawBossBar(g, boss);
+  if (boss) drawBossBar(g, boss, state.time);
 }

@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { lightenColor } from '../core/util.js';
+import { lightenColor, hexToRgba } from '../core/util.js';
 import { worldToScreen } from '../core/view.js';
 
 // 図形ベースの簡易デフォルメ（前作の drawPlayer の作り方を踏襲）。AI生成画像は使わない。
@@ -119,12 +119,25 @@ function drawShot(g, e, x, y, time) {
   g.fill();
 }
 
+function drawUnknown(g, e, x, y) {
+  g.save();
+  g.translate(x, y);
+  ellipse(g, 0, 0, e.radius, e.radius, '#ff00ff');
+  g.fillStyle = '#ffffff';
+  g.font = "800 20px sans-serif";
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText('？', 0, 1);
+  g.restore();
+}
+
 export function drawEnemy(g, e, x, y, time) {
   if (e.type === 'meteor') drawMeteor(g, e, x, y);
   else if (e.type === 'drone') drawDrone(g, e, x, y, COLORS.drone);
   else if (e.type === 'bossMinion') drawDrone(g, e, x, y, COLORS.minion);
   else if (e.type === 'formationDrone') drawDrone(g, e, x, y, COLORS.formation);
   else if (e.type === 'enemyShot') drawShot(g, e, x, y, time);
+  else drawUnknown(g, e, x, y); // 未知の種類でも、見えない敵が当たってこないように目立たせる
   if (time - (e.flashT ?? -1) < 0.08) {
     g.fillStyle = 'rgba(255,255,255,0.6)';
     g.beginPath();
@@ -140,8 +153,8 @@ export function drawBoss(g, boss, x, y, time) {
   g.save();
   g.translate(x, y);
   const glow = g.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.6);
-  glow.addColorStop(0, 'rgba(143,124,255,0.35)');
-  glow.addColorStop(1, 'rgba(143,124,255,0)');
+  glow.addColorStop(0, hexToRgba(bodyColor, 0.35));
+  glow.addColorStop(1, hexToRgba(bodyColor, 0));
   g.fillStyle = glow;
   g.beginPath();
   g.arc(0, 0, r * 1.6, 0, Math.PI * 2);
@@ -197,7 +210,7 @@ export function drawEffects(g, fx) {
 }
 
 // ボスのHPバー（仮想エリア下部。視界外にいても表示する）
-export function drawBossBar(g, boss) {
+export function drawBossBar(g, boss, time = 0) {
   const w = 420, h = 14, x = 500 - w / 2, y = 780;
   g.fillStyle = 'rgba(255,255,255,0.12)';
   g.beginPath();
@@ -213,5 +226,5 @@ export function drawBossBar(g, boss) {
   g.fillStyle = '#f4f2ff';
   g.font = "700 18px 'M PLUS Rounded 1c', sans-serif";
   g.textAlign = 'center';
-  g.fillText('ボスA', 500, y - 8);
+  g.fillText(boss.name ?? 'ボス', 500, y - 8);
 }

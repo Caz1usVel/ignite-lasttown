@@ -22,11 +22,10 @@ export const BOSS_A_BASE = Object.freeze({
   score: 5000,
 });
 
-export function createBoss(type, params = {}) {
-  if (type !== 'bossA') throw new Error(`unknown boss type: ${type}`);
+function createBossA(params = {}) {
   const p = { ...BOSS_A_BASE, ...params };
   return {
-    type,
+    type: 'bossA',
     p,
     hp: p.hp,
     maxHp: p.hp,
@@ -58,7 +57,7 @@ export function pickSpreadAngles(count, minSep, rng, lo = -CONFIG.HEADING_LIMIT,
   return u.map((v, i) => lo + v + i * minSep);
 }
 
-export function updateBoss(boss, state, dt) {
+function updateBossA(boss, state, dt) {
   const p = boss.p;
   boss.t += dt;
 
@@ -112,4 +111,26 @@ export function updateBoss(boss, state, dt) {
     boss.advanceT += p.advanceInterval;
     boss.targetDist = Math.max(p.minDist, boss.targetDist - p.advanceStep);
   }
+}
+
+// ---- ボスの登録表：種類ごとに、名前・作り方・更新の仕方を持つ ----
+const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+export const BOSSES = {
+  bossA: { name: 'ボスA', create: createBossA, update: updateBossA },
+};
+
+export function createBoss(type, params = {}) {
+  const def = Object.prototype.hasOwnProperty.call(BOSSES, type) ? BOSSES[type] : null;
+  if (!def) throw new Error(`unknown boss type: ${type}`);
+  if (params.color !== undefined && !(typeof params.color === 'string' && COLOR_RE.test(params.color))) {
+    throw new Error(`invalid boss color (need #rrggbb): ${params.color}`);
+  }
+  const boss = def.create(params);
+  boss.name = def.name;
+  return boss;
+}
+
+export function updateBoss(boss, state, dt) {
+  BOSSES[boss.type].update(boss, state, dt);
 }

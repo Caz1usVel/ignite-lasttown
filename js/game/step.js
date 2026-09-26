@@ -40,7 +40,12 @@ export function stepGame(state, dt, controls) {
     }
   }
 
-  if (resolveCoreHits(state) > 0 && damageTurret(t)) {
+  let coreHits = resolveCoreHits(state);
+  if (state.boss?.hitCore) { // ボスの突進が中心に届いた
+    state.boss.hitCore = false;
+    coreHits += 1;
+  }
+  if (coreHits > 0 && damageTurret(t)) {
     applyKnockback(state);
     events.push({ type: 'damage', lives: t.lives });
   }

@@ -219,3 +219,38 @@ test('ボスの当たり判定は倍率を掛けない', () => {
   s.bullets.push(pbullet(angleOff(rBoss + 4), 300, 460, 0)); // ボスの元の判定より少し外側 → 外れる
   assert.equal(resolveBulletHits(s).length, 0);
 });
+
+test('hidden のボスには当たらない', () => {
+  const s = mkState();
+  s.boss = createBoss('bossA');
+  s.boss.dist = 380;
+  s.boss.hidden = true;
+  s.bullets.push(pbullet(0, 300, 460, 0));
+  assert.equal(resolveBulletHits(s).length, 0);
+  assert.equal(s.boss.hp, 40);
+  s.boss.hidden = false;
+  s.bullets = [pbullet(0, 300, 460, 0)];
+  assert.equal(resolveBulletHits(s).length, 1);
+});
+
+test('damageMult があると受けるダメージが増える。damageTaken が数値なら加算される', () => {
+  const s = mkState();
+  s.boss = createBoss('bossA');
+  s.boss.dist = 380;
+  s.boss.damageMult = 1.5;
+  s.boss.damageTaken = 0;
+  s.bullets.push(pbullet(0, 300, 460, 0));
+  resolveBulletHits(s);
+  assert.equal(s.boss.hp, 40 - 1.5);
+  assert.equal(s.boss.damageTaken, 1.5);
+});
+
+test('damageMult も damageTaken も無い対象は今までどおり（damageTaken を作らない）', () => {
+  const s = mkState();
+  const m = createEnemy('meteor', 0, rng, { dist: 100, speed: 0 });
+  s.enemies.push(m);
+  s.bullets.push(bullet(0, 60, 160));
+  resolveBulletHits(s);
+  assert.equal(m.dead, true);
+  assert.equal('damageTaken' in m, false);
+});

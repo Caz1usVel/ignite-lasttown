@@ -10,7 +10,7 @@ export function circlesOverlap(ax, ay, ar, bx, by, br) {
 }
 
 function targetsOf(state) {
-  return state.boss && !state.boss.dead ? [...state.enemies, state.boss] : state.enemies;
+  return state.boss && !state.boss.dead && !state.boss.hidden ? [...state.enemies, state.boss] : state.enemies;
 }
 
 // 判定は「今の向き」での画面座標で行う（見た目と一致させるため）。
@@ -37,7 +37,9 @@ export function resolveBulletHits(state) {
         const hitRadius = t.radius * CONFIG.HITBOX_RATIO * (t === state.boss ? 1 : visualScale(t.dist));
         if (!circlesOverlap(p.x, p.y, b.radius, q.x, q.y, hitRadius)) continue;
 
-        t.hp -= damage;
+        const dmg = damage * (t.damageMult ?? 1); // 咆哮硬直などで受けるダメージが増える
+        t.hp -= dmg;
+        if (typeof t.damageTaken === 'number') t.damageTaken += dmg; // ボスBの突進の中断の判定に使う
         const killed = t.hp <= KILL_EPS;
         if (killed) t.dead = true;
         events.push({ type: killed ? 'kill' : 'hit', target: t, x: q.x, y: q.y });

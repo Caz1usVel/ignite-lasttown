@@ -8,7 +8,7 @@ export const RADAR = Object.freeze({ cx: 860, cy: 940, r: 110 });
 // 世界の (角度, 距離) → レーダー上の座標。距離は出現距離で半径いっぱいになるように縮め、それより遠くは半径に収める
 export function radarPoint(angle, dist) {
   const k = clamp(dist / CONFIG.SPAWN_DIST, 0, 1) * RADAR.r;
-  const a = angle * DEG;
+  const a = clamp(angle, -CONFIG.HEADING_LIMIT, CONFIG.HEADING_LIMIT) * DEG;
   return { x: RADAR.cx + k * Math.sin(a), y: RADAR.cy - k * Math.cos(a) };
 }
 
@@ -68,7 +68,7 @@ export function drawRadar(g, state) {
     if (e.dead) continue;
     dot(g, e, inView(e.angle));
   }
-  const boss = state.boss && !state.boss.dead ? state.boss : null;
+  const boss = state.boss && !state.boss.dead && !state.boss.hidden ? state.boss : null;
   if (boss) {
     const p = radarPoint(boss.angle, boss.dist);
     g.fillStyle = inView(boss.angle) ? 'rgba(255,158,203,1)' : 'rgba(255,158,203,0.6)';

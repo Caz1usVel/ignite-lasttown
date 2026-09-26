@@ -187,3 +187,28 @@ test('選んだパワーアップが実際の射撃に効く（連射）', () =>
   for (let i = 0; i < 60 * 5; i++) shots += stepGame(s, DT, fireUp).filter((e) => e.type === 'fire').length;
   assert.ok(shots >= 21 && shots <= 24, `shots=${shots}`); // 基準値(4発/秒)なら20発。5秒 × 4.6発/秒 ≒ 22（フレーム単位の丸めで上下する）
 });
+
+test('ボスの hitCore が立つと、残機-1・ノックバック・damage イベントになり、hitCore は戻る', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.boss = createBoss('bossA');
+  s.boss.dist = 380;
+  s.boss.hitCore = true;
+  const other = createEnemy('meteor', 60, s.rng, { dist: 150, speed: 0 });
+  s.enemies.push(other);
+  const ev = stepGame(s, DT, idle);
+  assert.deepEqual(ev.filter((e) => e.type === 'damage'), [{ type: 'damage', lives: 2 }]);
+  assert.equal(s.turret.lives, 2);
+  assert.equal(s.boss.hitCore, false);
+  assert.equal(other.dist, 230);
+});
+
+test('無敵中は hitCore でも残機が減らないが、hitCore は戻る', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.boss = createBoss('bossA');
+  s.boss.dist = 380;
+  s.turret.invincible = 1;
+  s.boss.hitCore = true;
+  stepGame(s, DT, idle);
+  assert.equal(s.turret.lives, 3);
+  assert.equal(s.boss.hitCore, false);
+});

@@ -40,3 +40,10 @@ test('radarFovArc：視界の扇形の角度（ラジアン、-90度が真上を
   const l = radarFovArc(-80, 70);
   near(l.from, -Math.PI);
 });
+
+test('radarPoint：旋回範囲（±90度）の外の角度は、±90度に丸める', () => {
+  const r = radarPoint(120, 460);
+  near(r.x, RADAR.cx + RADAR.r); near(r.y, RADAR.cy);
+  const l = radarPoint(-150, 230);
+  near(l.x, RADAR.cx - RADAR.r * 0.5); near(l.y, RADAR.cy);
+});
