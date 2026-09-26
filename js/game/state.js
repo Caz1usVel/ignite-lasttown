@@ -16,6 +16,7 @@ export function createPlayState(stage, rng = Math.random) {
     nextOfferAt: OFFER_EVERY,        // 次の選択が発生する撃破数
     offer: null,                     // 選択待ちのとき、提示中のid配列
     rng,
+    endless: Boolean(stage.endless),
     outcome: null, // null | 'clear' | 'gameover'
   };
 }

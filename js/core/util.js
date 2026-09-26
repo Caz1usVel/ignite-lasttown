@@ -64,3 +64,13 @@ export function hexToRgba(hex, alpha) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }
+
+// フィッシャー–イェーツ（元の配列は変えない）
+export function shuffled(items, rng) {
+  const a = items.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(rng, 0, i);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}

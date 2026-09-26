@@ -353,3 +353,10 @@ export function removeDead(list) {
     if (list[i].dead) list.splice(i, 1);
   }
 }
+
+// 画面に同時にいる「敵の本体」の数（敵弾・妨害電波・偽像・回復の隕石は数えない）
+export function activeCount(state) {
+  let n = 0;
+  for (const e of state.enemies) if (!e.dead && ENEMY_DEFS[e.type].countsAsKill) n++;
+  return n;
+}

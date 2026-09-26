@@ -1,6 +1,6 @@
 import { CONFIG } from '../core/config.js';
 import { randRange } from '../core/util.js';
-import { createEnemy, ENEMY_SHOT_SPEED } from './enemies.js';
+import { createEnemy, activeCount, ENEMY_SHOT_SPEED } from './enemies.js';
 
 export const BOSS_A_BASE = Object.freeze({
   hp: 30,
@@ -78,7 +78,10 @@ export function updateBossA(boss, state, dt) {
   boss.summonT -= dt;
   if (boss.summonT <= 0) {
     boss.summonT += p.summonInterval;
-    for (const a of pickSpreadAngles(p.summonCount, p.summonMinSep, state.rng)) {
+    let count = p.summonCount;
+    // エンドレスでは、子機も同時に出る敵の上限（spawner.maxActive）の空きの分だけ出す
+    if (state.endless) count = Math.min(count, Math.max(0, state.spawner.maxActive - activeCount(state)));
+    for (const a of count > 0 ? pickSpreadAngles(count, p.summonMinSep, state.rng) : []) {
       state.enemies.push(createEnemy('bossMinion', a, state.rng, {
         dist: boss.dist,
         speed: boss.dist / p.minionApproach,

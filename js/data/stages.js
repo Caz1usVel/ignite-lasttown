@@ -15,5 +15,6 @@ export function getStage(id) {
 
 // 開始時のヒントの先頭に付ける、面の名前（例：「2面：上空・隕石帯（激化）　」）
 export function stageLabel(stage) {
+  if (stage.endless) return `${stage.name}　`;
   return stage.name ? `${stage.id}面：${stage.name}　` : `${stage.id}面　`;
 }

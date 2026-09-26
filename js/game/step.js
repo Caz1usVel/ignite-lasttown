@@ -63,15 +63,24 @@ export function stepGame(state, dt, controls) {
   removeDead(state.bullets);
 
   if (state.boss?.dead) {
-    state.outcome = 'clear';
-    events.push({ type: 'clear' });
+    if (state.endless) {
+      // エンドレス：クリアにならず、次のボスへ。偽像・子機は消し、追加のパワーアップ選択を1回入れる
+      for (const e of state.enemies) if (e.type === 'decoy' || e.type === 'bossMinion') e.dead = true;
+      removeDead(state.enemies);
+      state.boss = null;
+      state.nextOfferAt = state.kills;
+      events.push({ type: 'bossDown' });
+    } else {
+      state.outcome = 'clear';
+      events.push({ type: 'clear' });
+    }
   } else if (t.lives <= 0) {
     state.outcome = 'gameover';
     events.push({ type: 'gameover' });
   }
 
-  // 撃破10体ごとのパワーアップ選択。決着した瞬間には出さない
-  if (!state.outcome && state.kills >= state.nextOfferAt) {
+  // 撃破10体ごとのパワーアップ選択。決着した瞬間・体力0（エンドレスでボスを倒したのと同じフレーム）には出さない
+  if (!state.outcome && t.lives > 0 && state.kills >= state.nextOfferAt) {
     const choices = makeOffer(state.powerups, state.rng);
     state.nextOfferAt += OFFER_EVERY;
     if (choices.length > 0) {

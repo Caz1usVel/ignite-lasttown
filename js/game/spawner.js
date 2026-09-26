@@ -1,18 +1,14 @@
 import { CONFIG } from '../core/config.js';
-import { randInt, randRange } from '../core/util.js';
-import { createEnemy, ENEMY_DEFS } from './enemies.js';
+import { randInt, randRange, shuffled } from '../core/util.js';
+import { createEnemy, ENEMY_DEFS, activeCount } from './enemies.js';
 import { createFormation } from './formation.js';
 import { createBoss } from './boss.js';
+import { initEndless, updateEndless } from './endless.js';
 
 export function createSpawner(stage, scale = CONFIG.SPAWN_SCALE, maxActive = CONFIG.MAX_ACTIVE) {
-  return { stage, scale, maxActive, time: 0, timers: {}, bags: {}, healT: CONFIG.HEAL_METEOR_INTERVAL, bossSpawned: false };
-}
-
-// 画面に同時にいる「敵の本体」の数（敵弾・妨害電波・偽像は数えない）
-function activeCount(state) {
-  let n = 0;
-  for (const e of state.enemies) if (!e.dead && ENEMY_DEFS[e.type].countsAsKill) n++;
-  return n;
+  const sp = { stage, scale, maxActive, time: 0, timers: {}, bags: {}, healT: CONFIG.HEAL_METEOR_INTERVAL, bossSpawned: false };
+  if (stage.endless) sp.endless = initEndless(stage);
+  return sp;
 }
 
 // 出現表の1項目を読む。
@@ -83,23 +79,33 @@ export function validateStage(stage) {
   }
 }
 
+export function updateHealMeteor(sp, state, dt) {
+  // 体力が減っているときだけ、一定間隔で回復の隕石を出す（満タンなら出さず、減るのを待つ）
+  const turret = state.turret;
+  if (turret) {
+    sp.healT -= dt;
+    if (sp.healT <= 0 && turret.lives < turret.maxLives) {
+      sp.healT = CONFIG.HEAL_METEOR_INTERVAL;
+      const angle = randRange(state.rng, -CONFIG.HEADING_LIMIT, CONFIG.HEADING_LIMIT);
+      state.enemies.push(createEnemy('healMeteor', angle, state.rng));
+    } else if (sp.healT <= 0) {
+      sp.healT = 0;
+    }
+  }
+}
+
 export function updateSpawner(sp, state, dt) {
   sp.time += dt;
   const { stage } = sp;
 
+  if (stage.endless) {
+    updateHealMeteor(sp, state, dt);
+    updateEndless(sp, state, dt);
+    return;
+  }
+
   if (sp.time < stage.spawnEnd) {
-    // 体力が減っているときだけ、一定間隔で回復の隕石を出す（満タンなら出さず、減るのを待つ）
-    const turret = state.turret;
-    if (turret) {
-      sp.healT -= dt;
-      if (sp.healT <= 0 && turret.lives < turret.maxLives) {
-        sp.healT = CONFIG.HEAL_METEOR_INTERVAL;
-        const angle = randRange(state.rng, -CONFIG.HEADING_LIMIT, CONFIG.HEADING_LIMIT);
-        state.enemies.push(createEnemy('healMeteor', angle, state.rng));
-      } else if (sp.healT <= 0) {
-        sp.healT = 0;
-      }
-    }
+    updateHealMeteor(sp, state, dt);
     const seg = stage.segments.find((s) => sp.time >= s.from && sp.time < s.to);
     if (!seg) return;
     const segIndex = stage.segments.indexOf(seg);
@@ -143,14 +149,4 @@ export function updateSpawner(sp, state, dt) {
     state.boss = createBoss(stage.boss.type, stage.boss.params);
     sp.bossSpawned = true;
   }
-}
-
-// フィッシャー–イェーツ（元の配列は変えない）
-function shuffled(items, rng) {
-  const a = items.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = randInt(rng, 0, i);
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
 }
