@@ -1,5 +1,6 @@
 import { createBossA, updateBossA, BOSS_A_BASE, pickSpreadAngles } from './boss-a.js';
 import { createBossB, updateBossB } from './boss-b.js';
+import { createBossC, updateBossC } from './boss-c.js';
 
 // 既存の import（テスト・formation.js など）を壊さないための再エクスポート
 export { BOSS_A_BASE, pickSpreadAngles };
@@ -10,6 +11,7 @@ const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 export const BOSSES = Object.freeze({
   bossA: Object.freeze({ name: 'ボスA', color: '#8f7cff', create: createBossA, update: updateBossA }),
   bossB: Object.freeze({ name: 'ボスB', color: '#c2418f', create: createBossB, update: updateBossB }),
+  bossC: Object.freeze({ name: 'ボスC', color: '#4fc3d9', create: createBossC, update: updateBossC }),
 });
 
 export function createBoss(type, params = {}) {

@@ -15,6 +15,7 @@ export const ENEMY_DEFS = {
   teleporter: { hp: 2, radius: 22, score: 250, countsAsKill: true,  behavior: 'teleporter' },
   jammer:     { hp: 2, radius: 24, score: 250, countsAsKill: true,  behavior: 'jammer' },
   jamShot:    { hp: 1, radius: 12, score: 10,  countsAsKill: false, behavior: 'straight' },
+  decoy:      { hp: 1, radius: 40, score: 0,   countsAsKill: false, behavior: 'decoy' },
 };
 
 export const DRONE = {
@@ -78,6 +79,12 @@ export const JAMMER = {
   hoverTime: 14,
 };
 
+// ボスCの偽像：動かずに、基準の角度を中心に少し揺れる（本体と見分けがつかない）
+export const DECOY = {
+  sway: 3,          // ±度
+  swayHz: 0.6,
+};
+
 function approachSpeed(rng) {
   const jitter = randRange(rng, -CONFIG.APPROACH_JITTER, CONFIG.APPROACH_JITTER);
   return CONFIG.SPAWN_DIST / (CONFIG.APPROACH_TIME * (1 + jitter));
@@ -137,6 +144,10 @@ const ENEMY_INITS = {
     e.hoverT = 0;
     e.fireT = JAMMER.fireInterval;
   },
+  decoy(e, angle) {
+    e.baseAngle = angle;
+    e.swayT = 0;
+  },
 };
 
 export function createEnemy(type, angle, rng, opts = {}) {
@@ -187,6 +198,12 @@ const BEHAVIORS = {
       return;
     }
     e.dist -= e.speed * dt; // advance
+  },
+
+  // 偽像：動かない。基準の角度を中心に、位相 spin で揺れる
+  decoy(e, state, dt) {
+    e.swayT += dt;
+    e.angle = e.baseAngle + DECOY.sway * Math.sin(e.swayT * DECOY.swayHz * Math.PI * 2 + e.spin);
   },
 
   // 盛り上がり → 隆起（衝撃波）→ 前進
