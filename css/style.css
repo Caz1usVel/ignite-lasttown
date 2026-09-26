@@ -148,6 +148,7 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
 #hudTime { color: var(--text-dim); }
 .icon-btn {
   pointer-events: auto;
+  touch-action: manipulation;
   font-size: 1.3rem;
   width: 44px;
   height: 44px;

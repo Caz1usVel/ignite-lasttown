@@ -77,6 +77,7 @@ export function createInput(canvas, viewport, leftBtn, rightBtn) {
   const endFire = (e) => firePointers.delete(e.pointerId);
   canvas.addEventListener('pointerup', endFire);
   canvas.addEventListener('pointercancel', endFire);
+  canvas.addEventListener('lostpointercapture', endFire);
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
   function bindTurn(btn, set) {

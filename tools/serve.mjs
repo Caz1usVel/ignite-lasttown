@@ -17,7 +17,13 @@ const TYPES = {
 };
 
 createServer(async (req, res) => {
-  const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  let urlPath;
+  try {
+    urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  } catch {
+    res.writeHead(400).end('bad request');
+    return;
+  }
   const file = normalize(join(ROOT, urlPath.endsWith('/') ? `${urlPath}index.html` : urlPath));
   if (file !== ROOT && !file.startsWith(ROOT + sep)) {
     res.writeHead(403).end();
