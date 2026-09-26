@@ -38,8 +38,13 @@ export function resolveBulletHits(state) {
         if (!circlesOverlap(p.x, p.y, b.radius, q.x, q.y, hitRadius)) continue;
 
         if (t.shielded) {
-          // 閉じているシールドは、弾を吸収する（ダメージも貫通も無し）
-          events.push({ type: 'block', target: t, x: q.x, y: q.y });
+          // シールドは弾を吸収する（ダメージも貫通も無し）。耐久（shieldHp）があるものは、0になると壊れる
+          let broken = false;
+          if (typeof t.shieldHp === 'number') {
+            t.shieldHp -= 1;
+            if (t.shieldHp <= 0) { t.shielded = false; broken = true; }
+          }
+          events.push({ type: 'block', target: t, x: q.x, y: q.y, broken });
           b.dead = true;
           break sweep;
         }

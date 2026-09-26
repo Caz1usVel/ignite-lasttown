@@ -24,8 +24,7 @@ test('定義とパラメータ', () => {
   assert.deepEqual(ENEMY_DEFS.jammer, { hp: 2, radius: 24, score: 250, countsAsKill: true, behavior: 'jammer' });
   assert.deepEqual(ENEMY_DEFS.jamShot, { hp: 1, radius: 12, score: 10, countsAsKill: false, behavior: 'straight' });
   assert.equal(CONFIG.JAM_TIME, 1.5);
-  assert.equal(SHIELDER.cycle, 3.0);
-  assert.equal(SHIELDER.closedTime, 2.2);
+  assert.equal(SHIELDER.shieldHits, 3);
   assert.equal(TELEPORTER.interval, 3.0);
   assert.equal(TELEPORTER.minDelta, 30);
   assert.equal(JAMMER.fireInterval, 5.0);
@@ -44,25 +43,39 @@ test('シールド敵：接近の間は閉じていて、保持距離320〜380�
   assert.equal(e.dist, e.holdDist);
 });
 
-test('シールド敵：保持に入ってから、閉じる2.2秒 → 開く0.8秒 の周期。開く前の0.3秒は点滅', () => {
+test('シールド敵：盾は3発で壊れる。壊れるまでの弾は吸収され、壊れたあとは普通に倒せる', () => {
+  const s = mkCombat();
+  const e = createEnemy('shielder', 0, rng, { dist: 200, speed: 0 });
+  s.enemies.push(e);
+  assert.equal(e.shielded, true);
+  assert.equal(e.shieldHp, 3);
+  const brokenFlags = [];
+  for (let i = 0; i < 3; i++) {
+    s.bullets = [bullet(0, 150, 260)];
+    const ev = resolveBulletHits(s);
+    assert.deepEqual(ev.map((x) => x.type), ['block'], `hit ${i + 1}`);
+    assert.equal(e.hp, 1);
+    assert.equal(e.dead, false);
+    brokenFlags.push(ev[0].broken);
+  }
+  assert.deepEqual(brokenFlags, [false, false, true]);
+  assert.equal(e.shieldHp, 0);
+  assert.equal(e.shielded, false);
+  s.bullets = [bullet(0, 150, 260)];
+  const ev = resolveBulletHits(s);
+  assert.deepEqual(ev.map((x) => x.type), ['kill']);
+  assert.equal(e.dead, true);
+});
+
+test('シールド敵：盾は時間では開閉せず、保持中も前進中も閉じたまま（壊れるまで）', () => {
   const s = mkState();
   const e = createEnemy('shielder', 0, s.rng);
   s.enemies.push(e);
-  while (e.phase === 'approach') updateEnemies(s, DT);
-  run(s, 1.0);
-  assert.equal(e.shielded, true);
-  assert.equal(e.blink, false);
-  run(s, 1.0); // 2.0 秒：開く前の0.3秒（1.9〜2.2）に入っている
-  assert.equal(e.shielded, true);
-  assert.equal(e.blink, true);
-  run(s, 0.4); // 2.4 秒：開いている
-  assert.equal(e.shielded, false);
-  assert.equal(e.blink, false);
-  run(s, 0.7); // 3.1 秒：次の周期の閉じている間
-  assert.equal(e.shielded, true);
+  for (let i = 0; i < 60 * 20; i++) { updateEnemies(s, DT); assert.equal(e.shielded, true); }
+  assert.equal(e.shieldHp, 3);
 });
 
-test('シールド敵：14秒保持したあと、前進を再開する（周期は続く）', () => {
+test('シールド敵：14秒保持したあと、前進を再開する', () => {
   const s = mkState();
   const e = createEnemy('shielder', 0, s.rng);
   s.enemies.push(e);

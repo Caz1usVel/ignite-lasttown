@@ -264,7 +264,7 @@ function drawCharger(g, e, x, y, time) {
   g.restore();
 }
 
-// シールド敵：丸い体と、正面（中心側＝画面の下）に広がる盾。閉じている間は盾が見え、開く前は点滅、開くと消える
+// シールド敵：丸い体と、正面（中心側＝画面の下）に広がる盾。盾は残りの耐久の数だけ弧が残り、3発で壊れて消える
 function drawShielder(g, e, x, y, time) {
   const r = e.radius;
   g.save();
@@ -276,13 +276,19 @@ function drawShielder(g, e, x, y, time) {
     ellipse(g, s * r * 0.3, -r * 0.17, r * 0.06, r * 0.08, COLORS.eye);
   }
   if (e.shielded) {
-    const flicker = e.blink && Math.floor(time * 20) % 2 === 0;
-    g.strokeStyle = flicker ? 'rgba(255,255,255,0.35)' : 'rgba(143,184,255,0.9)';
-    g.lineWidth = 6;
-    g.beginPath();
-    g.arc(0, r * 0.1, r * 1.35, Math.PI * 0.15, Math.PI * 0.85); // 下側（中心側）に弧の盾
-    g.stroke();
-    g.fillStyle = flicker ? 'rgba(255,255,255,0.08)' : 'rgba(143,184,255,0.22)';
+    const hits = e.shieldHp ?? 3;
+    const k = Math.max(1, hits) / 3; // 残りの耐久：1.0（3発）〜0.33（1発）
+    g.strokeStyle = `rgba(143,184,255,${(0.4 + 0.5 * k).toFixed(2)})`;
+    g.lineWidth = 3 + 3 * k;
+    // 下側（中心側）に、残りの耐久の数だけ弧の盾を並べる
+    const seg = (Math.PI * 0.7) / 3;
+    for (let i = 0; i < hits; i++) {
+      const a0 = Math.PI * 0.15 + seg * i + 0.03;
+      g.beginPath();
+      g.arc(0, r * 0.1, r * 1.35, a0, a0 + seg - 0.06);
+      g.stroke();
+    }
+    g.fillStyle = `rgba(143,184,255,${(0.08 + 0.14 * k).toFixed(2)})`;
     g.beginPath();
     g.moveTo(0, r * 0.1);
     g.arc(0, r * 0.1, r * 1.35, Math.PI * 0.15, Math.PI * 0.85);

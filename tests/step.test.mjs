@@ -94,8 +94,8 @@ test('何もしなければ1面はゲームオーバーになる', () => {
 // 自動操縦は狙いが完璧で、人間より強い。失敗した場合は、結果（到達時間・残機・ボスHP）を報告すること。
 function autoPilot(st) {
   const t = st.turret;
-  // 閉じているシールドの敵・ボスは撃っても吸収されるので、狙わない
-  const cands = [...st.enemies, ...(st.boss && !st.boss.dead && !st.boss.hidden ? [st.boss] : [])].filter((e) => !e.shielded);
+  // 時間で開くボスCの盾は撃っても吸収されるので狙わない。耐久のある盾（シールド敵）は、撃って壊す
+  const cands = [...st.enemies, ...(st.boss && !st.boss.dead && !st.boss.hidden ? [st.boss] : [])].filter((e) => !e.shielded || e.shieldHp > 0);
   if (!cands.length) return idle;
   const target = cands.reduce((a, b) => (b.dist < a.dist ? b : a));
   let aimAngle = target.angle;

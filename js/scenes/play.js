@@ -68,7 +68,7 @@ export function createPlayScene(app) {
           break;
         case 'block':
           audio.se.block();
-          spawnBurst(fx, ev.x, ev.y, '#8fb8ff', 5);
+          spawnBurst(fx, ev.x, ev.y, ev.broken ? '#ffffff' : '#8fb8ff', ev.broken ? 14 : 5);
           break;
         case 'jam':
           audio.se.jam();

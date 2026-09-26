@@ -59,9 +59,7 @@ export const SHIELDER = {
   holdMin: 320,
   holdMax: 380,
   hoverTime: 14,
-  cycle: 3.0,        // シールドの周期（秒）
-  closedTime: 2.2,   // 周期の最初の、閉じている時間（残りが開いている時間）
-  blinkTime: 0.3,    // 開く前の点滅（予兆）
+  shieldHits: 3,     // 盾が壊れるまでに吸収できる弾の数（壊れたあとは普通に倒せる）
 };
 export const TELEPORTER = {
   interval: 3.0,
@@ -128,9 +126,8 @@ const ENEMY_INITS = {
     e.phase = 'approach';
     e.holdDist = randRange(rng, SHIELDER.holdMin, SHIELDER.holdMax);
     e.hoverT = 0;
-    e.cycleT = 0;
-    e.shielded = true;   // 接近の間は、常に閉じている
-    e.blink = false;
+    e.shielded = true;   // 盾は shieldHits 発の弾で壊れる
+    e.shieldHp = SHIELDER.shieldHits;
   },
   teleporter(e, angle, rng) {
     e.tpT = TELEPORTER.interval + randRange(rng, -TELEPORTER.jitter, TELEPORTER.jitter);
@@ -278,14 +275,13 @@ const BEHAVIORS = {
     e.angle = e.baseAngle + e.offset * Math.max(0, e.dist / e.startDist);
   },
 
-  // 保持距離まで進んで静止。シールドが周期的に開閉する。14秒後に前進（周期は続く）
+  // 保持距離まで進んで静止。14秒後に前進。盾は弾を吸収し、shieldHits 発で壊れる
   shielder(e, state, dt) {
     if (e.phase === 'approach') {
       e.dist -= e.speed * dt;
       if (e.dist <= e.holdDist) {
         e.dist = e.holdDist;
         e.phase = 'hover';
-        e.cycleT = 0;
       }
       return;
     }
@@ -295,9 +291,6 @@ const BEHAVIORS = {
     } else {
       e.dist -= e.speed * dt; // advance
     }
-    e.cycleT = (e.cycleT + dt) % SHIELDER.cycle;
-    e.shielded = e.cycleT < SHIELDER.closedTime;
-    e.blink = e.shielded && e.cycleT >= SHIELDER.closedTime - SHIELDER.blinkTime;
   },
 
   // 通常の速さで前進しながら、一定の間隔で、角度だけ離れた場所へ瞬間移動する
