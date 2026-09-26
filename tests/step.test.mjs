@@ -8,12 +8,13 @@ import { STAGE1 } from '../js/data/stage1.js';
 import { STAGE2 } from '../js/data/stage2.js';
 import { worldToScreen } from '../js/core/view.js';
 import { mulberry32 } from '../js/core/util.js';
+import { CONFIG } from '../js/core/config.js';
 import { chooseOffer } from '../js/game/powerups.js';
 
 const EMPTY_STAGE = { id: 0, segments: [], spawnEnd: 1e9, boss: { type: 'bossA', params: {} } };
 const DT = 1 / 60;
-const idle = { turnAxis: 0, firing: false, aim: null, bulletSpeed: 600 };
-const fireUp = { turnAxis: 0, firing: true, aim: { x: 500, y: 100 }, bulletSpeed: 600 };
+const idle = { turnAxis: 0, firing: false, aim: null, bulletSpeed: CONFIG.BULLET_SPEED_PC };
+const fireUp = { turnAxis: 0, firing: true, aim: { x: 500, y: 100 }, bulletSpeed: CONFIG.BULLET_SPEED_PC };
 
 function runUntil(state, controls, pred, maxSec = 10, autoChoose = false) {
   const all = [];
@@ -93,12 +94,12 @@ function autoPilot(st) {
   const target = cands.reduce((a, b) => (b.dist < a.dist ? b : a));
   let aimAngle = target.angle;
   if (target === st.boss && st.boss.arrived) {
-    aimAngle += st.boss.dir * st.boss.p.drift * (target.dist / 600); // ボスは横移動を先読み
+    aimAngle += st.boss.dir * st.boss.p.drift * (target.dist / CONFIG.BULLET_SPEED_PC); // ボスは横移動を先読み
   }
   const diff = aimAngle - t.heading;
   const turnAxis = Math.abs(diff) > 3 ? Math.sign(diff) : 0;
   const p = worldToScreen(aimAngle, target.dist, t.heading, t.fov);
-  return { turnAxis, firing: p.visible, aim: p.visible ? { x: p.x, y: p.y } : null, bulletSpeed: 600 };
+  return { turnAxis, firing: p.visible, aim: p.visible ? { x: p.x, y: p.y } : null, bulletSpeed: CONFIG.BULLET_SPEED_PC };
 }
 
 test('自動操縦で1面をクリアできる', () => {

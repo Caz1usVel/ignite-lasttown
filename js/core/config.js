@@ -11,11 +11,11 @@ export const CONFIG = Object.freeze({
   HEADING_LIMIT: 90,    // ±度（敵の出現範囲も同じ）
 
   SPAWN_DIST: 460,
-  APPROACH_TIME: 10,    // 秒
+  APPROACH_TIME: 14,    // 秒（実プレイで「気づくのが遅れる」ため、10秒から遅くした）
   APPROACH_JITTER: 0.15,
 
-  BULLET_SPEED_PC: 600,
-  BULLET_SPEED_MOBILE: 1500,
+  BULLET_SPEED_PC: 900,      // 飛ぶ速さだけを上げた（連射速度は据え置き）
+  BULLET_SPEED_MOBILE: 2200,
   BULLET_RADIUS: 6,
   BULLET_MAX_DIST: 520,
   FIRE_RATE: 4,         // 発/秒

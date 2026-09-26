@@ -2,11 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createBoss, updateBoss, pickSpreadAngles, BOSS_A_BASE } from '../js/game/boss.js';
 import { mulberry32 } from '../js/core/util.js';
+import { CONFIG } from '../js/core/config.js';
 
 const mkState = () => ({ enemies: [], rng: mulberry32(11) });
 const run = (boss, s, seconds, dt = 1 / 60) => {
   for (let i = 0; i < Math.round(seconds / dt); i++) updateBoss(boss, s, dt);
 };
+// ボスAが距離460から目標の距離まで進入するのにかかる秒数（moveSpeed 28 → 約2.86秒）
+const ARRIVE = (CONFIG.SPAWN_DIST - BOSS_A_BASE.dist) / BOSS_A_BASE.moveSpeed;
 
 test('pickSpreadAngles は互いに minSep 以上離れ、範囲内', () => {
   for (let seed = 1; seed <= 100; seed++) {
@@ -33,7 +36,7 @@ test('ボスは距離460から380まで進入してから攻撃を始める', ()
   run(b, s, 1);
   assert.equal(b.arrived, false);
   assert.equal(s.enemies.length, 0);
-  run(b, s, 1.1);
+  run(b, s, ARRIVE);
   assert.equal(b.arrived, true);
   assert.equal(b.dist, 380);
 });
@@ -41,20 +44,20 @@ test('ボスは距離460から380まで進入してから攻撃を始める', ()
 test('到着後6秒で子機3体、4秒で敵弾3連射', () => {
   const s = mkState();
   const b = createBoss('bossA');
-  run(b, s, 2.1);          // 到着
+  run(b, s, ARRIVE + 0.1); // 到着
   run(b, s, 4.6);          // 到着から約4.6秒
   assert.equal(s.enemies.filter((e) => e.type === 'enemyShot').length, 3);
   assert.equal(s.enemies.filter((e) => e.type === 'bossMinion').length, 0);
   run(b, s, 1.5);          // 到着から約6.1秒
   const minions = s.enemies.filter((e) => e.type === 'bossMinion');
   assert.equal(minions.length, 3);
-  for (const m of minions) assert.ok(Math.abs(m.dist / m.speed - 5) < 0.5);
+  for (const m of minions) assert.ok(Math.abs(m.dist / m.speed - BOSS_A_BASE.minionApproach) < 0.5);
 });
 
 test('12秒ごとに40前進、下限200', () => {
   const s = mkState();
   const b = createBoss('bossA');
-  run(b, s, 2.1);
+  run(b, s, ARRIVE + 0.1);
   run(b, s, 12.05);
   assert.equal(b.targetDist, 340);
   run(b, s, 12 * 10);
@@ -75,7 +78,7 @@ test('params で強化型のパラメータを上書きできる', () => {
   const s = mkState();
   const b = createBoss('bossA', { summonCount: 5, hp: 60 });
   assert.equal(b.maxHp, 60);
-  run(b, s, 2.1);
+  run(b, s, ARRIVE + 0.1);
   run(b, s, 6.1);
   assert.equal(s.enemies.filter((e) => e.type === 'bossMinion').length, 5);
 });
@@ -118,4 +121,10 @@ test('pickSpreadAngles：1機なら範囲内の角度を1つ返す', () => {
   const a = pickSpreadAngles(1, 25, mulberry32(3));
   assert.equal(a.length, 1);
   assert.ok(a[0] >= -90 && a[0] <= 90);
+});
+
+test('共通調整：ボスAの子機到達7秒・進入速度28', () => {
+  assert.equal(BOSS_A_BASE.minionApproach, 7);
+  assert.equal(BOSS_A_BASE.moveSpeed, 28);
+  assert.equal(Object.isFrozen(BOSS_A_BASE), true);
 });

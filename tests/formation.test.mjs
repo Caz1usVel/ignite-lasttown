@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createFormation } from '../js/game/formation.js';
 import { ENEMY_DEFS } from '../js/game/enemies.js';
 import { mulberry32 } from '../js/core/util.js';
+import { CONFIG } from '../js/core/config.js';
 
 test('formationDrone の定義：HP1・半径16・50点・撃破数に数える・直進', () => {
   assert.deepEqual(ENEMY_DEFS.formationDrone, {
@@ -34,11 +35,13 @@ test('編隊：角度は-90〜+90度で、互いに minSep 以上離れる', () 
   }
 });
 
-test('編隊：ほぼ同時に中心へ届く（到達時間の差が1.5秒未満、8.5〜11.5秒の範囲）', () => {
+test('編隊：ほぼ同時に中心へ届く（到達時間の差が基準の約10%未満、共通ジッタ±15%＋機ごと±3%の範囲）', () => {
+  const lo = CONFIG.APPROACH_TIME * (1 - CONFIG.APPROACH_JITTER - 0.03);
+  const hi = CONFIG.APPROACH_TIME * (1 + CONFIG.APPROACH_JITTER + 0.03);
   for (let seed = 1; seed <= 200; seed++) {
     const times = createFormation('formationDrone', 5, 25, mulberry32(seed)).map((e) => e.dist / e.speed);
-    assert.ok(Math.max(...times) - Math.min(...times) < 1.5, `spread ${Math.max(...times) - Math.min(...times)}`);
-    for (const t of times) assert.ok(t >= 8.5 - 0.35 && t <= 11.5 + 0.35, `t=${t}`);
+    assert.ok(Math.max(...times) - Math.min(...times) < CONFIG.APPROACH_TIME * 0.1, `spread ${Math.max(...times) - Math.min(...times)}`);
+    for (const t of times) assert.ok(t >= lo - 1e-9 && t <= hi + 1e-9, `t=${t}`);
   }
 });
 

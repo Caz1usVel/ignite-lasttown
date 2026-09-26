@@ -18,7 +18,7 @@ export const DRONE = {
   hoverTime: 15,
 };
 
-export const ENEMY_SHOT_SPEED = 120;
+export const ENEMY_SHOT_SPEED = 85;
 
 function approachSpeed(rng) {
   const jitter = randRange(rng, -CONFIG.APPROACH_JITTER, CONFIG.APPROACH_JITTER);

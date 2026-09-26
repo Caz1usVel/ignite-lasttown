@@ -8,11 +8,11 @@ export const BOSS_A_BASE = Object.freeze({
   dist: 380,
   angleRange: 60,       // ±度
   drift: 10,            // 度/秒
-  moveSpeed: 40,        // 距離の移動速度（進入・前進）
+  moveSpeed: 28,        // 距離の移動速度（進入・前進）
   summonInterval: 6,
   summonCount: 3,
   summonMinSep: 20,
-  minionApproach: 5,    // 子機が中心へ届くまでの秒数
+  minionApproach: 7,    // 子機が中心へ届くまでの秒数
   shotInterval: 4,
   shotBurst: 3,
   shotGap: 0.25,
