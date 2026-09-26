@@ -5,6 +5,9 @@ import { createAudio } from './core/audio.js';
 import { createStarfield } from './render/background.js';
 import { initSettings } from './scenes/settings.js';
 import { createTitleScene } from './scenes/title.js';
+import { createInput } from './core/input.js';
+import { createPlayScene } from './scenes/play.js';
+import { createResultScene } from './scenes/result.js';
 
 const IDS = [
   'stage', 'game',
@@ -30,10 +33,13 @@ const app = {
   sceneName: null,
   persist: () => writeSave(save),
   setScene,
-  startGame: (mode) => console.info('play scene is added in Task 11', mode),
+  startGame: (mode) => setScene('play', { mode }),
 };
+app.input = createInput(dom.game, app.viewport, dom.turnLeftBtn, dom.turnRightBtn);
 app.settings = initSettings(app);
 app.scenes.title = createTitleScene(app);
+app.scenes.play = createPlayScene(app);
+app.scenes.result = createResultScene(app);
 
 let current = null;
 function setScene(name, params) {
@@ -44,7 +50,10 @@ function setScene(name, params) {
 }
 
 // 最初のユーザー操作でオーディオを有効化する
-document.addEventListener('pointerdown', () => app.audio.unlock(), { capture: true });
+document.addEventListener('pointerdown', (e) => {
+  app.input.notePointer(e);
+  app.audio.unlock();
+}, { capture: true });
 window.addEventListener('keydown', () => app.audio.unlock(), { capture: true });
 
 // ループは常にこの1本だけ
