@@ -52,3 +52,85 @@ test('雑魚がいなくなったらボスが出る（1回だけ）', () => {
   updateSpawner(sp, state, 0.1);
   assert.equal(state.boss, first);
 });
+
+// ---- まとめて出す書き方 ----
+const groupStage = (spawns) => ({
+  id: 9,
+  segments: [{ from: 0, to: 1000, spawns }],
+  spawnEnd: 1000,
+  boss: { type: 'bossA', params: {} },
+});
+
+// 敵を動かさず、出現だけを時刻ごとにまとめて返す
+function simulateStage(stage, seconds, dt = 0.1) {
+  const state = { enemies: [], boss: null, rng: mulberry32(5) };
+  const sp = createSpawner(stage);
+  const groups = []; // { time, types: string[], angles: number[] }
+  for (let i = 0; i < Math.round(seconds / dt); i++) {
+    const before = state.enemies.length;
+    updateSpawner(sp, state, dt);
+    const fresh = state.enemies.slice(before);
+    if (fresh.length) groups.push({ time: sp.time, types: fresh.map((e) => e.type), angles: fresh.map((e) => e.angle) });
+  }
+  return { state, groups };
+}
+
+test('まとめ書き方：every 秒ごとに count 機が同時に出る', () => {
+  const { groups } = simulateStage(groupStage({ formationDrone: { every: 10, count: 3, minSep: 25 } }), 35);
+  assert.equal(groups.length, 3);
+  for (const g of groups) {
+    assert.equal(g.types.length, 3);
+    assert.ok(g.types.every((t) => t === 'formationDrone'));
+  }
+  const times = groups.map((g) => g.time);
+  assert.ok(Math.abs(times[0] - 10) < 0.15 && Math.abs(times[1] - 20) < 0.15 && Math.abs(times[2] - 30) < 0.15, `times=${times}`);
+});
+
+test('まとめ書き方：出る角度は互いに minSep 以上離れ、-90〜+90度', () => {
+  const { groups } = simulateStage(groupStage({ formationDrone: { every: 5, count: [3, 5], minSep: 25 } }), 120);
+  assert.ok(groups.length >= 20);
+  for (const g of groups) {
+    const a = [...g.angles].sort((x, y) => x - y);
+    for (let i = 0; i < a.length; i++) {
+      assert.ok(a[i] >= -90 && a[i] <= 90);
+      if (i > 0) assert.ok(a[i] - a[i - 1] >= 25 - 1e-9);
+    }
+  }
+});
+
+test('まとめ書き方：count が配列なら [最小, 最大] の範囲で、複数の機数が出る', () => {
+  const { groups } = simulateStage(groupStage({ formationDrone: { every: 5, count: [3, 5], minSep: 25 } }), 200);
+  const sizes = new Set(groups.map((g) => g.types.length));
+  for (const s of sizes) assert.ok(s >= 3 && s <= 5, `size ${s}`);
+  assert.ok(sizes.size >= 2, `sizes=${[...sizes]}`);
+});
+
+test('数値の書き方と、まとめ書き方を同じ区間に混ぜられる', () => {
+  const { groups } = simulateStage(
+    groupStage({ meteor: 2.0, formationDrone: { every: 10, count: 3, minSep: 25 } }), 35);
+  // 同じフレームに隕石と編隊が同時に出ることがあるので、種類ごとの総数で数える
+  const all = groups.flatMap((g) => g.types);
+  const meteors = all.filter((t) => t === 'meteor').length;
+  const formationDrones = all.filter((t) => t === 'formationDrone').length;
+  assert.ok(meteors >= 16 && meteors <= 18, `meteors=${meteors}`);
+  assert.equal(formationDrones, 9); // 3機 × 3回
+});
+
+test('不正な出現表の項目は例外になる', () => {
+  const bad = [
+    { formationDrone: { every: 0, count: 3, minSep: 25 } },
+    { formationDrone: { every: -1, count: 3, minSep: 25 } },
+    { formationDrone: { every: 10, count: 0, minSep: 25 } },
+    { formationDrone: { every: 10, count: 2.5, minSep: 25 } },
+    { formationDrone: { every: 10, count: [4, 3], minSep: 25 } },
+    { formationDrone: { every: 10, count: [3, 4] } },
+    { formationDrone: { every: 10, count: 3, minSep: 'wide' } },
+    { formationDrone: 'often' },
+    { meteor: 0 },
+    { meteor: -2 },
+    { meteor: Infinity },
+  ];
+  for (const spawns of bad) {
+    assert.throws(() => simulateStage(groupStage(spawns), 20), Error, JSON.stringify(spawns));
+  }
+});
