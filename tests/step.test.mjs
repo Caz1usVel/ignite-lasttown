@@ -5,6 +5,7 @@ import { stepGame } from '../js/game/step.js';
 import { createEnemy } from '../js/game/enemies.js';
 import { createBoss } from '../js/game/boss.js';
 import { STAGE1 } from '../js/data/stage1.js';
+import { STAGE2 } from '../js/data/stage2.js';
 import { worldToScreen } from '../js/core/view.js';
 import { mulberry32 } from '../js/core/util.js';
 import { chooseOffer } from '../js/game/powerups.js';
@@ -83,26 +84,37 @@ test('何もしなければ1面はゲームオーバーになる', () => {
   assert.equal(s.outcome, 'gameover');
 });
 
-// バランス確認：単純な自動操縦で1面をクリアできること。
-// 失敗した場合は数値を勝手に変えず、結果（到達時間・残機・ボスHP）を報告すること。
+// バランス確認：単純な自動操縦でステージをクリアできること。
+// 自動操縦は狙いが完璧で、人間より強い。失敗した場合は、結果（到達時間・残機・ボスHP）を報告すること。
+function autoPilot(st) {
+  const t = st.turret;
+  const cands = [...st.enemies, ...(st.boss && !st.boss.dead ? [st.boss] : [])];
+  if (!cands.length) return idle;
+  const target = cands.reduce((a, b) => (b.dist < a.dist ? b : a));
+  let aimAngle = target.angle;
+  if (target === st.boss && st.boss.arrived) {
+    aimAngle += st.boss.dir * st.boss.p.drift * (target.dist / 600); // ボスは横移動を先読み
+  }
+  const diff = aimAngle - t.heading;
+  const turnAxis = Math.abs(diff) > 3 ? Math.sign(diff) : 0;
+  const p = worldToScreen(aimAngle, target.dist, t.heading, t.fov);
+  return { turnAxis, firing: p.visible, aim: p.visible ? { x: p.x, y: p.y } : null, bulletSpeed: 600 };
+}
+
 test('自動操縦で1面をクリアできる', () => {
   const s = createPlayState(STAGE1, mulberry32(3));
-  const bot = (st) => {
-    const t = st.turret;
-    const cands = [...st.enemies, ...(st.boss && !st.boss.dead ? [st.boss] : [])];
-    if (!cands.length) return idle;
-    const target = cands.reduce((a, b) => (b.dist < a.dist ? b : a));
-    let aimAngle = target.angle;
-    if (target === st.boss && st.boss.arrived) {
-      aimAngle += st.boss.dir * st.boss.p.drift * (target.dist / 600); // ボスは横移動を先読み
-    }
-    const diff = aimAngle - t.heading;
-    const turnAxis = Math.abs(diff) > 3 ? Math.sign(diff) : 0;
-    const p = worldToScreen(aimAngle, target.dist, t.heading, t.fov);
-    return { turnAxis, firing: p.visible, aim: p.visible ? { x: p.x, y: p.y } : null, bulletSpeed: 600 };
-  };
-  runUntil(s, bot, (st) => st.outcome, 400, true); // 選択が出たら先頭の候補を自動で選ぶ
+  runUntil(s, autoPilot, (st) => st.outcome, 400, true); // 選択が出たら先頭の候補を自動で選ぶ
   assert.equal(s.outcome, 'clear', `time=${s.time.toFixed(1)} lives=${s.turret.lives} bossHp=${s.boss?.hp}`);
+});
+
+test('自動操縦で2面をクリアできる（複数のシード）', () => {
+  for (const seed of [3, 4, 5, 6, 7]) {
+    const s = createPlayState(STAGE2, mulberry32(seed));
+    runUntil(s, autoPilot, (st) => st.outcome, 500, true);
+    assert.equal(s.outcome, 'clear',
+      `seed=${seed} time=${s.time.toFixed(1)} lives=${s.turret.lives} bossHp=${s.boss?.hp}`);
+    assert.ok(s.turret.lives >= 1);
+  }
 });
 
 const meteorAhead = (s) => s.enemies.push(createEnemy('meteor', 0, s.rng, { dist: 300, speed: 0 }));

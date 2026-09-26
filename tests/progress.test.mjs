@@ -5,21 +5,24 @@ import {
 } from '../js/core/progress.js';
 import { STAGES, getStage } from '../js/data/stages.js';
 import { STAGE1 } from '../js/data/stage1.js';
+import { STAGE2 } from '../js/data/stage2.js';
 
 const mkSave = (stages = {}) => ({ version: 2, settings: {}, stages });
 const three = (id) => (id >= 1 && id <= 3 ? { id } : null); // 1〜3面にデータがあると仮定した登録
 
-test('ステージの登録：1面だけ', () => {
+test('ステージの登録：1〜2面', () => {
   assert.equal(getStage(1), STAGE1);
-  assert.deepEqual(Object.keys(STAGES), ['1']);
-  for (let i = 2; i <= 7; i++) assert.equal(getStage(i), null);
+  assert.equal(getStage(2), STAGE2);
+  assert.deepEqual(Object.keys(STAGES), ['1', '2']);
+  for (let i = 3; i <= 7; i++) assert.equal(getStage(i), null);
   assert.equal(getStage(0), null);
   assert.equal(getStage('__proto__'), null);
 });
 
 test('isStageAvailable：データがある面だけ', () => {
   assert.equal(isStageAvailable(1), true);
-  assert.equal(isStageAvailable(2), false);
+  assert.equal(isStageAvailable(2), true);
+  assert.equal(isStageAvailable(3), false);
   assert.equal(isStageAvailable(3, three), true);
   assert.equal(isStageAvailable(4, three), false);
   assert.equal(isStageAvailable(0, three), false);
@@ -40,19 +43,22 @@ test('isStageUnlocked：1面は常に解放、以降は直前の面のクリア�
 test('isStagePlayable：データがあり、かつ解放済み', () => {
   const s = mkSave({ 1: { cleared: true, best: 1 } });
   assert.equal(isStagePlayable(s, 1), true);
-  assert.equal(isStagePlayable(s, 2), false);       // 解放済みだがデータが無い（準備中）
-  assert.equal(isStagePlayable(s, 2, three), true);
-  assert.equal(isStagePlayable(s, 3, three), false); // データはあるが未解放
+  assert.equal(isStagePlayable(s, 2), true);          // 1面クリア済みで、2面のデータがある
+  assert.equal(isStagePlayable(s, 3, three), false);  // データはあるが未解放（2面が未クリア）
+  s.stages['2'] = { cleared: true, best: 1 };
+  assert.equal(isStagePlayable(s, 3), false);         // 解放済みだがデータが無い（準備中）
+  assert.equal(isStagePlayable(s, 3, three), true);
 });
 
 test('nextPlayableStage', () => {
   const s = mkSave({ 1: { cleared: true, best: 1 } });
-  assert.equal(nextPlayableStage(s, 1), null);
-  assert.equal(nextPlayableStage(s, 1, three), 2);
-  assert.equal(nextPlayableStage(s, 2, three), null); // 2面が未クリア
+  assert.equal(nextPlayableStage(s, 1), 2);
+  assert.equal(nextPlayableStage(s, 2), null);          // 2面が未クリア
+  assert.equal(nextPlayableStage(s, 2, three), null);   // 同上
   s.stages['2'] = { cleared: true, best: 1 };
+  assert.equal(nextPlayableStage(s, 2), null);          // 3面のデータが無い
   assert.equal(nextPlayableStage(s, 2, three), 3);
-  assert.equal(nextPlayableStage(s, 3, three), null); // 4面のデータが無い
+  assert.equal(nextPlayableStage(s, 3, three), null);   // 4面のデータが無い
 });
 
 test('recordResult：クリアで cleared、最高スコアを更新', () => {
