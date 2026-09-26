@@ -18,7 +18,7 @@ export function createResultScene(app) {
   return {
     enter({ outcome, score, kills, mode, stageId, endless, time }) {
       last = { mode, stageId, endless: endless ?? null };
-      const { newBest } = endless
+      const { newBest, newClear = false } = endless
         ? recordEndlessResult(app.save, endless, score, time ?? 0)
         : recordResult(app.save, stageId, outcome, score);
       app.persist();
@@ -35,6 +35,7 @@ export function createResultScene(app) {
       dom.resultKills.textContent = kills.toLocaleString();
       dom.resultBest.textContent = (endless ? app.save.endless[endless].best : app.save.stages[stageId].best).toLocaleString();
       dom.resultNewBest.classList.toggle('hidden', !newBest);
+      dom.resultDiaryNote.classList.toggle('hidden', !newClear);
       dom.nextStageBtn.classList.toggle('hidden', nextId === null);
       dom.hud.classList.add('hidden');
       dom.hint.classList.add('hidden');
@@ -42,6 +43,7 @@ export function createResultScene(app) {
     },
     exit() {
       dom.resultScreen.classList.add('hidden');
+      dom.resultDiaryNote.classList.add('hidden');
     },
     update() {},
     render(g, dt) {

@@ -299,3 +299,8 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
 .offer-hint { color: var(--text-dim); font-size: 0.85rem; margin: 6px 0 0; }
 /* 出た直後は誤選択を防ぐため押せない（見た目でも分かるように薄くする） */
 #powerupScreen.locked .offer-card { opacity: 0.45; pointer-events: none; }
+.diary-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 560px; }
+.diary-list button { min-width: 120px; padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: var(--text-main); font-family: var(--font); cursor: pointer; }
+.diary-list button:disabled { opacity: 0.4; cursor: default; }
+.diary-list button.active { border-color: var(--ember); }
+.diary-text { max-width: 520px; min-height: 8em; padding: 14px 18px; border-radius: 14px; background: rgba(10, 14, 39, 0.75); white-space: pre-line; line-height: 1.8; text-align: left; }

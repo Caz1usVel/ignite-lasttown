@@ -38,6 +38,7 @@
     <div class="btn-col">
       <button class="btn" id="startSoloBtn">ひとりで</button>
       <button class="btn btn-sub" id="startDuoBtn">ふたりで（PC）</button>
+      <button class="btn btn-sub" id="titleDiaryBtn">日記</button>
       <button class="link-btn" id="titleSettingsBtn">設定</button>
     </div>
   </div>
@@ -91,11 +92,19 @@
       <dt>最高スコア</dt><dd id="resultBest">0</dd>
     </dl>
     <p id="resultNewBest" class="new-best hidden">最高スコア更新！</p>
+    <p id="resultDiaryNote" class="new-best hidden">日記が解放されました（タイトルの「日記」から読めます）</p>
     <div class="btn-col">
       <button class="btn" id="nextStageBtn">次のステージへ</button>
       <button class="btn btn-sub" id="retryBtn">もう一度</button>
       <button class="link-btn" id="resultStageSelectBtn">ステージ選択へ</button>
     </div>
+  </div>
+
+  <div id="diaryScreen" class="overlay hidden">
+    <h2>日記</h2>
+    <div id="diaryList" class="diary-list"></div>
+    <p id="diaryText" class="diary-text">読みたい日記を選んでください</p>
+    <button class="link-btn" id="diaryBackBtn">もどる</button>
   </div>
 
   <div id="settingsScreen" class="overlay hidden">

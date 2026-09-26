@@ -13,6 +13,7 @@ export function createTitleScene(app) {
     app.mode = 'duo';
     app.setScene('stageselect');
   });
+  dom.titleDiaryBtn.addEventListener('click', () => app.setScene('diary'));
   dom.titleSettingsBtn.addEventListener('click', () => app.settings.open());
 
   return {

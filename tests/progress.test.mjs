@@ -71,17 +71,17 @@ test('nextPlayableStage', () => {
 
 test('recordResult：クリアで cleared、最高スコアを更新', () => {
   const s = mkSave();
-  assert.deepEqual(recordResult(s, 1, 'clear', 5000), { newBest: true });
+  assert.deepEqual(recordResult(s, 1, 'clear', 5000), { newBest: true, newClear: true });
   assert.deepEqual(s.stages['1'], { cleared: true, best: 5000 });
-  assert.deepEqual(recordResult(s, 1, 'clear', 4000), { newBest: false });
+  assert.deepEqual(recordResult(s, 1, 'clear', 4000), { newBest: false, newClear: false });
   assert.equal(s.stages['1'].best, 5000);
-  assert.deepEqual(recordResult(s, 1, 'clear', 6000), { newBest: true });
+  assert.deepEqual(recordResult(s, 1, 'clear', 6000), { newBest: true, newClear: false });
   assert.equal(s.stages['1'].best, 6000);
 });
 
 test('recordResult：ゲームオーバーでもスコアは記録し、cleared は変えない', () => {
   const s = mkSave();
-  assert.deepEqual(recordResult(s, 1, 'gameover', 700), { newBest: true });
+  assert.deepEqual(recordResult(s, 1, 'gameover', 700), { newBest: true, newClear: false });
   assert.deepEqual(s.stages['1'], { cleared: false, best: 700 });
   s.stages['1'].cleared = true;
   recordResult(s, 1, 'gameover', 100);
@@ -91,7 +91,7 @@ test('recordResult：ゲームオーバーでもスコアは記録し、cleared 
 
 test('recordResult：スコア0では最高スコア更新にならない', () => {
   const s = mkSave();
-  assert.deepEqual(recordResult(s, 1, 'gameover', 0), { newBest: false });
+  assert.deepEqual(recordResult(s, 1, 'gameover', 0), { newBest: false, newClear: false });
 });
 
 import { isHardEndlessUnlocked, recordEndlessResult } from '../js/core/progress.js';

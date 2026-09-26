@@ -11,18 +11,20 @@ import { createStageSelectScene } from './scenes/stageselect.js';
 import { createResultScene } from './scenes/result.js';
 import { createPauseScene } from './scenes/pause.js';
 import { createPowerupScene } from './scenes/powerup.js';
+import { createDiaryScene } from './scenes/diary.js';
 
 const IDS = [
   'stage', 'game',
   'hud', 'hudLives', 'hudScore', 'hudPowerups', 'hudTime', 'pauseBtn', 'hint',
   'powerupScreen', 'offerCard0', 'offerCard1',
   'touchControls', 'turnLeftBtn', 'turnRightBtn',
-  'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleSettingsBtn',
+  'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleDiaryBtn', 'titleSettingsBtn',
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
-  'resultScreen', 'resultTitle', 'resultScore', 'resultKills', 'resultBest', 'resultNewBest',
+  'resultScreen', 'resultTitle', 'resultScore', 'resultKills', 'resultBest', 'resultNewBest', 'resultDiaryNote',
   'endlessBtn', 'hardEndlessBtn', 'resultTimeLabel', 'resultTime',
   'nextStageBtn', 'retryBtn', 'resultStageSelectBtn',
+  'diaryScreen', 'diaryList', 'diaryText', 'diaryBackBtn',
   'settingsScreen', 'bgmVol', 'seVol', 'muteBtn', 'settingsBackBtn',
 ];
 const dom = Object.fromEntries(IDS.map((id) => [id, document.getElementById(id)]));
@@ -49,6 +51,7 @@ app.scenes.play = createPlayScene(app);
 app.scenes.result = createResultScene(app);
 app.scenes.pause = createPauseScene(app);
 app.scenes.powerup = createPowerupScene(app);
+app.scenes.diary = createDiaryScene(app);
 
 let current = null;
 function setScene(name, params) {

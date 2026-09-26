@@ -25,10 +25,11 @@ export function nextPlayableStage(save, id, getStageFn = getStage) {
 // 結果をセーブデータに反映する（呼び出し側が persist する）。最高スコアはクリア・ゲームオーバーどちらでも記録する。
 export function recordResult(save, id, outcome, score) {
   const entry = (save.stages[id] ??= { cleared: false, best: 0 });
+  const newClear = outcome === 'clear' && !entry.cleared;
   if (outcome === 'clear') entry.cleared = true;
   const newBest = score > entry.best;
   if (newBest) entry.best = score;
-  return { newBest };
+  return { newBest, newClear };
 }
 
 // ハードエンドレスは、全ステージのクリアで解放される
