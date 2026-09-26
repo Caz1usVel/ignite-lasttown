@@ -4,8 +4,8 @@ import { createEnemy, ENEMY_DEFS } from './enemies.js';
 import { createFormation } from './formation.js';
 import { createBoss } from './boss.js';
 
-export function createSpawner(stage) {
-  return { stage, time: 0, timers: {}, bossSpawned: false };
+export function createSpawner(stage, scale = CONFIG.SPAWN_SCALE) {
+  return { stage, scale, time: 0, timers: {}, bossSpawned: false };
 }
 
 // 出現表の1項目を読む。
@@ -66,7 +66,8 @@ export function updateSpawner(sp, state, dt) {
     const seg = stage.segments.find((s) => sp.time >= s.from && sp.time < s.to);
     if (!seg) return;
     for (const [type, raw] of Object.entries(seg.spawns)) {
-      const { every, group } = readEntry(type, raw);
+      const { every: baseEvery, group } = readEntry(type, raw);
+      const every = baseEvery * sp.scale; // 物量の調整（仕様書 §2）
       sp.timers[type] = (sp.timers[type] ?? 0) + dt;
       while (sp.timers[type] >= every) {
         sp.timers[type] -= every;

@@ -4,6 +4,7 @@ import { createSpawner, updateSpawner, validateStage } from '../js/game/spawner.
 import { STAGES } from '../js/data/stages.js';
 import { STAGE1 } from '../js/data/stage1.js';
 import { mulberry32 } from '../js/core/util.js';
+import { CONFIG } from '../js/core/config.js';
 
 // 敵を動かさず、出現だけを数える
 function simulate(seconds, dt = 0.1) {
@@ -18,9 +19,10 @@ function simulate(seconds, dt = 0.1) {
   return { state, sp, log };
 }
 
-test('0〜20秒は隕石だけが3秒ごと（6体）', () => {
+test('0〜20秒は隕石だけが 3秒×SPAWN_SCALE ごと（4体）', () => {
   const { log } = simulate(20);
-  assert.equal(log.filter((l) => l.type === 'meteor' && l.time < 20).length, 6);
+  assert.equal(Math.floor(20 / (3.0 * CONFIG.SPAWN_SCALE)), 4);
+  assert.equal(log.filter((l) => l.type === 'meteor' && l.time < 20).length, 4);
   assert.equal(log.filter((l) => l.type === 'drone' && l.time < 20).length, 0);
 });
 
@@ -28,8 +30,11 @@ test('90秒までの総数がおおむね出現表どおり', () => {
   const { log } = simulate(90);
   const meteors = log.filter((l) => l.type === 'meteor').length;
   const drones = log.filter((l) => l.type === 'drone').length;
-  assert.ok(meteors >= 44 && meteors <= 48, `meteors=${meteors}`);
-  assert.ok(drones >= 8 && drones <= 12, `drones=${drones}`);
+  const k = CONFIG.SPAWN_SCALE;
+  const expMeteors = 20 / (3.0 * k) + 40 / (2.0 * k) + 30 / (1.5 * k); // 区間ごとの間隔 × SPAWN_SCALE
+  const expDrones = 40 / (8 * k) + 30 / (6 * k);
+  assert.ok(Math.abs(meteors - expMeteors) <= 2, `meteors=${meteors} expected≈${expMeteors}`);
+  assert.ok(Math.abs(drones - expDrones) <= 2, `drones=${drones} expected≈${expDrones}`);
 });
 
 test('出現角度は-90〜+90度', () => {
@@ -65,7 +70,7 @@ const groupStage = (spawns) => ({
 // 敵を動かさず、出現だけを時刻ごとにまとめて返す
 function simulateStage(stage, seconds, dt = 0.1) {
   const state = { enemies: [], boss: null, rng: mulberry32(5) };
-  const sp = createSpawner(stage);
+  const sp = createSpawner(stage, 1); // 既存の算術を保つため scale = 1
   const groups = []; // { time, types: string[], angles: number[] }
   for (let i = 0; i < Math.round(seconds / dt); i++) {
     const before = state.enemies.length;

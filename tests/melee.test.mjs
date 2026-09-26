@@ -30,7 +30,7 @@ test('突き上げ敵：最初は盛り上がり（HP1・半径12）、距離280
   }
 });
 
-test('突き上げ敵：盛り上がりの間は動かない。潜伏時間が過ぎると隆起して、衝撃波（敵弾5発）を放つ', () => {
+test('突き上げ敵：盛り上がりの間は動かない。潜伏時間が過ぎると隆起して、衝撃波（敵弾3発）を放つ', () => {
   const s = mkState();
   const e = createEnemy('burrower', 10, s.rng);
   s.enemies.push(e);
@@ -44,8 +44,8 @@ test('突き上げ敵：盛り上がりの間は動かない。潜伏時間が�
   assert.equal(e.hp, 2);
   assert.equal(e.radius, 24);
   const shots = shotsOf(s, 'enemyShot');
-  assert.equal(shots.length, 5);
-  assert.deepEqual(shots.map((x) => x.angle).sort((a, b) => a - b), [-14, -2, 10, 22, 34].map((a) => a));
+  assert.equal(shots.length, 3);
+  assert.deepEqual(shots.map((x) => x.angle).sort((a, b) => a - b), BURROWER.waveOffsets.map((o) => 10 + o));
   for (const x of shots) {
     assert.equal(x.speed, ENEMY_SHOT_SPEED);
     assert.equal(x.dist, dist0 - 24);
@@ -58,7 +58,7 @@ test('突き上げ敵：衝撃波の角度は -90〜+90 度に丸める', () => 
   s.enemies.push(e);
   run(s, 4);
   const angles = shotsOf(s, 'enemyShot').map((x) => x.angle).sort((a, b) => a - b);
-  assert.deepEqual(angles, [61, 73, 85, 90, 90]);
+  assert.deepEqual(angles, [69, 85, 90]);
 });
 
 test('突き上げ敵：隆起後は接近速度で中心へ前進する', () => {
@@ -74,7 +74,7 @@ test('突き上げ敵：隆起後は接近速度で中心へ前進する', () =>
 });
 
 // ---- 破片飛ばし敵 ----
-test('破片飛ばし敵：保持距離300〜360まで進んで止まり、4秒ごとに破片3つ', () => {
+test('破片飛ばし敵：保持距離300〜360まで進んで止まり、5秒ごとに破片3つ', () => {
   const s = mkState();
   const t = createEnemy('thrower', 20, s.rng);
   assert.equal(t.hp, 3);
@@ -84,7 +84,7 @@ test('破片飛ばし敵：保持距離300〜360まで進んで止まり、4秒�
   assert.equal(t.phase, 'hover');
   assert.equal(t.dist, t.holdDist);
 
-  run(s, 3.9);
+  run(s, THROWER.fireInterval - 0.1);
   assert.equal(shotsOf(s, 'shard').length, 0);
   run(s, 0.2);
   const shards = shotsOf(s, 'shard');
@@ -135,14 +135,14 @@ test('破片：オフセット無しなら直進（角度は基準のまま）',
 });
 
 // ---- 突進敵 ----
-test('突進敵：距離440で1.2秒静止（予兆）→ dist/3.0 の速さで突進し、約3秒で中心へ届く', () => {
+test('突進敵：距離440で1.5秒静止（予兆）→ dist/3.0 の速さで突進し、約3秒で中心へ届く', () => {
   const s = mkState();
   const c = createEnemy('charger', -40, s.rng);
   assert.equal(c.hp, 2);
   assert.equal(c.dist, 440);
   assert.equal(c.phase, 'wait');
   s.enemies.push(c);
-  run(s, 1.1);
+  run(s, CHARGER.waitTime - 0.1);
   assert.equal(c.phase, 'wait');
   assert.equal(c.dist, 440);
   run(s, 0.2);
@@ -159,6 +159,6 @@ test('突進敵の速さは接近時間の基準の影響を受けない', () =>
   const b = createEnemy('charger', 0, mulberry32(999));
   const sa = mkState(); sa.enemies.push(a);
   const sb = mkState(); sb.enemies.push(b);
-  run(sa, 1.3); run(sb, 1.3);
+  run(sa, CHARGER.waitTime + 0.1); run(sb, CHARGER.waitTime + 0.1);
   assert.equal(a.speed, b.speed);
 });

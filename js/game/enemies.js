@@ -18,7 +18,7 @@ export const DRONE = {
   holdMax: 380,
   sway: 4,          // ±度
   swayHz: 0.3,
-  fireInterval: 3.5,
+  fireInterval: 4.5,
   hoverTime: 15,
 };
 
@@ -32,20 +32,20 @@ export const BURROWER = {
   burrowJitter: 0.5,
   burrowedHp: 1,
   burrowedRadius: 12,
-  waveOffsets: [-24, -12, 0, 12, 24], // 隆起の衝撃波（敵弾5発）の角度
+  waveOffsets: [-16, 0, 16], // 隆起の衝撃波（敵弾3発）の角度
 };
 export const THROWER = {
   holdMin: 300,
   holdMax: 360,
   sway: 4,                // ±度
   swayHz: 0.3,
-  fireInterval: 4.0,
+  fireInterval: 5.0,
   hoverTime: 14,
   shardOffsets: [-20, 0, 20],
 };
 export const CHARGER = {
   dist: 440,
-  waitTime: 1.2,          // 予兆（点滅）の時間
+  waitTime: 1.5,          // 予兆（点滅）の時間
   dashTime: 3.0,          // 突進で中心へ届くまで（接近時間の基準の影響は受けない）
 };
 

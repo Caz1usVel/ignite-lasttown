@@ -31,7 +31,8 @@ test('pickSpreadAngles は不可能な条件なら等間隔にする', () => {
 test('ボスは距離460から380まで進入してから攻撃を始める', () => {
   const s = mkState();
   const b = createBoss('bossA');
-  assert.equal(b.hp, 40);
+  assert.equal(b.hp, BOSS_A_BASE.hp);
+  assert.equal(b.hp, 30);
   assert.equal(b.dist, 460);
   run(b, s, 1);
   assert.equal(b.arrived, false);
@@ -41,14 +42,16 @@ test('ボスは距離460から380まで進入してから攻撃を始める', ()
   assert.equal(b.dist, 380);
 });
 
-test('到着後6秒で子機3体、4秒で敵弾3連射', () => {
+test('到着後7.5秒で子機3体、5秒で敵弾3連射', () => {
   const s = mkState();
   const b = createBoss('bossA');
   run(b, s, ARRIVE + 0.1); // 到着
-  run(b, s, 4.6);          // 到着から約4.6秒
+  run(b, s, BOSS_A_BASE.shotInterval - 0.4); // 到着から shotInterval の少し前＋0.1秒＝約4.7秒は未発射のはずだが、下で確認する
+  assert.equal(s.enemies.filter((e) => e.type === 'enemyShot').length, 0);
+  run(b, s, 1.2);          // 到着から約5.9秒（3連射の間隔を含む）
   assert.equal(s.enemies.filter((e) => e.type === 'enemyShot').length, 3);
   assert.equal(s.enemies.filter((e) => e.type === 'bossMinion').length, 0);
-  run(b, s, 1.5);          // 到着から約6.1秒
+  run(b, s, BOSS_A_BASE.summonInterval - BOSS_A_BASE.shotInterval - 0.7); // 到着から約7.6秒
   const minions = s.enemies.filter((e) => e.type === 'bossMinion');
   assert.equal(minions.length, 3);
   for (const m of minions) assert.ok(Math.abs(m.dist / m.speed - BOSS_A_BASE.minionApproach) < 0.5);
@@ -79,7 +82,7 @@ test('params で強化型のパラメータを上書きできる', () => {
   const b = createBoss('bossA', { summonCount: 5, hp: 60 });
   assert.equal(b.maxHp, 60);
   run(b, s, ARRIVE + 0.1);
-  run(b, s, 6.1);
+  run(b, s, BOSS_A_BASE.summonInterval);
   assert.equal(s.enemies.filter((e) => e.type === 'bossMinion').length, 5);
 });
 

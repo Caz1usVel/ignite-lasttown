@@ -13,6 +13,7 @@ export const CONFIG = Object.freeze({
   SPAWN_DIST: 460,
   APPROACH_TIME: 14,    // 秒（実プレイで「気づくのが遅れる」ため、10秒から遅くした）
   APPROACH_JITTER: 0.15,
+  SPAWN_SCALE: 1.35,    // 全ステージの出現間隔に掛ける（実プレイで「物量が多い」ため、薄くした）
 
   BULLET_SPEED_PC: 900,      // 飛ぶ速さだけを上げた（連射速度は据え置き）
   BULLET_SPEED_MOBILE: 2200,

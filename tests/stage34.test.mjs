@@ -39,19 +39,19 @@ test('4面：突進敵が出て、3面の敵も旧テーマの敵も混ざる', 
 test('3面のボスは、ボスBの初期型（基準値のまま）', () => {
   assert.equal(STAGE3.boss.type, 'bossB');
   const b = createBoss(STAGE3.boss.type, STAGE3.boss.params);
-  assert.equal(b.maxHp, 50);
+  assert.equal(b.maxHp, BOSS_B_BASE.hp);
   for (const key of Object.keys(BOSS_B_BASE)) assert.equal(b.p[key], BOSS_B_BASE[key], key);
 });
 
-test('4面のボスは、ボスBの強化型：HP80・連続2回・間隔6.5・突進2.3秒・中断8・散布5秒・色', () => {
+test('4面のボスは、ボスBの強化型：HP60・連続2回・間隔8.5・突進2.5秒・中断6・散布7秒・色', () => {
   assert.equal(STAGE4.boss.type, 'bossB');
   const b = createBoss(STAGE4.boss.type, STAGE4.boss.params);
-  assert.equal(b.maxHp, 80);
+  assert.equal(b.maxHp, 60);
   assert.equal(b.p.dashCount, 2);
-  assert.equal(b.p.dashInterval, 6.5);
-  assert.equal(b.p.dashTime, 2.3);
-  assert.equal(b.p.dashBreak, 8);
-  assert.equal(b.p.scatterInterval, 5);
+  assert.equal(b.p.dashInterval, 8.5);
+  assert.equal(b.p.dashTime, 2.5);
+  assert.equal(b.p.dashBreak, 6);
+  assert.equal(b.p.scatterInterval, 7);
   assert.equal(b.p.color, '#ff7a3d');
-  assert.equal(BOSS_B_BASE.hp, 50); // 基準値は書き換わらない
+  assert.equal(BOSS_B_BASE.hp, 40); // 基準値は書き換わらない
 });

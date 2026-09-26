@@ -13,5 +13,5 @@ export const STAGE2 = Object.freeze({
   ],
   spawnEnd: 110,
   // ボスAの強化型：HP・分散召喚の数と間隔を強め、色で見分ける（他は初期型のまま）
-  boss: { type: 'bossA', params: { hp: 60, summonCount: 5, summonInterval: 4.5, color: '#ff8f6b' } },
+  boss: { type: 'bossA', params: { hp: 45, summonCount: 4, summonInterval: 6, color: '#ff8f6b' } },
 });

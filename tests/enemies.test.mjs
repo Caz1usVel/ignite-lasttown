@@ -38,7 +38,7 @@ test('隕石は直進する', () => {
   assert.equal(e.angle, 10);
 });
 
-test('ドローンは接近→ホバリング→3.5秒ごとに撃つ→15秒後に再接近', () => {
+test('ドローンは接近→ホバリング→4.5秒ごとに撃つ→15秒後に再接近', () => {
   const s = mkState();
   const d = createEnemy('drone', 20, s.rng);
   assert.equal(d.hp, 2);
@@ -49,13 +49,13 @@ test('ドローンは接近→ホバリング→3.5秒ごとに撃つ→15秒後
   assert.equal(d.phase, 'hover');
   assert.equal(d.dist, d.holdDist);
 
-  for (let i = 0; i < Math.round(3.6 / dt); i++) updateEnemies(s, dt);
+  for (let i = 0; i < Math.round((DRONE.fireInterval + 0.1) / dt); i++) updateEnemies(s, dt);
   const shots = s.enemies.filter((e) => e.type === 'enemyShot');
   assert.equal(shots.length, 1);
   assert.equal(shots[0].speed, ENEMY_SHOT_SPEED);
   assert.ok(Math.abs(d.angle - 20) <= DRONE.sway + 1e-9);
 
-  for (let i = 0; i < Math.round(12 / dt); i++) updateEnemies(s, dt);
+  for (let i = 0; i < Math.round((15.6 - DRONE.fireInterval - 0.1) / dt); i++) updateEnemies(s, dt);
   assert.equal(d.phase, 'advance');
   const before = d.dist;
   updateEnemies(s, 1);

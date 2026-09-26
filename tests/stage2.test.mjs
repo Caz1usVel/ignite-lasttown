@@ -24,17 +24,17 @@ test('2面：最初の区間には編隊が無く、それ以降の区間には�
 test('2面：ボスAの強化型は初期型より強く、それ以外は初期型のまま。基準値は書き換わらない', () => {
   const boss = createBoss(STAGE2.boss.type, STAGE2.boss.params);
   assert.equal(STAGE2.boss.type, 'bossA');
-  assert.equal(boss.maxHp, 60);
-  assert.equal(boss.p.summonCount, 5);
-  assert.equal(boss.p.summonInterval, 4.5);
+  assert.equal(boss.maxHp, 45);
+  assert.equal(boss.p.summonCount, 4);
+  assert.equal(boss.p.summonInterval, 6);
   assert.equal(boss.p.color, '#ff8f6b');
   for (const key of ['radius', 'dist', 'angleRange', 'drift', 'moveSpeed', 'summonMinSep', 'minionApproach',
     'shotInterval', 'shotBurst', 'shotGap', 'advanceInterval', 'advanceStep', 'minDist', 'score']) {
     assert.equal(boss.p[key], BOSS_A_BASE[key], key);
   }
-  assert.equal(BOSS_A_BASE.hp, 40);
+  assert.equal(BOSS_A_BASE.hp, 30);
   assert.equal(BOSS_A_BASE.summonCount, 3);
-  assert.equal(BOSS_A_BASE.summonInterval, 6);
+  assert.equal(BOSS_A_BASE.summonInterval, 7.5);
   assert.equal(Object.isFrozen(BOSS_A_BASE), true);
 });
 

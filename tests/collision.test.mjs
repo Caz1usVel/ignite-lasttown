@@ -79,7 +79,7 @@ test('ボスにも当たる', () => {
   s.bullets.push(bullet(0, 300, 360));
   const ev = resolveBulletHits(s);
   assert.equal(ev[0].target, s.boss);
-  assert.equal(s.boss.hp, 39);
+  assert.equal(s.boss.hp, s.boss.maxHp - 1);
 });
 
 test('中心に届いた敵は dead になり、数が返る', () => {
@@ -227,7 +227,7 @@ test('hidden のボスには当たらない', () => {
   s.boss.hidden = true;
   s.bullets.push(pbullet(0, 300, 460, 0));
   assert.equal(resolveBulletHits(s).length, 0);
-  assert.equal(s.boss.hp, 40);
+  assert.equal(s.boss.hp, s.boss.maxHp);
   s.boss.hidden = false;
   s.bullets = [pbullet(0, 300, 460, 0)];
   assert.equal(resolveBulletHits(s).length, 1);
@@ -241,7 +241,7 @@ test('damageMult があると受けるダメージが増える。damageTaken が
   s.boss.damageTaken = 0;
   s.bullets.push(pbullet(0, 300, 460, 0));
   resolveBulletHits(s);
-  assert.equal(s.boss.hp, 40 - 1.5);
+  assert.equal(s.boss.hp, s.boss.maxHp - 1.5);
   assert.equal(s.boss.damageTaken, 1.5);
 });
 

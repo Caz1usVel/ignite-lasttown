@@ -4,17 +4,17 @@ import { createEnemy, ENEMY_SHOT_SPEED } from './enemies.js';
 import { createBossB, updateBossB } from './boss-b.js';
 
 export const BOSS_A_BASE = Object.freeze({
-  hp: 40,
+  hp: 30,
   radius: 60,
   dist: 380,
   angleRange: 60,       // ±度
   drift: 10,            // 度/秒
   moveSpeed: 28,        // 距離の移動速度（進入・前進）
-  summonInterval: 6,
+  summonInterval: 7.5,
   summonCount: 3,
   summonMinSep: 20,
   minionApproach: 7,    // 子機が中心へ届くまでの秒数
-  shotInterval: 4,
+  shotInterval: 5,
   shotBurst: 3,
   shotGap: 0.25,
   advanceInterval: 12,

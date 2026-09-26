@@ -5,14 +5,14 @@ import { createEnemy, ENEMY_SHOT_SPEED } from './enemies.js';
 // ボスB：瞬間突進（視界の外に再出現して、中心へ突進する）が識別攻撃。
 // 循環参照を避けるため、boss.js は読み込まない（boss.js の登録表がこのファイルを読み込む）。
 export const BOSS_B_BASE = Object.freeze({
-  hp: 50,
+  hp: 40,
   radius: 56,
   dist: 340,            // 待機の距離
   moveSpeed: 28,        // 進入速度
   angleRange: 50,       // 待機中の左右の往復（±度）
   drift: 8,             // 度/秒
   firstDashDelay: 2,    // 到着してから、最初の突進の予兆まで（秒）
-  dashInterval: 9,      // 咆哮のあと待機に戻ってから、次の突進の予兆まで（秒）
+  dashInterval: 11,      // 咆哮のあと待機に戻ってから、次の突進の予兆まで（秒）
   dashCount: 1,         // 連続突進の回数
   chainGap: 0.6,        // 連続突進の2回目の予兆までの間（秒）
   telegraph: 1.0,       // 予兆（点滅）
@@ -21,9 +21,9 @@ export const BOSS_B_BASE = Object.freeze({
   reappearMargin: 15,   // 視界の端から、さらに外側へ離す量（度）
   settle: 0.4,          // 再出現してから突進を始めるまで
   dashTime: 2.6,        // 距離440から中心へ届くまで
-  dashBreak: 8,         // 突進中に受けたダメージがこの値に届くと中断
-  scatterInterval: 7,
-  scatterCount: 7,
+  dashBreak: 6,         // 突進中に受けたダメージがこの値に届くと中断
+  scatterInterval: 9,
+  scatterCount: 5,
   scatterSpread: 120,   // 扇の全体の角度（度）
   roarTime: 2.2,        // 咆哮硬直（無防備）
   roarMult: 1.5,        // 咆哮中に受けるダメージの倍率

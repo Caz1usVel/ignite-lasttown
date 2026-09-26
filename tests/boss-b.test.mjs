@@ -18,11 +18,11 @@ const until = (b, s, phase, maxSec = 40) => {
 
 test('BOSS_B_BASE：仕様の値で、凍結されている', () => {
   assert.equal(Object.isFrozen(BOSS_B_BASE), true);
-  assert.equal(BOSS_B_BASE.hp, 50);
+  assert.equal(BOSS_B_BASE.hp, 40);
   assert.equal(BOSS_B_BASE.dist, 340);
   assert.equal(BOSS_B_BASE.moveSpeed, 28);
   assert.equal(BOSS_B_BASE.firstDashDelay, 2);
-  assert.equal(BOSS_B_BASE.dashInterval, 9);
+  assert.equal(BOSS_B_BASE.dashInterval, 11);
   assert.equal(BOSS_B_BASE.dashCount, 1);
   assert.equal(BOSS_B_BASE.telegraph, 1.0);
   assert.equal(BOSS_B_BASE.vanish, 0.8);
@@ -30,9 +30,9 @@ test('BOSS_B_BASE：仕様の値で、凍結されている', () => {
   assert.equal(BOSS_B_BASE.reappearMargin, 15);
   assert.equal(BOSS_B_BASE.settle, 0.4);
   assert.equal(BOSS_B_BASE.dashTime, 2.6);
-  assert.equal(BOSS_B_BASE.dashBreak, 8);
-  assert.equal(BOSS_B_BASE.scatterInterval, 7);
-  assert.equal(BOSS_B_BASE.scatterCount, 7);
+  assert.equal(BOSS_B_BASE.dashBreak, 6);
+  assert.equal(BOSS_B_BASE.scatterInterval, 9);
+  assert.equal(BOSS_B_BASE.scatterCount, 5);
   assert.equal(BOSS_B_BASE.scatterSpread, 120);
   assert.equal(BOSS_B_BASE.roarTime, 2.2);
   assert.equal(BOSS_B_BASE.roarMult, 1.5);
@@ -45,13 +45,13 @@ test('登録表：bossB を createBoss で作れる（名前・色の検査つ�
   const b = createBoss('bossB');
   assert.equal(b.type, 'bossB');
   assert.equal(b.name, 'ボスB');
-  assert.equal(b.hp, 50);
+  assert.equal(b.hp, 40);
   assert.equal(b.dist, 460);
   assert.throws(() => createBoss('bossB', { color: 'orange' }), /invalid boss color/);
   assert.equal(createBoss('bossB', { color: '#ff7a3d' }).p.color, '#ff7a3d');
   const strong = createBoss('bossB', { hp: 80, dashCount: 2 });
   assert.equal(strong.maxHp, 80);
-  assert.equal(BOSS_B_BASE.hp, 50); // 基準値は書き換わらない
+  assert.equal(BOSS_B_BASE.hp, 40); // 基準値は書き換わらない
 });
 
 test('進入：距離460から340まで進み、着いたら待機（idle）', () => {
@@ -130,14 +130,14 @@ test('突進の流れ：待機 → 予兆 → 消える → 再出現（視界�
   assert.equal(b.damageMult, 1);        // 咆哮のあと、元に戻る
 });
 
-test('待機から予兆までは dashInterval（9秒）、各段階の長さは 1.0 / 0.8 / 0.4 秒', () => {
+test('待機から予兆までは dashInterval（11秒）、各段階の長さは 1.0 / 0.8 / 0.4 秒', () => {
   const s = mkState();
   const b = createBossB();
   toIdle(b, s);
   b.dashT = b.p.dashInterval; // 到着からの余りを捨てて、待機の長さを正確に測る
   const t0 = b.t;
   assert.equal(until(b, s, 'telegraph'), true);
-  assert.ok(Math.abs(b.t - t0 - 9) < 0.1, `idle for ${b.t - t0}`);
+  assert.ok(Math.abs(b.t - t0 - b.p.dashInterval) < 0.1, `idle for ${b.t - t0}`);
   const t1 = b.t;
   assert.equal(until(b, s, 'vanish'), true);
   assert.ok(Math.abs(b.t - t1 - 1.0) < 0.1);
@@ -162,13 +162,13 @@ test('突進：dashTime（2.6秒）で距離440から中心へ。距離40（被�
   assert.equal(b.hitCore, true);
 });
 
-test('突進の中断：突進中に受けたダメージが dashBreak（8）に届くと、怯んで戻り、咆哮に入る', () => {
+test('突進の中断：突進中に受けたダメージが dashBreak（6）に届くと、怯んで戻り、咆哮に入る', () => {
   const s = mkState();
   const b = createBossB();
   toIdle(b, s);
   until(b, s, 'dash');
   step(b, s, 0.5);
-  b.damageTaken += 7.9;
+  b.damageTaken += b.p.dashBreak - 0.1;
   step(b, s, DT);
   assert.equal(b.phase, 'dash'); // まだ届かない
   b.damageTaken += 0.2;
@@ -195,7 +195,7 @@ test('咆哮：2.2秒間は damageMult が 1.5 で、その間は動かない。
   const b = createBossB();
   toIdle(b, s);
   until(b, s, 'dash');
-  b.damageTaken += 8;
+  b.damageTaken += b.p.dashBreak;
   step(b, s, DT);
   assert.equal(b.phase, 'roar');
   const angle0 = b.angle;
@@ -218,7 +218,7 @@ test('最初の突進：到着から firstDashDelay（2秒）後に予兆。到�
   assert.equal(until(b, s, 'telegraph'), true);
   assert.ok(Math.abs(b.t - t0 - (2 - 0.1)) < 0.1, `first telegraph after ${b.t - t0}`); // toIdle は着いてから約0.1秒進めてある
   until(b, s, 'dash');
-  b.damageTaken += 8;
+  b.damageTaken += b.p.dashBreak;
   step(b, s, DT);
   assert.equal(b.phase, 'roar');
   b.scatterT = 1e9;
@@ -233,7 +233,7 @@ test('突進の中断：再出現（settle）の間に与えたダメージも�
   until(b, s, 'vanish');
   b.damageTaken += 50;          // 消えている間（再出現の前）のダメージ
   until(b, s, 'settle');
-  b.damageTaken += 8;           // 再出現してからのダメージ
+  b.damageTaken += b.p.dashBreak;           // 再出現してからのダメージ
   assert.equal(until(b, s, 'dash'), true);
   assert.equal(b.phase, 'dash');
   step(b, s, DT);
@@ -261,13 +261,13 @@ test('連続突進の途中で中断されたら、残りの突進は無くな�
   const b = createBossB({ dashCount: 2 });
   toIdle(b, s);
   until(b, s, 'dash');
-  b.damageTaken += 8;
+  b.damageTaken += b.p.dashBreak;
   step(b, s, DT);
   assert.equal(b.phase, 'roar');
   assert.equal(b.dashesLeft, 0);
 });
 
-test('破片散布：7秒ごとに敵弾7発を、ボスの角度を中心に ±60 度に放つ（-90〜+90に丸める）', () => {
+test('破片散布：9秒ごとに敵弾5発を、ボスの角度を中心に ±60 度に放つ（-90〜+90に丸める）', () => {
   const s = mkState();
   const b = createBossB();
   toIdle(b, s);
@@ -275,12 +275,12 @@ test('破片散布：7秒ごとに敵弾7発を、ボスの角度を中心に ±
   b.angle = 0;
   b.dir = 0;     // 動かさない（drift × 0）
   b.scatterT = b.p.scatterInterval; // 到着からの余りを捨てて、間隔を正確に測る
-  step(b, s, 6.7);
+  step(b, s, b.p.scatterInterval - 0.3);
   assert.equal(s.enemies.length, 0);
   step(b, s, 0.5);
-  assert.equal(s.enemies.length, 7);
+  assert.equal(s.enemies.length, 5);
   const angles = s.enemies.map((e) => e.angle).sort((a, c) => a - c);
-  assert.deepEqual(angles.map((a) => Math.round(a)), [-60, -40, -20, 0, 20, 40, 60]);
+  assert.deepEqual(angles.map((a) => Math.round(a)), [-60, -30, 0, 30, 60]);
   for (const e of s.enemies) {
     assert.equal(e.type, 'enemyShot');
     assert.equal(e.speed, ENEMY_SHOT_SPEED);
@@ -296,7 +296,7 @@ test('破片散布：端に近いときも -90〜+90 度に丸める', () => {
   b.angle = 50;
   b.dir = 0;
   b.scatterT = b.p.scatterInterval;
-  step(b, s, 7.1);
+  step(b, s, b.p.scatterInterval + 0.1);
   for (const e of s.enemies) assert.ok(e.angle >= -90 && e.angle <= 90, `angle ${e.angle}`);
   assert.equal(Math.max(...s.enemies.map((e) => e.angle)), 90);
 });
