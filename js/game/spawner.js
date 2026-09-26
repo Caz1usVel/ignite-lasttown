@@ -1,6 +1,6 @@
 import { CONFIG } from '../core/config.js';
 import { randInt, randRange } from '../core/util.js';
-import { createEnemy } from './enemies.js';
+import { createEnemy, ENEMY_DEFS } from './enemies.js';
 import { createFormation } from './formation.js';
 import { createBoss } from './boss.js';
 
@@ -28,6 +28,34 @@ function readEntry(type, entry) {
     return { every, group: { lo, hi, minSep } };
   }
   throw new Error(`invalid spawn entry for ${type}: ${entry}`);
+}
+
+// ステージのデータを読み込み時に検査する。誤りがあれば、内容のわかる例外を投げる。
+export function validateStage(stage) {
+  const label = `stage ${stage?.id}`;
+  const { segments } = stage ?? {};
+  if (!Array.isArray(segments) || segments.length === 0) throw new Error(`${label}: segments must be a non-empty array`);
+  if (segments[0].from !== 0) throw new Error(`${label}: first segment must start at 0 (got ${segments[0].from})`);
+  segments.forEach((seg, i) => {
+    if (i > 0 && seg.from !== segments[i - 1].to) {
+      throw new Error(`${label}: segment ${i} starts at ${seg.from} but the previous one ends at ${segments[i - 1].to}`);
+    }
+    if (!(seg.to > seg.from)) throw new Error(`${label}: segment ${i} must have to > from (${seg.from}..${seg.to})`);
+    for (const [type, raw] of Object.entries(seg.spawns ?? {})) {
+      if (!Object.prototype.hasOwnProperty.call(ENEMY_DEFS, type)) throw new Error(`${label}: unknown enemy type in spawns: ${type}`);
+      readEntry(type, raw);
+      if (raw && typeof raw === 'object' && Array.isArray(raw.count) && raw.count.length !== 2) {
+        throw new Error(`${label}: "count" array for ${type} must have exactly 2 elements: ${JSON.stringify(raw.count)}`);
+      }
+    }
+  });
+  const last = segments[segments.length - 1];
+  if (stage.spawnEnd !== last.to) throw new Error(`${label}: spawnEnd (${stage.spawnEnd}) must equal the last segment's end (${last.to})`);
+  try {
+    createBoss(stage.boss?.type, stage.boss?.params);
+  } catch (err) {
+    throw new Error(`${label}: invalid boss (${err.message})`);
+  }
 }
 
 export function updateSpawner(sp, state, dt) {

@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createSpawner, updateSpawner } from '../js/game/spawner.js';
+import { createSpawner, updateSpawner, validateStage } from '../js/game/spawner.js';
+import { STAGES } from '../js/data/stages.js';
 import { STAGE1 } from '../js/data/stage1.js';
 import { mulberry32 } from '../js/core/util.js';
 
@@ -133,4 +134,44 @@ test('不正な出現表の項目は例外になる', () => {
   for (const spawns of bad) {
     assert.throws(() => simulateStage(groupStage(spawns), 20), Error, JSON.stringify(spawns));
   }
+});
+
+// ---- validateStage ----
+test('validateStage：登録済みの全ステージが通る', () => {
+  for (const [id, stage] of Object.entries(STAGES)) {
+    assert.doesNotThrow(() => validateStage(stage), `stage ${id}`);
+  }
+});
+
+test('validateStage：誤ったステージデータは例外になる', () => {
+  const ok = () => ({
+    id: 9,
+    segments: [
+      { from: 0, to: 10, spawns: { meteor: 2 } },
+      { from: 10, to: 20, spawns: { formationDrone: { every: 5, count: [3, 4], minSep: 25 } } },
+    ],
+    spawnEnd: 20,
+    boss: { type: 'bossA', params: {} },
+  });
+  assert.doesNotThrow(() => validateStage(ok()));
+  const cases = {
+    '区間の隙間': (s) => { s.segments[1].from = 12; },
+    '区間の重なり': (s) => { s.segments[1].from = 8; },
+    'to <= from': (s) => { s.segments[1].to = 10; },
+    '最初が0でない': (s) => { s.segments[0].from = 1; },
+    'segments が空': (s) => { s.segments = []; },
+    'spawnEnd の不一致': (s) => { s.spawnEnd = 25; },
+    '未知の敵の種類': (s) => { s.segments[0].spawns = { ufo: 2 }; },
+    '不正なまとめ項目': (s) => { s.segments[1].spawns.formationDrone.every = 0; },
+    'count 配列が3要素': (s) => { s.segments[1].spawns.formationDrone.count = [3, 4, 5]; },
+    '未知のボス': (s) => { s.boss.type = 'bossZ'; },
+  };
+  for (const [name, mutate] of Object.entries(cases)) {
+    const stage = ok();
+    mutate(stage);
+    assert.throws(() => validateStage(stage), Error, name);
+  }
+  const ufo = ok();
+  ufo.segments[0].spawns = { ufo: 2 };
+  assert.throws(() => validateStage(ufo), /ufo/);
 });
