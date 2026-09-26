@@ -8,6 +8,8 @@ import { STAGE1 } from '../js/data/stage1.js';
 import { STAGE2 } from '../js/data/stage2.js';
 import { STAGE3 } from '../js/data/stage3.js';
 import { STAGE4 } from '../js/data/stage4.js';
+import { STAGE5 } from '../js/data/stage5.js';
+import { STAGE6 } from '../js/data/stage6.js';
 import { worldToScreen } from '../js/core/view.js';
 import { mulberry32 } from '../js/core/util.js';
 import { CONFIG } from '../js/core/config.js';
@@ -91,7 +93,8 @@ test('何もしなければ1面はゲームオーバーになる', () => {
 // 自動操縦は狙いが完璧で、人間より強い。失敗した場合は、結果（到達時間・残機・ボスHP）を報告すること。
 function autoPilot(st) {
   const t = st.turret;
-  const cands = [...st.enemies, ...(st.boss && !st.boss.dead && !st.boss.hidden ? [st.boss] : [])];
+  // 閉じているシールドの敵・ボスは撃っても吸収されるので、狙わない
+  const cands = [...st.enemies, ...(st.boss && !st.boss.dead && !st.boss.hidden ? [st.boss] : [])].filter((e) => !e.shielded);
   if (!cands.length) return idle;
   const target = cands.reduce((a, b) => (b.dist < a.dist ? b : a));
   let aimAngle = target.angle;
@@ -123,6 +126,8 @@ test('自動操縦で1面をクリアできる（複数のシード）', () => a
 test('自動操縦で2面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE2, 500, 'stage 2'));
 test('自動操縦で3面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE3, 600, 'stage 3'));
 test('自動操縦で4面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE4, 700, 'stage 4'));
+test('自動操縦で5面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE5, 700, 'stage 5'));
+test('自動操縦で6面をクリアできる（複数のシード）', () => assertMostlyClears(STAGE6, 800, 'stage 6'));
 
 const meteorAhead = (s) => s.enemies.push(createEnemy('meteor', 0, s.rng, { dist: 300, speed: 0 }));
 

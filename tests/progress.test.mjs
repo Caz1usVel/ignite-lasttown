@@ -8,28 +8,27 @@ import { STAGE1 } from '../js/data/stage1.js';
 import { STAGE2 } from '../js/data/stage2.js';
 import { STAGE3 } from '../js/data/stage3.js';
 import { STAGE4 } from '../js/data/stage4.js';
+import { STAGE5 } from '../js/data/stage5.js';
+import { STAGE6 } from '../js/data/stage6.js';
 
 const mkSave = (stages = {}) => ({ version: 2, settings: {}, stages });
 const cleared = (...ids) => mkSave(Object.fromEntries(ids.map((i) => [i, { cleared: true, best: 1 }])));
-const six = (id) => (id >= 1 && id <= 6 ? { id } : null); // 1〜6面にデータがあると仮定した登録
+const seven = (id) => (id >= 1 && id <= 7 ? { id } : null); // 7面までデータがあると仮定した登録
 
-test('ステージの登録：1〜4面', () => {
-  assert.equal(getStage(1), STAGE1);
-  assert.equal(getStage(2), STAGE2);
-  assert.equal(getStage(3), STAGE3);
-  assert.equal(getStage(4), STAGE4);
-  assert.deepEqual(Object.keys(STAGES), ['1', '2', '3', '4']);
-  for (let i = 5; i <= 7; i++) assert.equal(getStage(i), null);
+test('ステージの登録：1〜6面', () => {
+  const expected = [STAGE1, STAGE2, STAGE3, STAGE4, STAGE5, STAGE6];
+  expected.forEach((stage, i) => assert.equal(getStage(i + 1), stage));
+  assert.deepEqual(Object.keys(STAGES), ['1', '2', '3', '4', '5', '6']);
+  assert.equal(getStage(7), null);
   assert.equal(getStage(0), null);
   assert.equal(getStage('__proto__'), null);
 });
 
 test('isStageAvailable：データがある面だけ', () => {
-  for (const id of [1, 2, 3, 4]) assert.equal(isStageAvailable(id), true, `stage ${id}`);
-  assert.equal(isStageAvailable(5), false);
-  assert.equal(isStageAvailable(5, six), true);
-  assert.equal(isStageAvailable(7, six), false);
-  assert.equal(isStageAvailable(0, six), false);
+  for (const id of [1, 2, 3, 4, 5, 6]) assert.equal(isStageAvailable(id), true, `stage ${id}`);
+  assert.equal(isStageAvailable(7), false);
+  assert.equal(isStageAvailable(7, seven), true);
+  assert.equal(isStageAvailable(0, seven), false);
   assert.equal(isStageAvailable(8, () => ({})), false); // STAGE_COUNT を超える番号は常に不可
 });
 
@@ -49,22 +48,22 @@ test('isStagePlayable：データがあり、かつ解放済み', () => {
   assert.equal(isStagePlayable(s, 1), true);
   assert.equal(isStagePlayable(s, 2), true);   // 1面クリア済みで、2面のデータがある
   assert.equal(isStagePlayable(s, 3), false);  // データはあるが未解放（2面が未クリア）
-  const all = cleared(1, 2, 3, 4);
-  assert.equal(isStagePlayable(all, 4), true);
-  assert.equal(isStagePlayable(all, 5), false);      // 解放済みだがデータが無い（準備中）
-  assert.equal(isStagePlayable(all, 5, six), true);
-  assert.equal(isStagePlayable(all, 6, six), false); // データはあるが未解放（5面が未クリア）
+  const all = cleared(1, 2, 3, 4, 5, 6);
+  assert.equal(isStagePlayable(all, 6), true);
+  assert.equal(isStagePlayable(all, 7), false);         // 解放済みだがデータが無い（準備中）
+  assert.equal(isStagePlayable(all, 7, seven), true);
+  assert.equal(isStagePlayable(cleared(1, 2, 3, 4, 5), 7, seven), false); // データはあるが未解放（6面が未クリア）
 });
 
 test('nextPlayableStage', () => {
   assert.equal(nextPlayableStage(cleared(1), 1), 2);
   assert.equal(nextPlayableStage(cleared(1), 2), null);      // 2面が未クリア
   assert.equal(nextPlayableStage(cleared(1, 2), 2), 3);
-  assert.equal(nextPlayableStage(cleared(1, 2), 3), null);   // 3面が未クリア
-  assert.equal(nextPlayableStage(cleared(1, 2, 3), 3), 4);
-  assert.equal(nextPlayableStage(cleared(1, 2, 3, 4), 4), null);      // 5面のデータが無い
-  assert.equal(nextPlayableStage(cleared(1, 2, 3, 4), 4, six), 5);
-  assert.equal(nextPlayableStage(cleared(1, 2, 3, 4, 5, 6), 6, six), null); // 7面のデータが無い
+  assert.equal(nextPlayableStage(cleared(1, 2, 3, 4), 4), 5);
+  assert.equal(nextPlayableStage(cleared(1, 2, 3, 4, 5), 5), 6);
+  assert.equal(nextPlayableStage(cleared(1, 2, 3, 4, 5, 6), 6), null);      // 7面のデータが無い
+  assert.equal(nextPlayableStage(cleared(1, 2, 3, 4, 5, 6), 6, seven), 7);
+  assert.equal(nextPlayableStage(cleared(1, 2, 3, 4, 5, 6, 7), 7, seven), null); // 最後の面
 });
 
 test('recordResult：クリアで cleared、最高スコアを更新', () => {
