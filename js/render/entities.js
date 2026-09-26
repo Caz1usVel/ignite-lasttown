@@ -16,6 +16,11 @@ export const COLORS = {
   shard: '#ffb84d',
   charger: '#ff6b6b',
   bossB: '#c2418f',
+  shielder: '#8fb8ff',
+  teleporter: '#b18cff',
+  jammer: '#7be0c3',
+  jamShot: '#5fffd0',
+  bossC: '#4fc3d9',
   boss: '#8f7cff',
   bullet: '#fff6c8',
   eye: '#1b1f3a',
@@ -258,6 +263,163 @@ function drawCharger(g, e, x, y, time) {
   g.restore();
 }
 
+// シールド敵：丸い体と、正面（中心側＝画面の下）に広がる盾。閉じている間は盾が見え、開く前は点滅、開くと消える
+function drawShielder(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  ellipse(g, 0, 0, r * 0.9, r * 0.8, COLORS.shielder);
+  ellipse(g, 0, r * 0.15, r * 0.55, r * 0.4, lightenColor(COLORS.shielder, 0.4));
+  for (const s of [-1, 1]) {
+    ellipse(g, s * r * 0.3, -r * 0.2, r * 0.13, r * 0.17, '#ffffff');
+    ellipse(g, s * r * 0.3, -r * 0.17, r * 0.06, r * 0.08, COLORS.eye);
+  }
+  if (e.shielded) {
+    const flicker = e.blink && Math.floor(time * 20) % 2 === 0;
+    g.strokeStyle = flicker ? 'rgba(255,255,255,0.35)' : 'rgba(143,184,255,0.9)';
+    g.lineWidth = 6;
+    g.beginPath();
+    g.arc(0, r * 0.1, r * 1.35, Math.PI * 0.15, Math.PI * 0.85); // 下側（中心側）に弧の盾
+    g.stroke();
+    g.fillStyle = flicker ? 'rgba(255,255,255,0.08)' : 'rgba(143,184,255,0.22)';
+    g.beginPath();
+    g.moveTo(0, r * 0.1);
+    g.arc(0, r * 0.1, r * 1.35, Math.PI * 0.15, Math.PI * 0.85);
+    g.closePath();
+    g.fill();
+  }
+  g.restore();
+}
+
+// テレポート敵：ふわふわした体。移動の予兆で点滅・半透明になり、移動した直後は光る輪が広がる
+function drawTeleporter(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  if (e.warpFlash > 0) {
+    g.strokeStyle = `rgba(200,170,255,${(e.warpFlash / 0.3).toFixed(2)})`;
+    g.lineWidth = 4;
+    g.beginPath();
+    g.arc(0, 0, r * (1.2 + (0.3 - e.warpFlash) * 6), 0, Math.PI * 2);
+    g.stroke();
+  }
+  g.globalAlpha = e.warn ? (Math.floor(time * 24) % 2 === 0 ? 0.25 : 0.7) : 1;
+  ellipse(g, 0, 0, r, r * 0.9, COLORS.teleporter);
+  ellipse(g, 0, r * 0.2, r * 0.6, r * 0.42, lightenColor(COLORS.teleporter, 0.4));
+  for (const s of [-1, 1]) {
+    ellipse(g, s * r * 0.3, -r * 0.15, r * 0.14, r * 0.18, '#ffffff');
+    ellipse(g, s * r * 0.3, -r * 0.12, r * 0.06, r * 0.09, COLORS.eye);
+  }
+  g.restore();
+}
+
+// 妨害電波敵：パラボラのような皿を載せた体。電波を出す直前は、皿のまわりに輪が広がる
+function drawJammer(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  ellipse(g, 0, r * 0.2, r * 0.95, r * 0.6, lightenColor(COLORS.jammer, -0.3));
+  ellipse(g, 0, 0, r * 0.8, r * 0.7, COLORS.jammer);
+  g.fillStyle = lightenColor(COLORS.jammer, 0.35); // 皿
+  g.beginPath();
+  g.ellipse(0, r * 0.45, r * 0.55, r * 0.3, 0, 0, Math.PI);
+  g.fill();
+  const charging = e.phase === 'hover' && e.fireT < 0.8;
+  if (charging) {
+    const k = 1 - e.fireT / 0.8;
+    g.strokeStyle = `rgba(95,255,208,${(0.8 * (1 - k)).toFixed(2)})`;
+    g.lineWidth = 3;
+    g.beginPath();
+    g.arc(0, r * 0.45, r * (0.6 + k * 1.0), 0, Math.PI * 2);
+    g.stroke();
+  }
+  for (const s of [-1, 1]) {
+    ellipse(g, s * r * 0.28, -r * 0.2, r * 0.13, r * 0.17, '#ffffff');
+    ellipse(g, s * r * 0.28, -r * 0.17, r * 0.06, r * 0.08, COLORS.eye);
+  }
+  g.restore();
+}
+
+// 妨害電波（jamShot）：同心円の波
+function drawJamShot(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  g.strokeStyle = COLORS.jamShot;
+  g.lineWidth = 3;
+  for (let i = 0; i < 3; i++) {
+    g.globalAlpha = 1 - i * 0.28;
+    g.beginPath();
+    g.arc(0, 0, r * (0.45 + 0.4 * i + 0.1 * Math.sin(time * 14 + i)), 0, Math.PI * 2);
+    g.stroke();
+  }
+  g.restore();
+}
+
+// ボスCの体（本体と偽像で共用）。見分けがつかないように、同じ描き方にする
+function drawBossCBody(g, r, color, time, opts = {}) {
+  const { flash = false, swapBlink = false } = opts;
+  g.save();
+  const glow = g.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.6);
+  glow.addColorStop(0, hexToRgba(color, 0.35));
+  glow.addColorStop(1, hexToRgba(color, 0));
+  g.fillStyle = glow;
+  g.beginPath();
+  g.arc(0, 0, r * 1.6, 0, Math.PI * 2);
+  g.fill();
+  g.globalAlpha = swapBlink && Math.floor(time * 20) % 2 === 0 ? 0.35 : 1;
+  g.fillStyle = lightenColor(color, -0.35); // 頭の飾り（アンテナ）
+  for (const s of [-1, 0, 1]) {
+    g.beginPath();
+    g.moveTo(s * r * 0.35 - r * 0.08, -r * 0.6);
+    g.lineTo(s * r * 0.35, -r * (s === 0 ? 1.15 : 0.95));
+    g.lineTo(s * r * 0.35 + r * 0.08, -r * 0.6);
+    g.closePath();
+    g.fill();
+  }
+  ellipse(g, 0, 0, r, r * 0.8, flash ? '#ffffff' : color);
+  ellipse(g, 0, r * 0.22, r * 0.62, r * 0.4, lightenColor(color, 0.45));
+  for (const s of [-1, 1]) {
+    ellipse(g, s * r * 0.3, -r * 0.18, r * 0.14, r * 0.18, '#eaffff');
+    ellipse(g, s * r * 0.3, -r * 0.15, r * 0.06, r * 0.09, COLORS.eye);
+  }
+  g.strokeStyle = COLORS.eye;
+  g.lineWidth = 3;
+  g.beginPath();
+  g.moveTo(-r * 0.22, r * 0.32);
+  g.lineTo(r * 0.22, r * 0.32);
+  g.stroke();
+  g.restore();
+}
+
+function drawDecoy(g, e, x, y, time, swapBlink) {
+  g.save();
+  g.translate(x, y);
+  drawBossCBody(g, e.radius, COLORS.bossC, time, { swapBlink });
+  g.restore();
+}
+
+function drawBossC(g, boss, x, y, time) {
+  const r = boss.radius;
+  const color = boss.color ?? boss.p.color ?? COLORS.bossC;
+  const flash = time - (boss.flashT ?? -1) < 0.1;
+  g.save();
+  g.translate(x, y);
+  drawBossCBody(g, r, color, time, { flash, swapBlink: boss.phase === 'swap' });
+  if (boss.shielded) { // シールドのバブル（本体だけ）
+    g.strokeStyle = 'rgba(143,184,255,0.9)';
+    g.lineWidth = 6;
+    g.beginPath();
+    g.arc(0, 0, r * 1.25, 0, Math.PI * 2);
+    g.stroke();
+    g.fillStyle = 'rgba(143,184,255,0.18)';
+    g.beginPath();
+    g.arc(0, 0, r * 1.25, 0, Math.PI * 2);
+    g.fill();
+  }
+  g.restore();
+}
+
 function drawUnknown(g, e, x, y) {
   g.save();
   g.translate(x, y);
@@ -279,6 +441,11 @@ export function drawEnemy(g, e, x, y, time) {
   else if (e.type === 'thrower') drawThrower(g, e, x, y, time);
   else if (e.type === 'shard') drawShard(g, e, x, y, time);
   else if (e.type === 'charger') drawCharger(g, e, x, y, time);
+  else if (e.type === 'shielder') drawShielder(g, e, x, y, time);
+  else if (e.type === 'teleporter') drawTeleporter(g, e, x, y, time);
+  else if (e.type === 'jammer') drawJammer(g, e, x, y, time);
+  else if (e.type === 'jamShot') drawJamShot(g, e, x, y, time);
+  else if (e.type === 'decoy') drawDecoy(g, e, x, y, time, e.swapBlink === true);
   else if (e.type === 'enemyShot') drawShot(g, e, x, y, time);
   else drawUnknown(g, e, x, y); // 未知の種類でも、見えない敵が当たってこないように目立たせる
   if (time - (e.flashT ?? -1) < 0.08) {
@@ -373,6 +540,7 @@ function drawBossB(g, boss, x, y, time) {
 const BOSS_DRAWERS = {
   bossA: drawBossA,
   bossB: drawBossB,
+  bossC: drawBossC,
 };
 
 export function drawBoss(g, boss, x, y, time) {
@@ -439,4 +607,15 @@ export function drawBossBar(g, boss, time = 0) {
     g.font = "800 22px 'M PLUS Rounded 1c', sans-serif";
     g.fillText('⚠ 視界の外から突進！', 500, y - 36);
   }
+}
+
+// 妨害中の表示（自機の近く）。攻撃が使えないことを知らせる
+export function drawJamNotice(g, time) {
+  g.save();
+  g.globalAlpha = 0.6 + 0.4 * Math.sin(time * 16);
+  g.fillStyle = '#5fffd0';
+  g.font = "800 26px 'M PLUS Rounded 1c', sans-serif";
+  g.textAlign = 'center';
+  g.fillText('⚡ 妨害中', 500, 430);
+  g.restore();
 }

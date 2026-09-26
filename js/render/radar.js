@@ -21,13 +21,21 @@ export function radarFovArc(heading, fov) {
 
 function dot(g, e, inFov) {
   const p = radarPoint(e.angle, e.dist);
-  const isShot = e.type === 'enemyShot' || e.type === 'shard';
+  const isShot = e.type === 'enemyShot' || e.type === 'shard' || e.type === 'jamShot';
   const r = isShot ? 2 : 4;
   g.fillStyle = isShot
     ? (inFov ? 'rgba(255,122,82,1)' : 'rgba(255,122,82,0.55)')
     : (inFov ? 'rgba(255,216,102,1)' : 'rgba(255,216,102,0.55)');
   g.beginPath();
   g.arc(p.x, p.y, r, 0, Math.PI * 2);
+  g.fill();
+}
+
+function bossDot(g, e, inFov) {
+  const p = radarPoint(e.angle, e.dist);
+  g.fillStyle = inFov ? 'rgba(255,158,203,1)' : 'rgba(255,158,203,0.6)';
+  g.beginPath();
+  g.arc(p.x, p.y, 7, 0, Math.PI * 2);
   g.fill();
 }
 
@@ -66,15 +74,15 @@ export function drawRadar(g, state) {
   const inView = (angle) => Math.abs(angle - heading) <= fov / 2;
   for (const e of state.enemies) {
     if (e.dead) continue;
+    if (e.type === 'decoy') { // 本体と見分けがつかないように、ボスと同じ点で描く
+      bossDot(g, e, inView(e.angle));
+      continue;
+    }
     dot(g, e, inView(e.angle));
   }
   const boss = state.boss && !state.boss.dead && !state.boss.hidden ? state.boss : null;
   if (boss) {
-    const p = radarPoint(boss.angle, boss.dist);
-    g.fillStyle = inView(boss.angle) ? 'rgba(255,158,203,1)' : 'rgba(255,158,203,0.6)';
-    g.beginPath();
-    g.arc(p.x, p.y, 7, 0, Math.PI * 2);
-    g.fill();
+    bossDot(g, boss, inView(boss.angle));
   }
 
   // 自機

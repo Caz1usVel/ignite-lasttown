@@ -1,7 +1,7 @@
 import { worldToScreen, visualScale } from '../core/view.js';
 import { drawBackground } from './background.js';
 import { drawFov, drawHeadingGauge } from './fov.js';
-import { drawTurret, drawEnemy, drawBoss, drawBullet, drawEffects, drawBossBar } from './entities.js';
+import { drawTurret, drawEnemy, drawBoss, drawBullet, drawEffects, drawBossBar, drawJamNotice } from './entities.js';
 import { drawRadar } from './radar.js';
 
 export function drawPlayfield(g, vp, stars, state, fx, dt) {
@@ -11,6 +11,7 @@ export function drawPlayfield(g, vp, stars, state, fx, dt) {
 
   vp.virtualSpace(g);
   drawFov(g);
+  const swapping = state.boss?.phase === 'swap' && state.boss.type === 'bossC';
   for (const e of state.enemies) {
     const p = worldToScreen(e.angle, e.dist, t.heading, t.fov);
     if (!p.visible) continue;
@@ -19,6 +20,7 @@ export function drawPlayfield(g, vp, stars, state, fx, dt) {
     g.save();
     g.translate(p.x, p.y);
     g.scale(k, k);
+    if (e.type === 'decoy') e.swapBlink = swapping; // 入れ替えの間、偽像も本体と同時に点滅する
     drawEnemy(g, e, 0, 0, state.time);
     g.restore();
   }
@@ -32,5 +34,6 @@ export function drawPlayfield(g, vp, stars, state, fx, dt) {
   drawEffects(g, fx);
   drawHeadingGauge(g, t.heading, t.fov);
   drawRadar(g, state);
+  if (t.jam > 0) drawJamNotice(g, state.time);
   if (boss) drawBossBar(g, boss, state.time);
 }

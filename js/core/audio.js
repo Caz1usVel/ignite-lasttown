@@ -93,6 +93,11 @@ export function createAudio(settings) {
         tone(784, 0.07, { type: 'square', gain: 0.12 });
         tone(1046.5, 0.12, { type: 'square', gain: 0.14, delay: 0.06 });
       },
+      block: () => tone(1200, 0.05, { type: 'square', gain: 0.1, slideTo: 900 }),
+      jam: () => {
+        tone(180, 0.25, { type: 'sawtooth', gain: 0.18, slideTo: 90 });
+        tone(140, 0.25, { type: 'square', gain: 0.1, delay: 0.05, slideTo: 70 });
+      },
     },
   };
 

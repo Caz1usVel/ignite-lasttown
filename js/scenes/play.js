@@ -50,7 +50,7 @@ export function createPlayScene(app) {
           const score = isBoss ? state.boss.p.score : ENEMY_DEFS[ev.target.type].score;
           if (isBoss) audio.se.bossKill(); else audio.se.kill();
           spawnBurst(fx, ev.x, ev.y, isBoss ? (state.boss.color ?? COLORS.boss) : '#ffd866', isBoss ? 60 : 12);
-          spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, '#ffd866');
+          if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, '#ffd866');
           break;
         }
         case 'damage':
@@ -60,6 +60,14 @@ export function createPlayScene(app) {
         case 'clear':
           audio.se.clear();
           endTimer = END_DELAY;
+          break;
+        case 'block':
+          audio.se.block();
+          spawnBurst(fx, ev.x, ev.y, '#8fb8ff', 5);
+          break;
+        case 'jam':
+          audio.se.jam();
+          spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y, '#5fffd0', 16);
           break;
         case 'offer':
           audio.se.offer();
