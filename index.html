@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>防衛砲台（仮）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="hud-left">
+      <div id="hudLives"></div>
+      <div id="hudScore">0</div>
+    </div>
+    <div class="hud-right">
+      <span id="hudTime">0:00</span>
+      <button id="pauseBtn" class="icon-btn" aria-label="ポーズ">⏸</button>
+    </div>
+  </div>
+
+  <div id="hint" class="hidden"></div>
+
+  <div id="touchControls" class="hidden">
+    <button id="turnLeftBtn" class="turn-btn" aria-label="左に旋回">◀</button>
+    <button id="turnRightBtn" class="turn-btn" aria-label="右に旋回">▶</button>
+  </div>
+
+  <div id="titleScreen" class="overlay hidden">
+    <h1 class="logo" id="titleLogo"></h1>
+    <p class="tagline">旋回して、見つけて、撃ち落とせ。</p>
+    <div class="btn-col">
+      <button class="btn" id="startSoloBtn">ひとりで</button>
+      <button class="btn btn-sub" id="startDuoBtn">ふたりで（PC）</button>
+      <button class="link-btn" id="titleSettingsBtn">設定</button>
+    </div>
+    <p class="best">ハイスコア <span id="titleBest">0</span></p>
+  </div>
+
+  <div id="pauseScreen" class="overlay hidden">
+    <h2>ポーズ</h2>
+    <div class="btn-col">
+      <button class="btn" id="resumeBtn">つづける</button>
+      <button class="btn btn-sub" id="pauseSettingsBtn">設定</button>
+      <button class="link-btn" id="pauseTitleBtn">タイトルへ</button>
+    </div>
+  </div>
+
+  <div id="resultScreen" class="overlay hidden">
+    <h2 id="resultTitle"></h2>
+    <dl class="result-stats">
+      <dt>スコア</dt><dd id="resultScore">0</dd>
+      <dt>撃破数</dt><dd id="resultKills">0</dd>
+      <dt>ハイスコア</dt><dd id="resultBest">0</dd>
+    </dl>
+    <p id="resultNewBest" class="new-best hidden">ハイスコア更新！</p>
+    <div class="btn-col">
+      <button class="btn" id="retryBtn">もう一度</button>
+      <button class="link-btn" id="resultTitleBtn">タイトルへ</button>
+    </div>
+  </div>
+
+  <div id="settingsScreen" class="overlay hidden">
+    <h2>設定</h2>
+    <label class="slider-row">BGM <input type="range" id="bgmVol" min="0" max="100"></label>
+    <label class="slider-row">効果音 <input type="range" id="seVol" min="0" max="100"></label>
+    <button class="btn btn-sub" id="muteBtn"></button>
+    <button class="link-btn" id="settingsBackBtn">もどる</button>
+  </div>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
