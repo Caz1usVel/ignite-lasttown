@@ -13,6 +13,7 @@ export function createTurret() {
     turnSpeed: CONFIG.TURN_SPEED,
     fireRate: CONFIG.FIRE_RATE,
     damage: 1,
+    pierce: 0,
   };
 }
 
