@@ -24,14 +24,14 @@
 
 | ファイル | 役割 | タスク |
 | --- | --- | --- |
-| `js/game/spawner.js`, `tests/pool.test.mjs` | `pool` の出現（袋方式）と検査 | B1 |
-| `js/game/boss-d.js`（新規）, `js/game/boss.js`（登録）, `js/game/enemies.js`（decoy の `style`/`color`）, `tests/boss-d.test.mjs` | 最終ボス | B2 |
-| `js/render/entities.js` | 最終ボスと、その偽像の描画 | B3 |
-| `js/data/stage7.js`, `js/data/stages.js`, `tests/stage7.test.mjs`, `tests/progress.test.mjs`, `tests/step.test.mjs`, `README.md` | 7面・登録・自動操縦・README | B4 |
+| `js/game/spawner.js`, `tests/pool.test.mjs` | `pool` の出現（袋方式）と検査 | 1 |
+| `js/game/boss-d.js`（新規）, `js/game/boss.js`（登録）, `js/game/enemies.js`（decoy の `style`/`color`）, `tests/boss-d.test.mjs` | 最終ボス | 2 |
+| `js/render/entities.js` | 最終ボスと、その偽像の描画 | 3 |
+| `js/data/stage7.js`, `js/data/stages.js`, `tests/stage7.test.mjs`, `tests/progress.test.mjs`, `tests/step.test.mjs`, `README.md` | 7面・登録・自動操縦・README | 4 |
 
 ---
 
-### Task B1: `pool`（出現表の抽選）
+### Task 1: `pool`（出現表の抽選）
 
 **Files:**
 - Modify: `js/game/spawner.js`
@@ -250,7 +250,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
 ---
 
-### Task B2: 最終ボス（bossD）
+### Task 2: 最終ボス（bossD）
 
 **Files:**
 - Create: `js/game/boss-d.js`
@@ -865,7 +865,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
 ---
 
-### Task B3: 最終ボスの描画
+### Task 3: 最終ボスの描画
 
 **Files:**
 - Modify: `js/render/entities.js`
@@ -979,7 +979,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
 ---
 
-### Task B4: 7面のデータ・登録・進行・自動操縦・README
+### Task 4: 7面のデータ・登録・進行・自動操縦・README
 
 **Files:**
 - Create: `js/data/stage7.js`、`tests/stage7.test.mjs`
