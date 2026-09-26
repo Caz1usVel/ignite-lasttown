@@ -21,7 +21,7 @@ export function radarFovArc(heading, fov) {
 
 function dot(g, e, inFov) {
   const p = radarPoint(e.angle, e.dist);
-  const isShot = e.type === 'enemyShot';
+  const isShot = e.type === 'enemyShot' || e.type === 'shard';
   const r = isShot ? 2 : 4;
   g.fillStyle = isShot
     ? (inFov ? 'rgba(255,122,82,1)' : 'rgba(255,122,82,0.55)')

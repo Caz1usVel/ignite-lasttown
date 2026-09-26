@@ -117,10 +117,10 @@ function updateBossA(boss, state, dt) {
 // ---- ボスの登録表：種類ごとに、名前・作り方・更新の仕方を持つ ----
 const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
-export const BOSSES = {
-  bossA: { name: 'ボスA', create: createBossA, update: updateBossA },
-  bossB: { name: 'ボスB', create: createBossB, update: updateBossB },
-};
+export const BOSSES = Object.freeze({
+  bossA: Object.freeze({ name: 'ボスA', create: createBossA, update: updateBossA }),
+  bossB: Object.freeze({ name: 'ボスB', create: createBossB, update: updateBossB }),
+});
 
 export function createBoss(type, params = {}) {
   const def = Object.prototype.hasOwnProperty.call(BOSSES, type) ? BOSSES[type] : null;

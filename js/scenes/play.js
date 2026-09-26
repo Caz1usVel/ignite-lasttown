@@ -49,7 +49,7 @@ export function createPlayScene(app) {
           const isBoss = ev.target === state.boss;
           const score = isBoss ? state.boss.p.score : ENEMY_DEFS[ev.target.type].score;
           if (isBoss) audio.se.bossKill(); else audio.se.kill();
-          spawnBurst(fx, ev.x, ev.y, isBoss ? (state.boss.p.color ?? COLORS.boss) : '#ffd866', isBoss ? 60 : 12);
+          spawnBurst(fx, ev.x, ev.y, isBoss ? (state.boss.p.color ?? (state.boss.type === 'bossB' ? COLORS.bossB : COLORS.boss)) : '#ffd866', isBoss ? 60 : 12);
           spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, '#ffd866');
           break;
         }

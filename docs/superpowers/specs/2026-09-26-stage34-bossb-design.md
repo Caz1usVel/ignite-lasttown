@@ -76,7 +76,7 @@ shard:    { hp: 1, radius: 10, score: 10,  countsAsKill: false, behavior: 'arc' 
 - `countsAsKill`：盛り上がりの間に倒しても、隆起後に倒しても、同じ150点・撃破数1
 
 ### 4.3 破片飛ばし敵（`thrower`）
-- 出現：距離460から接近し、保持距離 300〜360（ランダム）で静止（`phase: 'hold'`）。保持の間、左右にゆらゆら動く（±4度、偵察ドローンと同じ）
+- 出現：距離460から接近し、保持距離 300〜360（ランダム）で静止（`phase: 'hover'`）。保持の間、左右にゆらゆら動く（±4度、偵察ドローンと同じ）
 - 攻撃：`fireInterval = 4.0` 秒ごとに、**破片（`shard`）を3つ**、オフセット `[-20, 0, +20]` 度で投げる。速さは `ENEMY_SHOT_SPEED`
 - 保持時間 14 秒のあと、前進を再開する（`phase: 'advance'`。速さは通常の接近速度）
 
@@ -101,7 +101,8 @@ shard:    { hp: 1, radius: 10, score: 10,  countsAsKill: false, behavior: 'arc' 
 | `dist` | 340 | | 待機の距離 |
 | `moveSpeed` | 28 | | 進入速度 |
 | `angleRange` / `drift` | 50 / 8 | | 待機中の左右の往復（±度、度/秒） |
-| `dashInterval` | 9 | 6.5 | 待機に入ってから次の突進の予兆まで（秒） |
+| `firstDashDelay` | 2 | | 到着してから、最初の突進の予兆まで（秒） |
+| `dashInterval` | 9 | 6.5 | 咆哮のあと待機に戻ってから、次の突進の予兆まで（秒） |
 | `dashCount` | 1 | 2 | 連続突進の回数 |
 | `chainGap` | 0.6 | | 連続突進の2回目の予兆までの間（秒） |
 | `telegraph` | 1.0 | | 予兆（点滅）の時間 |
@@ -109,8 +110,8 @@ shard:    { hp: 1, radius: 10, score: 10,  countsAsKill: false, behavior: 'arc' 
 | `reappearDist` | 440 | | 再出現の距離 |
 | `reappearMargin` | 15 | | 再出現の角度を、視界の端からさらに外側に離す量（度） |
 | `settle` | 0.4 | | 再出現してから突進を始めるまでの間（秒） |
-| `dashTime` | 2.6 | 2.0 | 突進で中心へ届くまでの時間（秒） |
-| `dashBreak` | 8 | 12 | 突進中に受けたダメージがこの値に届くと突進が中断する |
+| `dashTime` | 2.6 | 2.3 | 突進で中心へ届くまでの時間（秒） |
+| `dashBreak` | 8 | 8 | 再出現してから（settle と突進の間）に受けたダメージがこの値に届くと突進が中断する |
 | `scatterInterval` | 7 | 5 | 破片散布の間隔（秒） |
 | `scatterCount` | 7 | | 破片散布の発数 |
 | `scatterSpread` | 120 | | 扇の全体の角度（度） |
@@ -124,19 +125,19 @@ shard:    { hp: 1, radius: 10, score: 10,  countsAsKill: false, behavior: 'arc' 
 ### 5.2 状態
 - ボスのオブジェクト：`{ type: 'bossB', name: 'ボスB', p, hp, maxHp, radius, angle, dist, targetDist, dir, arrived, t, dead, phase, phaseT, hidden, dashesLeft, dashSpeed, dashStartDamage, damageTaken, damageMult, dashT, scatterT, hitCore }`
 - `phase`：`'idle'`（待機）→ `'telegraph'` → `'vanish'` → `'settle'` → `'dash'` →（`'roar'` または連続突進なら `'telegraph'`）→ `'idle'`
-- 進入（`arrived` になるまで）は、ボスAと同じく、距離460から `dist` まで `moveSpeed` で進む。到着したら `phase = 'idle'`、`dashT = dashInterval`、`scatterT = scatterInterval`
+- 進入（`arrived` になるまで）は、ボスAと同じく、距離460から `dist` まで `moveSpeed` で進む。到着したら `phase = 'idle'`、`dashT = firstDashDelay`（最初の予兆までは短く、咆哮のあとに戻ったときだけ `dashInterval`）、`scatterT = scatterInterval`
 
 ### 5.3 動き（`updateBossB(boss, state, dt)`）
 1. **idle**：ボスAと同じく左右に往復。`dashT` と `scatterT` を減らす。
    - `scatterT ≤ 0`：`scatterT += scatterInterval`。**破片散布**として、敵弾（`enemyShot`）を `scatterCount` 発、角度 `boss.angle + linspace(−scatterSpread/2, +scatterSpread/2)`（-90〜+90度に丸める）に放つ。距離は `dist − radius`、速さは `ENEMY_SHOT_SPEED`
    - `dashT ≤ 0`：`phase = 'telegraph'`、`phaseT = telegraph`、`dashesLeft = dashCount`
 2. **telegraph**：ボスが点滅する（描画側）。`phaseT` が0になったら `phase = 'vanish'`、`phaseT = vanish`、`hidden = true`
-3. **vanish**：`phaseT` が0になったら、視界の外の角度に再出現する（`pickHiddenAngle`、§5.4）。`hidden = false`、`dist = reappearDist`、`phase = 'settle'`、`phaseT = settle`
-4. **settle**：`phaseT` が0になったら `phase = 'dash'`、`dashSpeed = dist / dashTime`、`dashStartDamage = damageTaken`
+3. **vanish**：`phaseT` が0になったら、視界の外の角度に再出現する（`pickHiddenAngle`、§5.4）。`hidden = false`、`dist = reappearDist`、`dashStartDamage = damageTaken`（**中断の判定に数えるダメージは、この再出現の時点から**）、`phase = 'settle'`、`phaseT = settle`
+4. **settle**：`phaseT` が0になったら `phase = 'dash'`、`dashSpeed = dist / dashTime`（`dashStartDamage` は再出現のときのまま。settle の間に与えたダメージも数える）
 5. **dash**：`dist −= dashSpeed × dt`。
-   - **中断**：`damageTaken − dashStartDamage ≥ dashBreak` になったら、突進を中断する。`dist = p.dist`、角度は `±angleRange` のランダム、`dashesLeft = 0`、`phase = 'roar'`、`phaseT = roarTime`、`damageMult = roarMult`
+   - **中断**：`damageTaken − dashStartDamage ≥ dashBreak`（再出現からの合計） になったら、突進を中断する。`dist = p.dist`、角度は `±angleRange` のランダム、`dashesLeft = 0`、`phase = 'roar'`、`phaseT = roarTime`、`damageMult = roarMult`
    - **到達**：`dist ≤ HIT_RADIUS_CORE` になったら `hitCore = true`（`stepGame` が残機-1とノックバックを行う）。`dist = p.dist`、角度は `±angleRange` のランダム。`dashesLeft −= 1`。まだ残っていれば `phase = 'telegraph'`、`phaseT = chainGap`（連続突進）。残っていなければ `phase = 'roar'`、`phaseT = roarTime`、`damageMult = roarMult`
-6. **roar**：その場で待機（左右には動かない）。`phaseT` が0になったら `damageMult = 1`、`phase = 'idle'`、`dashT = dashInterval`
+6. **roar**：その場で待機（左右には動かない）。`phaseT` が0になったら `damageMult = 1`、`phase = 'idle'`、`dashT = dashInterval`（最初の突進の前だけは `firstDashDelay`。§5.2）
 
 ### 5.4 再出現の角度（`pickHiddenAngle(heading, fov, margin, rng)`、純粋関数・エクスポートする）
 - `half = fov/2 + margin`。視界の外の区間は、`[-90, heading − half]` と `[heading + half, 90]`（長さが正のもの）
@@ -153,7 +154,8 @@ shard:    { hp: 1, radius: 10, score: 10,  countsAsKill: false, behavior: 'arc' 
 - ボスB（`drawBossB`）：大きな体（楕円）と2本の角、光る目。`COLORS.bossB` または `boss.p.color` を体の色にし、オーラは `hexToRgba` で導く
 - 予兆（`telegraph`）：赤く点滅する。咆哮（`roar`）：口を大きく開け、体を少し膨らませる。`hidden` のときは描かない
 - HPバー（`drawBossBar`）：名前は `boss.name`。`phase` が `'telegraph'` / `'vanish'` / `'settle'` の間は、HPバーの上に警告「⚠ 視界の外から突進！」を点滅させる
-- 撃破エフェクトの色は `boss.p.color ?? COLORS.boss`（既存）
+- 撃破エフェクトの色は `boss.p.color ?? （ボスBなら COLORS.bossB、それ以外は COLORS.boss）`
+- ミニマップでは、敵弾（`enemyShot`）と破片（`shard`）を小さな橙の点で描く
 
 ## 6. 3面・4面のデータ（数値は仮）
 
@@ -172,15 +174,15 @@ boss: { type: 'bossB', params: {} },
 
 // STAGE4：落下地帯・激戦区（130秒）
 segments: [
-  { from: 0,  to: 20,  spawns: { meteor: 3.0, burrower: 10, charger: 14 } },
-  { from: 20, to: 55,  spawns: { meteor: 2.6, drone: 10, burrower: 8, thrower: 14, charger: 11 } },
-  { from: 55, to: 95,  spawns: { meteor: 2.4, drone: 9, burrower: 7, thrower: 11, charger: 9,
+  { from: 0,  to: 20,  spawns: { meteor: 3.0, burrower: 14, charger: 18 } },
+  { from: 20, to: 55,  spawns: { meteor: 2.6, drone: 10, burrower: 12, thrower: 16, charger: 15 } },
+  { from: 55, to: 95,  spawns: { meteor: 2.4, drone: 9, burrower: 11, thrower: 14, charger: 12,
                                  formationDrone: { every: 16, count: 3, minSep: 25 } } },
-  { from: 95, to: 130, spawns: { meteor: 2.2, drone: 8, burrower: 6, thrower: 9, charger: 7,
+  { from: 95, to: 130, spawns: { meteor: 2.2, drone: 8, burrower: 10, thrower: 12, charger: 10,
                                  formationDrone: { every: 12, count: [3, 4], minSep: 25 } } },
 ],
 spawnEnd: 130,
-boss: { type: 'bossB', params: { hp: 80, dashInterval: 6.5, dashCount: 2, dashTime: 2.0, dashBreak: 12,
+boss: { type: 'bossB', params: { hp: 80, dashInterval: 6.5, dashCount: 2, dashTime: 2.3, dashBreak: 8,
                                  scatterInterval: 5, color: '#ff7a3d' } },
 ```
 - `name`：3面「落下地帯・地表」、4面「落下地帯・激戦区」
@@ -199,10 +201,10 @@ boss: { type: 'bossB', params: { hp: 80, dashInterval: 6.5, dashCount: 2, dashTi
 - **破片飛ばし敵**：保持距離まで進んで止まる／4秒ごとに破片3つ／保持14秒のあと前進
 - **破片**：曲線（`angle = base + offset × dist/startDist`）／中心に届くと被弾／撃破数に数えない
 - **突進敵**：1.2秒待つ／その後 `dist/3.0` で突進し、約3秒で届く
-- **ボスB**：進入→待機／`pickHiddenAngle` が視界の外の区間から選ぶ（多数のシードと、heading・fov の組み合わせ）／突進の流れ（予兆→消える→再出現→settle→突進）／ダメージで中断する（`dashBreak`）／到達で `hitCore`／咆哮のダメージ倍率／連続突進（強化型）／破片散布／`BOSS_B_BASE` が凍結され書き換わらない／強化型の上書き
-- **ステップ**：ボスBの `hitCore` で残機が減る／ノックバック／咆哮のダメージ倍率が実際の被ダメージに効く
+- **ボスB**：進入→待機／`pickHiddenAngle` が視界の外の区間から選ぶ（多数のシードと、heading・fov の組み合わせ）／突進の流れ（予兆→消える→再出現→settle→突進）／最初の予兆は到着から `firstDashDelay` 後（咆哮のあとは `dashInterval`）／ダメージで中断する（`dashBreak`。再出現の前のダメージは数えず、settle の間のダメージは数える）／到達で `hitCore`／咆哮のダメージ倍率／連続突進（強化型）／破片散布／`BOSS_B_BASE` が凍結され書き換わらない／強化型の上書き
+- **ステップ**：ボスBの `hitCore` で残機が減る／ノックバック／咆哮のダメージ倍率が実際の被ダメージに効く／**突進をstepGame経由で確かめる**（撃たないと最初の突進が中心に届いて残機-1・咆哮・元の距離に戻る／ダメージ2で狙い撃つと突進が中断され、その間の残機は減らない）
 - **ステージのデータ**：3面・4面が `validateStage` を通る（全ステージのテストに自動で入る）／4面にだけ突進敵がある／ボスの設定
-- **自動操縦**：3面・4面を複数のシードでクリアできる。自動操縦の関数は、`hidden` のボスを狙わないように直す。**調整してよい範囲**：`stage3.js` / `stage4.js` の出現表の数値、`BOSS_B_BASE` と4面の強化型の `params` のうち、`dashTime`（初期型は最大3.2秒、強化型は最大2.6秒まで）、`dashBreak`（初期型は最小5、強化型は最小8まで）、`settle`（最大0.8秒まで）、`dashInterval`。調整した場合は、最終の数値と、シードごとのクリア時間・残機を報告する
+- **自動操縦**：3面・4面を複数のシードでクリアできる。自動操縦の関数は、`hidden` のボスを狙わないように直す。**調整してよい範囲**：`stage3.js` / `stage4.js` の出現表の数値、`BOSS_B_BASE` と4面の強化型の `params` のうち、`dashTime`（初期型は最大3.2秒、強化型は2.0〜2.6秒。初期型より速くする）、`dashBreak`（初期型は最小5、強化型は最小8まで）、`settle`（最大0.8秒まで）、`firstDashDelay`（2〜4秒）、`dashInterval`。人間並みの確認（完璧な狙い・反応0.3秒・強化なし）で、突進が見られて（初期型 ≥ 90%）、止められる割合が初期型 ≥ 60%・強化型 ≥ 35%、ダメージ・連射Lv2 で ≥ 80% になること。調整した場合は、最終の数値と、シードごとのクリア時間・残機を報告する
 - ブラウザ（目視）：各敵の見た目と予兆、ボスBの突進・再出現・咆哮・警告、ミニマップの点、接近が遅くなった手応え
 
 ## 9. 未確定・後回し
