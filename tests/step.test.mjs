@@ -234,3 +234,46 @@ test('無敵中は hitCore でも残機が減らないが、hitCore は戻る', 
   assert.equal(s.turret.lives, 3);
   assert.equal(s.boss.hitCore, false);
 });
+
+// ---- ボスBの突進を、stepGame を通して確かめる（seed 固定・決定的） ----
+test('ボスBの突進を止められないと、中心に届いて残機-1になる', () => {
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.boss = createBoss('bossB');
+  const seen = [];
+  const ev = runUntil(s, idle, (st, e) => { seen.push(st.boss.phase); return e.some((x) => x.type === 'damage'); }, 30);
+  const damages = ev.filter((e) => e.type === 'damage');
+  assert.deepEqual(damages, [{ type: 'damage', lives: 2 }]); // 最初の突進が届いた分だけ
+  assert.equal(s.turret.lives, 2);
+  assert.equal(s.boss.hitCore, false);
+  assert.equal(s.boss.phase, 'roar');
+  assert.equal(s.boss.dist, s.boss.p.dist); // 届いたあとは待機の距離へ戻る
+  assert.ok(seen.includes('dash'));
+});
+
+test('ボスBの突進は、撃ち込むと止められる', () => {
+  // 突進の途中で dashBreak 分のダメージを与えれば、突進は中断される（残機は減らない）。
+  // ボスのHPは大きくして倒れないようにし、散布は止めて、敵弾で残機が減る余地をなくす。
+  // 見ているのは、「突進が dash → roar で終わり、その突進の間に damage が1回も無い」こと。
+  const s = createPlayState(EMPTY_STAGE, mulberry32(1));
+  s.boss = createBoss('bossB', { hp: 500, scatterInterval: 1e9 });
+  s.turret.damage = 2; // 4発で dashBreak（8）に届く
+  let prev = s.boss.phase;
+  let broken = 0;
+  let damagedInWindow = false;
+  for (let i = 0; i < 40 * 60; i++) {
+    const ev = stepGame(s, DT, autoPilot(s)); // ボスだけが狙いの候補（散布を止めてあるので、敵は出ない）
+    if (s.boss.phase === 'settle' || s.boss.phase === 'dash') {
+      if (ev.some((e) => e.type === 'damage')) damagedInWindow = true;
+    }
+    if (prev === 'dash' && s.boss.phase === 'roar') {
+      // 中心には届いていない（dist が待機の距離に戻っているのは、中断のあとの retreat による）
+      assert.equal(s.boss.dashesLeft, 0);
+      assert.equal(s.boss.dist, s.boss.p.dist);
+      if (!damagedInWindow) broken += 1;
+    }
+    if (s.boss.phase === 'telegraph') damagedInWindow = false;
+    prev = s.boss.phase;
+  }
+  assert.ok(broken >= 1, `broken=${broken}`);
+  assert.equal(s.turret.lives, 3); // 止め続けた間、残機は減らない
+});
