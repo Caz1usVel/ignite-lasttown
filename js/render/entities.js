@@ -21,6 +21,7 @@ export const COLORS = {
   jammer: '#7be0c3',
   jamShot: '#5fffd0',
   bossC: '#4fc3d9',
+  bossD: '#ffd24a',
   boss: '#8f7cff',
   bullet: '#fff6c8',
   eye: '#1b1f3a',
@@ -395,7 +396,8 @@ function drawBossCBody(g, r, color, time, opts = {}) {
 function drawDecoy(g, e, x, y, time, swapBlink) {
   g.save();
   g.translate(x, y);
-  drawBossCBody(g, e.radius, COLORS.bossC, time, { swapBlink });
+  if (e.style === 'bossD') drawBossDBody(g, e.radius, e.color ?? COLORS.bossD, time);
+  else drawBossCBody(g, e.radius, COLORS.bossC, time, { swapBlink });
   g.restore();
 }
 
@@ -417,6 +419,69 @@ function drawBossC(g, boss, x, y, time) {
     g.arc(0, 0, r * 1.25, 0, Math.PI * 2);
     g.fill();
   }
+  g.restore();
+}
+
+// 最終ボスの体（本体と偽像で共用）：ボスBの角・ボスCの3本の飾り・ボスAのような大きな目を合わせた、金色の体
+function drawBossDBody(g, r, color, time, opts = {}) {
+  const { flash = false, warn = false, roar = false } = opts;
+  g.save();
+  const glow = g.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 1.8);
+  glow.addColorStop(0, hexToRgba(color, 0.4));
+  glow.addColorStop(1, hexToRgba(color, 0));
+  g.fillStyle = glow;
+  g.beginPath();
+  g.arc(0, 0, r * 1.8, 0, Math.PI * 2);
+  g.fill();
+  const pulse = warn ? 1 + 0.06 * Math.sin(time * 40) : roar ? 1.08 : 1;
+  g.scale(pulse, pulse);
+  g.fillStyle = lightenColor(color, -0.4); // 角（ボスB）
+  for (const s of [-1, 1]) {
+    g.beginPath();
+    g.moveTo(s * r * 0.35, -r * 0.55);
+    g.lineTo(s * r * 0.95, -r * 1.1);
+    g.lineTo(s * r * 0.62, -r * 0.3);
+    g.closePath();
+    g.fill();
+  }
+  g.fillStyle = lightenColor(color, -0.2); // 冠の飾り（ボスC）
+  for (const s of [-1, 0, 1]) {
+    g.beginPath();
+    g.moveTo(s * r * 0.22 - r * 0.07, -r * 0.7);
+    g.lineTo(s * r * 0.22, -r * (s === 0 ? 1.25 : 1.05));
+    g.lineTo(s * r * 0.22 + r * 0.07, -r * 0.7);
+    g.closePath();
+    g.fill();
+  }
+  const blink = warn && Math.floor(time * 16) % 2 === 0;
+  ellipse(g, 0, 0, r, r * 0.82, flash ? '#ffffff' : blink ? '#ff4d4d' : color);
+  ellipse(g, 0, r * 0.24, r * 0.64, r * 0.4, lightenColor(color, 0.45));
+  ellipse(g, 0, -r * 0.16, r * 0.34, r * 0.26, '#fff6d0'); // 大きな目（ボスA）
+  ellipse(g, 0, -r * 0.14, r * 0.15, r * 0.15, COLORS.eye);
+  for (const s of [-1, 1]) {
+    ellipse(g, s * r * 0.5, -r * 0.12, r * 0.1, r * 0.13, '#fff6d0');
+    ellipse(g, s * r * 0.5, -r * 0.1, r * 0.045, r * 0.06, COLORS.eye);
+  }
+  if (roar) {
+    ellipse(g, 0, r * 0.38, r * 0.32, r * 0.24, COLORS.eye);
+  } else {
+    g.strokeStyle = COLORS.eye;
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(-r * 0.25, r * 0.36);
+    g.lineTo(r * 0.25, r * 0.36);
+    g.stroke();
+  }
+  g.restore();
+}
+
+function drawBossD(g, boss, x, y, time) {
+  if (boss.hidden) return;
+  const color = boss.color ?? boss.p.color ?? COLORS.bossD;
+  const flash = time - (boss.flashT ?? -1) < 0.1;
+  g.save();
+  g.translate(x, y);
+  drawBossDBody(g, boss.radius, color, time, { flash, warn: boss.phase === 'telegraph', roar: boss.phase === 'roar' });
   g.restore();
 }
 
@@ -541,6 +606,7 @@ const BOSS_DRAWERS = {
   bossA: drawBossA,
   bossB: drawBossB,
   bossC: drawBossC,
+  bossD: drawBossD,
 };
 
 export function drawBoss(g, boss, x, y, time) {
