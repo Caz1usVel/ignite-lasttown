@@ -22,6 +22,18 @@ function ellipse(g, x, y, rx, ry, color) {
   g.fill();
 }
 
+// CanvasRenderingContext2D#roundRect が無い環境（iOS<16 等）向けの代替パス生成。
+// 呼び出し側で beginPath() 済みであること前提。
+function roundRectPath(g, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+}
+
 export function drawTurret(g, turret, time) {
   if (turret.invincible > 0 && Math.floor(time * 12) % 2 === 0) return; // 無敵中は点滅
   g.save();
@@ -38,7 +50,7 @@ export function drawTurret(g, turret, time) {
   for (const fx of [-16, 16]) ellipse(g, fx, 24, 9, 6, lightenColor(COLORS.turret, -0.25)); // 足
   g.fillStyle = COLORS.barrel; // 砲身（常に真上）
   g.beginPath();
-  g.roundRect(-7, -48, 14, 30, 6);
+  roundRectPath(g, -7, -48, 14, 30, 6);
   g.fill();
   ellipse(g, 0, 0, 30, 27, COLORS.turret);                         // 体
   ellipse(g, 0, 6, 18, 13, lightenColor(COLORS.turret, 0.5));      // おなか
@@ -186,13 +198,13 @@ export function drawBossBar(g, boss) {
   const w = 420, h = 14, x = 500 - w / 2, y = 780;
   g.fillStyle = 'rgba(255,255,255,0.12)';
   g.beginPath();
-  g.roundRect(x, y, w, h, 7);
+  roundRectPath(g, x, y, w, h, 7);
   g.fill();
   const k = Math.max(0, boss.hp / boss.maxHp);
   if (k > 0) {
     g.fillStyle = '#ff9ecb';
     g.beginPath();
-    g.roundRect(x, y, Math.max(h, w * k), h, 7);
+    roundRectPath(g, x, y, Math.max(h, w * k), h, 7);
     g.fill();
   }
   g.fillStyle = '#f4f2ff';
