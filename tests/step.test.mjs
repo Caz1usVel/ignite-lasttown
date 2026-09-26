@@ -268,3 +268,55 @@ test('ボスBの突進は、撃ち込むと止められる', () => {
   assert.ok(broken >= 1, `broken=${broken}`);
   assert.equal(s.turret.lives, 3); // 止め続けた間、残機は減らない
 });
+
+// ---- 敵の弾は体力に関係なく、届くと減点。体当たりだけが残機を減らす ----
+const noInput = { turnAxis: 0, firing: false, aim: { x: 500, y: 100 }, bulletSpeed: CONFIG.BULLET_SPEED_PC };
+const idleStage = { id: 0, segments: [], spawnEnd: 1e9, boss: { type: 'bossA', params: {} } };
+
+test('敵の弾（enemyShot・shard）が中心に届くと、残機は減らず、スコアが SHOT_PENALTY だけ減る', () => {
+  for (const type of ['enemyShot', 'shard']) {
+    const s = createPlayState(idleStage, mulberry32(1));
+    s.score = 300;
+    s.enemies.push(createEnemy(type, 0, s.rng, { dist: 41, speed: 100 }));
+    const ev = stepGame(s, 0.05, noInput);
+    assert.deepEqual(ev.filter((e) => e.type === 'penalty'), [{ type: 'penalty', amount: CONFIG.SHOT_PENALTY, hits: 1 }], type);
+    assert.equal(s.score, 300 - CONFIG.SHOT_PENALTY);
+    assert.equal(s.turret.lives, CONFIG.LIVES);
+    assert.equal(s.turret.invincible, 0);
+    assert.equal(ev.some((e) => e.type === 'damage'), false);
+    assert.equal(s.enemies.length, 0); // 弾は消える
+  }
+});
+
+test('減点でスコアは0未満にならない。同時に届いた弾はそれぞれ減点される', () => {
+  const s = createPlayState(idleStage, mulberry32(1));
+  s.score = 70;
+  s.enemies.push(createEnemy('enemyShot', -10, s.rng, { dist: 41, speed: 100 }), createEnemy('enemyShot', 10, s.rng, { dist: 41, speed: 100 }));
+  const ev = stepGame(s, 0.05, noInput);
+  assert.equal(s.score, 0);
+  assert.deepEqual(ev.filter((e) => e.type === 'penalty'), [{ type: 'penalty', amount: 70, hits: 2 }]);
+  const t = createPlayState(idleStage, mulberry32(1));
+  const ev2 = stepGame(t, 0.05, noInput);
+  assert.equal(ev2.some((e) => e.type === 'penalty'), false);
+});
+
+test('敵の体当たり（弾でない敵が中心に届く）は、これまでどおり残機が減る。スコアは減らない', () => {
+  const s = createPlayState(idleStage, mulberry32(1));
+  s.score = 300;
+  s.enemies.push(createEnemy('meteor', 0, s.rng, { dist: 41, speed: 100 }));
+  const ev = stepGame(s, 0.05, noInput);
+  assert.equal(s.turret.lives, CONFIG.LIVES - 1);
+  assert.equal(s.score, 300);
+  assert.equal(ev.some((e) => e.type === 'damage'), true);
+  assert.equal(ev.some((e) => e.type === 'penalty'), false);
+});
+
+test('敵の弾は撃ち落とせる（減点にならない）', () => {
+  const s = createPlayState(idleStage, mulberry32(1));
+  s.score = 300;
+  s.enemies.push(createEnemy('enemyShot', 0, s.rng, { dist: 200, speed: 0 }));
+  s.bullets.push({ angle: 0, prevDist: 199.6, dist: 199.6, speed: 900, radius: 6, dead: false, pierceLeft: 0 });
+  stepGame(s, 0.01, noInput);
+  assert.equal(s.enemies.length, 0);
+  assert.ok(s.score >= 300);
+});

@@ -53,6 +53,11 @@ export function createPlayScene(app) {
           if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, '#ffd866');
           break;
         }
+        case 'penalty':
+          audio.se.block();
+          spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y, '#ffd866', 10);
+          if (ev.amount > 0) spawnPopup(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y - 70, `-${ev.amount}`, '#ff7a52');
+          break;
         case 'damage':
           audio.se.damage();
           spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y, '#ff7a52', 24);

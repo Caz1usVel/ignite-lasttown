@@ -63,15 +63,32 @@ export function resolveBulletHits(state) {
   return events;
 }
 
+// 敵が撃つ弾（体力には関係せず、届くと減点）。妨害電波（jamShot）は別扱い
+export const ENEMY_SHOT_TYPES = Object.freeze(['enemyShot', 'shard']);
+export const isEnemyShot = (e) => ENEMY_SHOT_TYPES.includes(e.type);
+
+// 体当たり：弾でない敵が中心に届いた（残機が減る）
 export function resolveCoreHits(state) {
   let reached = 0;
   for (const e of state.enemies) {
-    if (!e.dead && e.type !== 'jamShot' && e.dist <= CONFIG.HIT_RADIUS_CORE) {
+    if (!e.dead && e.type !== 'jamShot' && !isEnemyShot(e) && e.dist <= CONFIG.HIT_RADIUS_CORE) {
       e.dead = true;
       reached++;
     }
   }
   return reached;
+}
+
+// 敵の弾が中心に届いた：消えて、届いた数を返す（減点は呼び出し側）
+export function resolveShotHits(state) {
+  let n = 0;
+  for (const e of state.enemies) {
+    if (!e.dead && isEnemyShot(e) && e.dist <= CONFIG.HIT_RADIUS_CORE) {
+      e.dead = true;
+      n++;
+    }
+  }
+  return n;
 }
 
 // 妨害電波（jamShot）が中心に届いた：残機は減らさず、攻撃を一定時間使えなくする

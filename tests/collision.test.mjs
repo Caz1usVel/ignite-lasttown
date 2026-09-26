@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnBullet, updateBullets, MUZZLE_DIST } from '../js/game/bullets.js';
-import { resolveBulletHits, resolveCoreHits, applyKnockback, circlesOverlap } from '../js/game/collision.js';
+import { resolveBulletHits, resolveCoreHits, resolveShotHits, applyKnockback, circlesOverlap } from '../js/game/collision.js';
 import { createTurret } from '../js/game/turret.js';
 import { createEnemy } from '../js/game/enemies.js';
 import { createBoss } from '../js/game/boss.js';
@@ -253,4 +253,21 @@ test('damageMult も damageTaken も無い対象は今までどおり（damageTa
   resolveBulletHits(s);
   assert.equal(m.dead, true);
   assert.equal('damageTaken' in m, false);
+});
+
+test('resolveCoreHits は敵の弾（enemyShot・shard）を数えず、resolveShotHits が数える', () => {
+  const s = mkState();
+  const shot = createEnemy('enemyShot', 0, rng, { dist: 30 });
+  const shard = createEnemy('shard', 0, rng, { dist: 30 });
+  const meteor = createEnemy('meteor', 0, rng, { dist: 30 });
+  const far = createEnemy('enemyShot', 0, rng, { dist: 200 });
+  s.enemies.push(shot, shard, meteor, far);
+  assert.equal(resolveCoreHits(s), 1);
+  assert.equal(meteor.dead, true);
+  assert.equal(shot.dead, false);
+  assert.equal(resolveShotHits(s), 2);
+  assert.equal(shot.dead, true);
+  assert.equal(shard.dead, true);
+  assert.equal(far.dead, false);
+  assert.equal(resolveShotHits(s), 0);
 });
