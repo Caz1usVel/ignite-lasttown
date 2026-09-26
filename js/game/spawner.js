@@ -5,7 +5,7 @@ import { createFormation } from './formation.js';
 import { createBoss } from './boss.js';
 
 export function createSpawner(stage, scale = CONFIG.SPAWN_SCALE, maxActive = CONFIG.MAX_ACTIVE) {
-  return { stage, scale, maxActive, time: 0, timers: {}, bags: {}, bossSpawned: false };
+  return { stage, scale, maxActive, time: 0, timers: {}, bags: {}, healT: CONFIG.HEAL_METEOR_INTERVAL, bossSpawned: false };
 }
 
 // 画面に同時にいる「敵の本体」の数（敵弾・妨害電波・偽像は数えない）
@@ -88,6 +88,18 @@ export function updateSpawner(sp, state, dt) {
   const { stage } = sp;
 
   if (sp.time < stage.spawnEnd) {
+    // 体力が減っているときだけ、一定間隔で回復の隕石を出す（満タンなら出さず、減るのを待つ）
+    const turret = state.turret;
+    if (turret) {
+      sp.healT -= dt;
+      if (sp.healT <= 0 && turret.lives < turret.maxLives) {
+        sp.healT = CONFIG.HEAL_METEOR_INTERVAL;
+        const angle = randRange(state.rng, -CONFIG.HEADING_LIMIT, CONFIG.HEADING_LIMIT);
+        state.enemies.push(createEnemy('healMeteor', angle, state.rng));
+      } else if (sp.healT <= 0) {
+        sp.healT = 0;
+      }
+    }
     const seg = stage.segments.find((s) => sp.time >= s.from && sp.time < s.to);
     if (!seg) return;
     const segIndex = stage.segments.indexOf(seg);

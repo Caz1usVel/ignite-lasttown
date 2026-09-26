@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createPlayState } from '../js/game/state.js';
 import { stepGame } from '../js/game/step.js';
 import { createEnemy } from '../js/game/enemies.js';
+import { createSpawner, updateSpawner } from '../js/game/spawner.js';
 import { createBoss } from '../js/game/boss.js';
 import { STAGE1 } from '../js/data/stage1.js';
 import { STAGE2 } from '../js/data/stage2.js';
@@ -319,4 +320,65 @@ test('敵の弾は撃ち落とせる（減点にならない）', () => {
   stepGame(s, 0.01, noInput);
   assert.equal(s.enemies.length, 0);
   assert.ok(s.score >= 300);
+});
+
+// ---- 体力：最大値と、回復の隕石 ----
+test('体力の最大値：初期は LIVES。「最大体力+1」は最大値を1増やし、体力も1回復する（満タンでも増える）', () => {
+  const s = createPlayState(idleStage, mulberry32(1));
+  assert.equal(s.turret.maxLives, CONFIG.LIVES);
+  s.offer = ['life'];
+  assert.equal(chooseOffer(s, 'life'), true);
+  assert.equal(s.turret.maxLives, CONFIG.LIVES + 1);
+  assert.equal(s.turret.lives, CONFIG.LIVES + 1);
+  s.turret.lives = 1;
+  s.offer = ['life'];
+  chooseOffer(s, 'life');
+  assert.equal(s.turret.maxLives, CONFIG.LIVES + 2);
+  assert.equal(s.turret.lives, 2);
+});
+
+function shootAt(s, e) {
+  s.enemies.push(e);
+  s.bullets.push({ angle: e.angle, prevDist: e.dist - 30, dist: e.dist - 30, speed: 900, radius: 6, dead: false, pierceLeft: 0 });
+  return stepGame(s, 0.05, noInput);
+}
+
+test('回復の隕石を撃つと体力が1回復する（最大値まで）。スコア・撃破数は増えない', () => {
+  const s = createPlayState(idleStage, mulberry32(1));
+  s.turret.lives = 1;
+  const ev = shootAt(s, createEnemy('healMeteor', 0, s.rng, { dist: 300, speed: 0 }));
+  assert.equal(s.turret.lives, 2);
+  assert.ok(ev.some((e) => e.type === 'heal' && e.lives === 2));
+  assert.equal(s.score, 0);
+  assert.equal(s.kills, 0);
+  const full = createPlayState(idleStage, mulberry32(1));
+  const ev2 = shootAt(full, createEnemy('healMeteor', 0, full.rng, { dist: 300, speed: 0 }));
+  assert.equal(full.turret.lives, CONFIG.LIVES); // 満タンなら超えない
+  assert.equal(ev2.some((e) => e.type === 'heal'), false);
+});
+
+test('回復の隕石が中心に届いても、体力は減らず、何も起きずに消える', () => {
+  const s = createPlayState(idleStage, mulberry32(1));
+  s.enemies.push(createEnemy('healMeteor', 0, s.rng, { dist: 41, speed: 100 }));
+  const ev = stepGame(s, 0.05, noInput);
+  assert.equal(s.turret.lives, CONFIG.LIVES);
+  assert.equal(s.enemies.length, 0);
+  assert.equal(ev.some((e) => e.type === 'damage' || e.type === 'penalty'), false);
+});
+
+test('回復の隕石の出現：体力が減っているときだけ、HEAL_METEOR_INTERVAL ごとに1つ。満タンなら出ない', () => {
+  const heals = (s) => s.enemies.filter((e) => e.type === 'healMeteor').length;
+  const full = createPlayState(idleStage, mulberry32(1));
+  for (let i = 0; i < 60 * 130; i++) { full.enemies = full.enemies.filter((e) => e.type !== 'healMeteor'); stepGame(full, 1 / 60, noInput); if (full.enemies.some((e) => e.type === 'healMeteor')) assert.fail('spawned at full health'); }
+  const hurt = createPlayState(idleStage, mulberry32(1));
+  hurt.turret.lives = 2;
+  let n = 0;
+  for (let i = 0; i < 60 * (CONFIG.HEAL_METEOR_INTERVAL + 5); i++) {
+    stepGame(hurt, 1 / 60, noInput);
+    n += heals(hurt);
+    hurt.enemies = hurt.enemies.filter((e) => e.type !== 'healMeteor');
+  }
+  assert.ok(n >= 1, 'a heal meteor appears once health is missing');
+  const noTurret = { enemies: [], boss: null, rng: mulberry32(1) };
+  assert.doesNotThrow(() => updateSpawner(createSpawner(idleStage), noTurret, 1));
 });

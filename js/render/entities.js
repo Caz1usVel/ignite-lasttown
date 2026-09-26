@@ -8,6 +8,7 @@ export const COLORS = {
   cheek: '#ffc2d1',
   barrel: '#ffd866',
   meteor: '#b08a6a',
+  healMeteor: '#6fdc8c',
   drone: '#9be8ff',
   minion: '#ff9ecb',
   formation: '#8dffb0',
@@ -503,8 +504,41 @@ function drawUnknown(g, e, x, y) {
   g.restore();
 }
 
+// 回復の隕石：緑色の丸い石に、ハートが光る。撃つと体力が1回復する
+function drawHealMeteor(g, e, x, y, time) {
+  const r = e.radius;
+  g.save();
+  g.translate(x, y);
+  const pulse = 1 + 0.08 * Math.sin(time * 6);
+  const glow = g.createRadialGradient(0, 0, r * 0.4, 0, 0, r * 1.9);
+  glow.addColorStop(0, 'rgba(111,220,140,0.45)');
+  glow.addColorStop(1, 'rgba(111,220,140,0)');
+  g.fillStyle = glow;
+  g.beginPath();
+  g.arc(0, 0, r * 1.9 * pulse, 0, Math.PI * 2);
+  g.fill();
+  g.rotate(e.spin + e.t * 0.5);
+  g.fillStyle = COLORS.healMeteor;
+  g.beginPath();
+  METEOR_SHAPE.forEach((k, i) => {
+    const a = (i / METEOR_SHAPE.length) * Math.PI * 2;
+    const px = Math.cos(a) * r * k, py = Math.sin(a) * r * k;
+    if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+  });
+  g.closePath();
+  g.fill();
+  g.rotate(-(e.spin + e.t * 0.5)); // ハートは回転させない
+  g.fillStyle = '#ffffff';
+  g.font = `800 ${Math.round(r * 1.1)}px sans-serif`;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText('♥', 0, 1);
+  g.restore();
+}
+
 export function drawEnemy(g, e, x, y, time) {
   if (e.type === 'meteor') drawMeteor(g, e, x, y);
+  else if (e.type === 'healMeteor') drawHealMeteor(g, e, x, y, time);
   else if (e.type === 'drone') drawDrone(g, e, x, y, COLORS.drone);
   else if (e.type === 'bossMinion') drawDrone(g, e, x, y, COLORS.minion);
   else if (e.type === 'formationDrone') drawDrone(g, e, x, y, COLORS.formation);

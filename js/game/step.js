@@ -1,6 +1,6 @@
 import { CONFIG } from '../core/config.js';
 import { screenToWorldAngle } from '../core/view.js';
-import { updateTurret, tryFire, damageTurret } from './turret.js';
+import { updateTurret, tryFire, damageTurret, healTurret } from './turret.js';
 import { spawnBullet, updateBullets } from './bullets.js';
 import { updateEnemies, removeDead, ENEMY_DEFS } from './enemies.js';
 import { updateBoss } from './boss.js';
@@ -36,6 +36,7 @@ export function stepGame(state, dt, controls) {
       state.kills += 1;
     } else {
       const def = ENEMY_DEFS[ev.target.type];
+      if (ev.target.type === 'healMeteor' && healTurret(t)) events.push({ type: 'heal', lives: t.lives, x: ev.x, y: ev.y });
       state.score += def.score;
       if (def.countsAsKill) state.kills += 1;
     }

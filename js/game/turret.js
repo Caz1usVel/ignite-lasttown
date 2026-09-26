@@ -8,6 +8,7 @@ export function createTurret() {
     heading: 0,
     cooldown: 0,
     lives: CONFIG.LIVES,
+    maxLives: CONFIG.LIVES,
     invincible: 0,
     fov: CONFIG.FOV,
     turnSpeed: CONFIG.TURN_SPEED,
@@ -35,6 +36,13 @@ export function tryFire(t) {
   if (t.jam > 0) return false; // 妨害中は撃てない
   if (t.cooldown > COOLDOWN_EPS) return false;
   t.cooldown += 1 / t.fireRate;
+  return true;
+}
+
+// 体力を1回復する（最大値まで）。回復できたら true
+export function healTurret(t) {
+  if (t.lives <= 0 || t.lives >= t.maxLives) return false;
+  t.lives += 1;
   return true;
 }
 

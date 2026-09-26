@@ -15,6 +15,7 @@ export const ENEMY_DEFS = {
   teleporter: { hp: 2, radius: 22, score: 250, countsAsKill: true,  behavior: 'teleporter' },
   jammer:     { hp: 2, radius: 24, score: 250, countsAsKill: true,  behavior: 'jammer' },
   jamShot:    { hp: 1, radius: 12, score: 10,  countsAsKill: false, behavior: 'straight' },
+  healMeteor: { hp: 1, radius: 22, score: 0,   countsAsKill: false, behavior: 'straight' },
   decoy:      { hp: 1, radius: 40, score: 0,   countsAsKill: false, behavior: 'decoy' },
 };
 

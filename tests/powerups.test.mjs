@@ -128,5 +128,5 @@ test('powerupLevelText', () => {
   s.powerups.fireRate = 4;
   assert.equal(powerupLevelText(s, 'fireRate'), 'Lv 4 → 5（MAX）');
   s.turret.lives = 3;
-  assert.equal(powerupLevelText(s, 'life'), '残機 3 → 4');
+  assert.equal(powerupLevelText(s, 'life'), '最大体力 3 → 4');
 });

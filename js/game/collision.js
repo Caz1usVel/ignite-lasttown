@@ -78,7 +78,7 @@ export function resolveCoreHits(state) {
   for (const e of state.enemies) {
     if (!e.dead && e.type !== 'jamShot' && !isEnemyShot(e) && e.dist <= CONFIG.HIT_RADIUS_CORE) {
       e.dead = true;
-      reached++;
+      if (e.type !== 'healMeteor') reached++; // 回復の隕石は、届いても何も起きず消える
     }
   }
   return reached;

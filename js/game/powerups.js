@@ -12,7 +12,7 @@ export const POWERUPS = Object.freeze({
   pierce:    { id: 'pierce',    name: '貫通弾',         desc: '倒した敵を貫通する（+1体）', icon: '🎯', max: 3,        weight: 10 },
   turnSpeed: { id: 'turnSpeed', name: '旋回速度アップ', desc: '旋回の速さ +15%',          icon: '🔄', max: 4,        weight: 10 },
   fov:       { id: 'fov',       name: '視界拡大',       desc: '見える角度 +8度',          icon: '👁️', max: 3,        weight: 5 },
-  life:      { id: 'life',      name: '残機+1',         desc: '残機が1つ増える',          icon: '❤️', max: Infinity, weight: 2 },
+  life:      { id: 'life',      name: '最大体力+1',      desc: '最大体力が1増え、体力が1回復する',          icon: '❤️', max: Infinity, weight: 2 },
 });
 
 export const POWERUP_IDS = Object.freeze(Object.keys(POWERUPS));
@@ -42,7 +42,7 @@ export function makeOffer(counts, rng, defs = POWERUPS) {
   return picks;
 }
 
-// 取得回数から砲台の能力を計算し直す（残機は取得した瞬間に加算するので触らない）
+// 取得回数から砲台の能力を計算し直す（体力の最大値・現在値は取得した瞬間に加算するので触らない）
 export function recomputeTurret(turret, counts) {
   turret.fireRate = CONFIG.FIRE_RATE * (1 + PER_LEVEL.fireRate * counts.fireRate);
   turret.damage = 1 + PER_LEVEL.damage * counts.damage;
@@ -53,7 +53,10 @@ export function recomputeTurret(turret, counts) {
 
 export function applyPowerup(state, id) {
   state.powerups[id] += 1;
-  if (id === 'life') state.turret.lives += 1;
+  if (id === 'life') {
+    state.turret.maxLives += 1;
+    state.turret.lives += 1; // 最大値が増えるだけでなく、体力も1回復する
+  }
   recomputeTurret(state.turret, state.powerups);
 }
 
@@ -66,7 +69,7 @@ export function chooseOffer(state, id) {
 }
 
 export function powerupLevelText(state, id) {
-  if (id === 'life') return `残機 ${state.turret.lives} → ${state.turret.lives + 1}`;
+  if (id === 'life') return `最大体力 ${state.turret.maxLives} → ${state.turret.maxLives + 1}`;
   const n = state.powerups[id];
   const next = n + 1;
   return `Lv ${n} → ${next}${next >= POWERUPS[id].max ? '（MAX）' : ''}`;

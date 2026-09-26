@@ -25,7 +25,8 @@ export function createPlayScene(app) {
   let endTimer = 0;
 
   function updateHud() {
-    dom.hudLives.textContent = '♥'.repeat(Math.max(0, state.turret.lives));
+    const hp = Math.max(0, state.turret.lives);
+    dom.hudLives.textContent = '♥'.repeat(hp) + '♡'.repeat(Math.max(0, state.turret.maxLives - hp)); // 満タンでない分は空のハート
     dom.hudScore.textContent = state.score.toLocaleString();
     dom.hudPowerups.textContent = POWERUP_IDS
       .filter((id) => id !== 'life' && state.powerups[id] > 0) // 残機はハート表示に反映されるので並べない
@@ -53,6 +54,11 @@ export function createPlayScene(app) {
           if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, '#ffd866');
           break;
         }
+        case 'heal':
+          audio.se.heal();
+          spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y, '#6fdc8c', 18);
+          spawnPopup(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y - 70, '♥ 回復', '#6fdc8c');
+          break;
         case 'penalty':
           audio.se.block();
           spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y, '#ffd866', 10);

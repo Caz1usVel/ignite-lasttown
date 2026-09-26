@@ -25,7 +25,9 @@ function dot(g, e, inFov) {
   const r = isShot ? 2 : 4;
   g.fillStyle = isShot
     ? (inFov ? 'rgba(255,122,82,1)' : 'rgba(255,122,82,0.55)')
-    : (inFov ? 'rgba(255,216,102,1)' : 'rgba(255,216,102,0.55)');
+    : e.type === 'healMeteor'
+      ? (inFov ? 'rgba(111,220,140,1)' : 'rgba(111,220,140,0.6)')
+      : (inFov ? 'rgba(255,216,102,1)' : 'rgba(255,216,102,0.55)');
   g.beginPath();
   g.arc(p.x, p.y, r, 0, Math.PI * 2);
   g.fill();

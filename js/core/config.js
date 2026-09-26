@@ -23,7 +23,8 @@ export const CONFIG = Object.freeze({
   BULLET_MAX_DIST: 520,
   FIRE_RATE: 4,         // 発/秒
 
-  LIVES: 3,
+  LIVES: 3,             // 体力の初期の最大値（パワーアップで増える）
+  HEAL_METEOR_INTERVAL: 40, // 体力が減っているとき、回復の隕石が出る間隔（秒）
   INVINCIBLE_TIME: 1.5,
   HIT_RADIUS_CORE: 40,
   KNOCKBACK_RADIUS: 200,
