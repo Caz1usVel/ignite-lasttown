@@ -144,9 +144,11 @@ const ENEMY_INITS = {
     e.hoverT = 0;
     e.fireT = JAMMER.fireInterval;
   },
-  decoy(e, angle) {
+  decoy(e, angle, rng, opts) {
     e.baseAngle = angle;
     e.swayT = 0;
+    e.style = opts.style ?? null;   // 描画の見た目（例：'bossD'）
+    e.color = opts.color ?? null;
   },
 };
 
