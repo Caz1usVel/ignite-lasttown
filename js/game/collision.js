@@ -12,7 +12,8 @@ function targetsOf(state) {
   return state.boss && !state.boss.dead ? [...state.enemies, state.boss] : state.enemies;
 }
 
-// 判定は「今の向き」での画面座標で行う（見た目と一致させるため）
+// 判定は「今の向き」での画面座標で行う（見た目と一致させるため）。
+// 倒した弾は pierceLeft が残っていれば消えずに進み続ける。倒しきれなかった弾はそこで止まる。
 export function resolveBulletHits(state) {
   const { heading, fov, damage } = state.turret;
   const targets = targetsOf(state);
@@ -22,28 +23,31 @@ export function resolveBulletHits(state) {
     if (b.dead) continue;
     const span = b.dist - b.prevDist;
     const steps = Math.max(1, Math.ceil(span / SWEEP_STEP));
-    let hit = null;
+    let pierceLeft = b.pierceLeft ?? 0;
 
-    for (let s = 1; s <= steps && !hit; s++) {
+    sweep: for (let s = 1; s <= steps; s++) {
       const p = worldToScreen(b.angle, b.prevDist + (span * s) / steps, heading, fov);
       if (!p.visible) break;
       for (const t of targets) {
         if (t.dead) continue;
         const q = worldToScreen(t.angle, t.dist, heading, fov);
         if (!q.visible) continue;
-        if (circlesOverlap(p.x, p.y, b.radius, q.x, q.y, t.radius * CONFIG.HITBOX_RATIO)) {
-          hit = { target: t, x: q.x, y: q.y };
-          break;
+        if (!circlesOverlap(p.x, p.y, b.radius, q.x, q.y, t.radius * CONFIG.HITBOX_RATIO)) continue;
+
+        t.hp -= damage;
+        const killed = t.hp <= 0;
+        if (killed) t.dead = true;
+        events.push({ type: killed ? 'kill' : 'hit', target: t, x: q.x, y: q.y });
+
+        if (killed && pierceLeft > 0) {
+          pierceLeft -= 1; // 倒した敵は dead になるので、同じ敵に二度当たることはない
+          continue;
         }
+        b.dead = true;
+        break sweep;
       }
     }
-    if (!hit) continue;
-
-    b.dead = true;
-    hit.target.hp -= damage;
-    const killed = hit.target.hp <= 0;
-    if (killed) hit.target.dead = true;
-    events.push({ type: killed ? 'kill' : 'hit', target: hit.target, x: hit.x, y: hit.y });
+    b.pierceLeft = pierceLeft;
   }
   return events;
 }

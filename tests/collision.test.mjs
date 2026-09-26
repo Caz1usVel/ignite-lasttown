@@ -99,3 +99,71 @@ test('ノックバックは半径200より内側だけ80押し戻す', () => {
   assert.equal(a.dist, 230);
   assert.equal(b.dist, 250);
 });
+
+const pbullet = (angle, prevDist, dist, pierceLeft) => ({ ...bullet(angle, prevDist, dist), pierceLeft });
+const meteorAt = (s, dist) => {
+  const m = createEnemy('meteor', 0, rng, { dist, speed: 0 });
+  s.enemies.push(m);
+  return m;
+};
+
+test('spawnBullet は turret.pierce を pierceLeft に入れる', () => {
+  const s = mkState();
+  s.turret.pierce = 2;
+  spawnBullet(s, 0, 600);
+  assert.equal(s.bullets[0].pierceLeft, 2);
+});
+
+test('貫通0：1体倒したら弾は消え、奥の敵には当たらない', () => {
+  const s = mkState();
+  const a = meteorAt(s, 100), b = meteorAt(s, 150);
+  s.bullets.push(pbullet(0, 60, 260, 0));
+  const ev = resolveBulletHits(s);
+  assert.equal(ev.length, 1);
+  assert.equal(a.dead, true);
+  assert.equal(b.dead, false);
+  assert.equal(s.bullets[0].dead, true);
+});
+
+test('貫通2：3体まで倒して弾が消える（4体目は無傷）', () => {
+  const s = mkState();
+  const ms = [100, 150, 200, 250].map((d) => meteorAt(s, d));
+  s.bullets.push(pbullet(0, 60, 300, 2));
+  const ev = resolveBulletHits(s);
+  assert.equal(ev.filter((e) => e.type === 'kill').length, 3);
+  assert.deepEqual(ms.map((m) => m.dead), [true, true, true, false]);
+  assert.equal(s.bullets[0].dead, true);
+});
+
+test('貫通1：1体倒したあとも弾は生きていて、残りの貫通は0になる', () => {
+  const s = mkState();
+  const a = meteorAt(s, 100);
+  s.bullets.push(pbullet(0, 60, 160, 1));
+  const ev = resolveBulletHits(s);
+  assert.equal(ev.length, 1);
+  assert.equal(a.dead, true);
+  assert.equal(s.bullets[0].dead, false);
+  assert.equal(s.bullets[0].pierceLeft, 0);
+});
+
+test('倒しきれなかったら貫通していても弾は止まる', () => {
+  const s = mkState();
+  const d = createEnemy('drone', 0, rng, { dist: 100, speed: 0 });
+  const behind = meteorAt(s, 160);
+  s.enemies.push(d);
+  s.bullets.push(pbullet(0, 60, 260, 3));
+  const ev = resolveBulletHits(s);
+  assert.deepEqual(ev.map((e) => e.type), ['hit']);
+  assert.equal(d.hp, 1);
+  assert.equal(behind.dead, false);
+  assert.equal(s.bullets[0].dead, true);
+});
+
+test('pierceLeft が無い弾は貫通0として扱う', () => {
+  const s = mkState();
+  const a = meteorAt(s, 100), b = meteorAt(s, 150);
+  s.bullets.push(bullet(0, 60, 260));
+  resolveBulletHits(s);
+  assert.equal(a.dead, true);
+  assert.equal(b.dead, false);
+});

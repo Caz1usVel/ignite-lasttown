@@ -9,6 +9,7 @@ export function spawnBullet(state, angle, speed) {
     prevDist: MUZZLE_DIST,
     speed,
     radius: CONFIG.BULLET_RADIUS,
+    pierceLeft: state.turret.pierce ?? 0,
     dead: false,
   });
 }
