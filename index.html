@@ -17,6 +17,7 @@
     <div class="hud-left">
       <div id="hudLives"></div>
       <div id="hudScore">0</div>
+      <div id="hudPowerups"></div>
     </div>
     <div class="hud-right">
       <span id="hudTime">0:00</span>
@@ -45,6 +46,27 @@
     <h2>ステージ選択</h2>
     <div id="stageGrid"></div>
     <button class="link-btn" id="stageBackBtn">タイトルへ</button>
+  </div>
+
+  <div id="powerupScreen" class="overlay hidden">
+    <h2>パワーアップを選んでね</h2>
+    <div class="offer-row">
+      <button type="button" class="offer-card" id="offerCard0">
+        <span class="card-key">1</span>
+        <span class="card-icon"></span>
+        <span class="card-name"></span>
+        <span class="card-desc"></span>
+        <span class="card-level"></span>
+      </button>
+      <button type="button" class="offer-card" id="offerCard1">
+        <span class="card-key">2</span>
+        <span class="card-icon"></span>
+        <span class="card-name"></span>
+        <span class="card-desc"></span>
+        <span class="card-level"></span>
+      </button>
+    </div>
+    <p class="offer-hint">クリック・タップ、または 1 / 2 キーで選べます</p>
   </div>
 
   <div id="pauseScreen" class="overlay hidden">

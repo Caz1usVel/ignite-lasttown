@@ -10,10 +10,12 @@ import { createPlayScene } from './scenes/play.js';
 import { createStageSelectScene } from './scenes/stageselect.js';
 import { createResultScene } from './scenes/result.js';
 import { createPauseScene } from './scenes/pause.js';
+import { createPowerupScene } from './scenes/powerup.js';
 
 const IDS = [
   'stage', 'game',
-  'hud', 'hudLives', 'hudScore', 'hudTime', 'pauseBtn', 'hint',
+  'hud', 'hudLives', 'hudScore', 'hudPowerups', 'hudTime', 'pauseBtn', 'hint',
+  'powerupScreen', 'offerCard0', 'offerCard1',
   'touchControls', 'turnLeftBtn', 'turnRightBtn',
   'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleSettingsBtn',
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
@@ -45,6 +47,7 @@ app.scenes.stageselect = createStageSelectScene(app);
 app.scenes.play = createPlayScene(app);
 app.scenes.result = createResultScene(app);
 app.scenes.pause = createPauseScene(app);
+app.scenes.powerup = createPowerupScene(app);
 
 let current = null;
 function setScene(name, params) {

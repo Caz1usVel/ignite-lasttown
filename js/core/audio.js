@@ -84,6 +84,15 @@ export function createAudio(settings) {
         tone(261.63, 0.5, { type: 'triangle', gain: 0.22, delay: 0.44 });
       },
       click: () => tone(440, 0.06, { type: 'sine', gain: 0.12 }),
+      offer: () => {
+        tone(660, 0.08, { type: 'triangle', gain: 0.18 });
+        tone(880, 0.08, { type: 'triangle', gain: 0.18, delay: 0.08 });
+        tone(1320, 0.14, { type: 'triangle', gain: 0.2, delay: 0.16 });
+      },
+      pick: () => {
+        tone(784, 0.07, { type: 'square', gain: 0.12 });
+        tone(1046.5, 0.12, { type: 'square', gain: 0.14, delay: 0.06 });
+      },
     },
   };
 

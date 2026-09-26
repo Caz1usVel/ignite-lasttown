@@ -251,3 +251,48 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
 .tile-num { font-weight: 800; font-size: 1.3rem; color: var(--star-gold); }
 .tile-status { font-size: 0.85rem; color: var(--text-dim); }
 .tile-best { font-size: 0.8rem; color: var(--text-dim); min-height: 1.1em; }
+
+#hudPowerups { font-size: 0.95rem; color: var(--text-dim); min-height: 1.2em; }
+
+#powerupScreen { z-index: 12; }
+.offer-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.offer-card {
+  touch-action: manipulation;
+  font-family: var(--font);
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(210px, 42vw);
+  min-width: 150px;
+  padding: 18px 12px 16px;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 216, 102, 0.5);
+  background: rgba(20, 26, 61, 0.92);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.08s ease, border-color 0.08s ease;
+}
+.offer-card:hover, .offer-card:focus-visible { border-color: var(--star-gold); transform: translateY(-3px); }
+.offer-card:active { transform: translateY(1px); }
+.offer-card.hidden { display: none; }
+.card-key {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.card-icon { font-size: 2.2rem; line-height: 1; }
+.card-name { font-weight: 800; font-size: 1.05rem; color: var(--star-gold); }
+.card-desc { font-size: 0.9rem; color: var(--text-dim); }
+.card-level { font-weight: 800; font-size: 0.95rem; }
+.offer-hint { color: var(--text-dim); font-size: 0.85rem; margin: 6px 0 0; }
+/* 出た直後は誤選択を防ぐため押せない（見た目でも分かるように薄くする） */
+#powerupScreen.locked .offer-card { opacity: 0.45; pointer-events: none; }

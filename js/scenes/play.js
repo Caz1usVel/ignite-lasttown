@@ -2,6 +2,7 @@ import { CONFIG } from '../core/config.js';
 import { getStage } from '../data/stages.js';
 import { createPlayState } from '../game/state.js';
 import { stepGame } from '../game/step.js';
+import { POWERUPS, POWERUP_IDS } from '../game/powerups.js';
 import { ENEMY_DEFS } from '../game/enemies.js';
 import { createEffects, spawnBurst, spawnPopup, updateEffects } from '../game/effects.js';
 import { drawPlayfield } from '../render/playfield.js';
@@ -26,6 +27,10 @@ export function createPlayScene(app) {
   function updateHud() {
     dom.hudLives.textContent = '♥'.repeat(Math.max(0, state.turret.lives));
     dom.hudScore.textContent = state.score.toLocaleString();
+    dom.hudPowerups.textContent = POWERUP_IDS
+      .filter((id) => id !== 'life' && state.powerups[id] > 0) // 残機はハート表示に反映されるので並べない
+      .map((id) => `${POWERUPS[id].icon}${state.powerups[id]}`)
+      .join(' ');
     const s = Math.floor(state.time);
     dom.hudTime.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   }
@@ -55,6 +60,9 @@ export function createPlayScene(app) {
         case 'clear':
           audio.se.clear();
           endTimer = END_DELAY;
+          break;
+        case 'offer':
+          audio.se.offer();
           break;
         case 'gameover':
           audio.se.gameOver();
@@ -96,6 +104,10 @@ export function createPlayScene(app) {
       updateEffects(fx, dt);
       if (state.time > HINT_TIME) dom.hint.classList.add('hidden');
       updateHud();
+      if (state.offer) {
+        app.setScene('powerup'); // 選択が出たら止まる。選んだら { resume: true } で戻ってくる
+        return;
+      }
       if (state.outcome) {
         endTimer -= dt;
         if (endTimer <= 0) {
@@ -105,6 +117,9 @@ export function createPlayScene(app) {
     },
     render(g, dt) {
       drawPlayfield(g, app.viewport, app.stars, state, fx, dt);
+    },
+    getState() {
+      return state;
     },
   };
 }
