@@ -4,14 +4,15 @@ export const GAME_TITLE = '防衛砲台（仮）';
 export const CONFIG = Object.freeze({
   VIRTUAL_SIZE: 1000,
   CENTER_X: 500,
-  CENTER_Y: 500,
+  CENTER_Y: 900,        // 砲台は画面の下寄り（上に広く使う）
+  VERT_SCALE: 1.5,      // 縦方向だけ引き伸ばす（横は 距離=ピクセルのまま）。奥行きを広く見せる
 
   FOV: 70,              // 度
   TURN_SPEED: 90,       // 度/秒
   HEADING_LIMIT: 90,    // ±度（敵の出現範囲も同じ）
 
   SPAWN_DIST: 460,
-  APPROACH_TIME: 14,    // 秒（実プレイで「気づくのが遅れる」ため、10秒から遅くした）
+  APPROACH_TIME: 10,    // 秒（縦を引き伸ばして見つけやすくしたので、14秒から10秒に戻した）
   APPROACH_JITTER: 0.15,
   SPAWN_SCALE: 1.35,    // 全ステージの出現間隔に掛ける（実プレイで「物量が多い」ため、薄くした）
 

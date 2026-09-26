@@ -3,6 +3,7 @@ import { DEG } from '../core/util.js';
 
 const CX = CONFIG.CENTER_X, CY = CONFIG.CENTER_Y;
 const R = CONFIG.SPAWN_DIST + 30;
+const RY = R * CONFIG.VERT_SCALE; // 縦は引き伸ばした楕円
 
 // 視界の扇形（画面上では上半分の半円）を明るく、それ以外を暗くする
 export function drawFov(g) {
@@ -11,7 +12,7 @@ export function drawFov(g) {
   const M = CONFIG.VIRTUAL_SIZE * 3; // レターボックスの余白も暗くする
   g.rect(-M, -M, CONFIG.VIRTUAL_SIZE + 2 * M, CONFIG.VIRTUAL_SIZE + 2 * M);
   g.moveTo(CX + R, CY);
-  g.arc(CX, CY, R, 0, Math.PI, true);
+  g.ellipse(CX, CY, R, RY, 0, 0, Math.PI, true);
   g.closePath();
   g.fill('evenodd');
 
@@ -21,7 +22,7 @@ export function drawFov(g) {
   g.fillStyle = grad;
   g.beginPath();
   g.moveTo(CX, CY);
-  g.arc(CX, CY, R, Math.PI, Math.PI * 2);
+  g.ellipse(CX, CY, R, RY, 0, Math.PI, Math.PI * 2);
   g.closePath();
   g.fill();
 
@@ -29,7 +30,7 @@ export function drawFov(g) {
   g.lineWidth = 2;
   g.setLineDash([8, 10]);
   g.beginPath();
-  g.arc(CX, CY, R, Math.PI, Math.PI * 2);
+  g.ellipse(CX, CY, R, RY, 0, Math.PI, Math.PI * 2);
   g.stroke();
   g.setLineDash([]);
   g.strokeStyle = 'rgba(191,230,255,0.25)';
@@ -41,7 +42,7 @@ export function drawFov(g) {
 
 // 旋回範囲180度の中で、今どこを向いているか（敵の情報は出さない）
 export function drawHeadingGauge(g, heading, fov) {
-  const gx = CX, gy = CY + 150, r = 70;
+  const gx = 860, gy = 965, r = 70;
   g.save();
   g.lineWidth = 10;
   g.lineCap = 'round';

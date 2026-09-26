@@ -651,7 +651,7 @@ export function drawEffects(g, fx) {
 
 // ボスのHPバー（仮想エリア下部。視界外にいても表示する）
 export function drawBossBar(g, boss, time = 0) {
-  const w = 420, h = 14, x = 500 - w / 2, y = 780;
+  const w = 420, h = 14, x = 500 - w / 2, y = 975;
   g.fillStyle = 'rgba(255,255,255,0.12)';
   g.beginPath();
   roundRectPath(g, x, y, w, h, 7);
@@ -671,7 +671,7 @@ export function drawBossBar(g, boss, time = 0) {
   if (boss.phase === 'telegraph' || boss.phase === 'vanish' || boss.phase === 'settle') {
     g.fillStyle = Math.floor(time * 8) % 2 === 0 ? '#ff6b6b' : '#ffd866';
     g.font = "800 22px 'M PLUS Rounded 1c', sans-serif";
-    g.fillText('⚠ 視界の外から突進！', 500, y - 36);
+    g.fillText('⚠ 視界の外から突進！', 500, 790);
   }
 }
 
@@ -682,6 +682,6 @@ export function drawJamNotice(g, time) {
   g.fillStyle = '#5fffd0';
   g.font = "800 26px 'M PLUS Rounded 1c', sans-serif";
   g.textAlign = 'center';
-  g.fillText('⚡ 妨害中', 500, 430);
+  g.fillText('⚡ 妨害中', 500, 820);
   g.restore();
 }

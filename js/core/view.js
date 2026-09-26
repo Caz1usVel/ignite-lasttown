@@ -9,7 +9,7 @@ export function worldToScreen(angle, dist, heading, fov = CONFIG.FOV) {
   const phi = rel * (90 / (fov / 2)) * DEG;
   return {
     x: CONFIG.CENTER_X + dist * Math.sin(phi),
-    y: CONFIG.CENTER_Y - dist * Math.cos(phi),
+    y: CONFIG.CENTER_Y - dist * Math.cos(phi) * CONFIG.VERT_SCALE,
     visible: Math.abs(rel) <= fov / 2 + EPS,
   };
 }
@@ -17,7 +17,7 @@ export function worldToScreen(angle, dist, heading, fov = CONFIG.FOV) {
 // 仮想画面上の点 → その方向の世界の角度。中心より下は±90度に押し込む。
 export function screenToWorldAngle(x, y, heading, fov = CONFIG.FOV) {
   const dx = x - CONFIG.CENTER_X;
-  const dy = CONFIG.CENTER_Y - y;
+  const dy = (CONFIG.CENTER_Y - y) / CONFIG.VERT_SCALE;
   const phiDeg = clamp(Math.atan2(dx, dy) / DEG, -90, 90);
   return heading + phiDeg / (90 / (fov / 2));
 }

@@ -1,9 +1,9 @@
 import { CONFIG } from '../core/config.js';
 import { DEG, clamp } from '../core/util.js';
 
-// ミニマップ（レーダー）：仮想エリアの右下に、自機を中心とした上向きの半円（脅威の180度範囲）を置く。
+// ミニマップ（レーダー）：仮想エリアの上中央に、自機を中心とした上向きの半円（脅威の180度範囲）を置く。
 // 視界の外の敵も点だけは見える。世界の角度（0が正面、±90が左右の端）をそのまま使う。
-export const RADAR = Object.freeze({ cx: 860, cy: 940, r: 110 });
+export const RADAR = Object.freeze({ cx: 500, cy: 130, r: 90 });
 
 // 世界の (角度, 距離) → レーダー上の座標。距離は出現距離で半径いっぱいになるように縮め、それより遠くは半径に収める
 export function radarPoint(angle, dist) {

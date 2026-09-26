@@ -40,7 +40,7 @@ test('難易度調整：ボスBの初期型・強化型（4面）', () => {
 });
 
 test('難易度調整：接近時間・残機・連射・旋回は据え置き', () => {
-  assert.equal(CONFIG.APPROACH_TIME, 14);
+  assert.equal(CONFIG.APPROACH_TIME, 10);
   assert.equal(CONFIG.LIVES, 3);
   assert.equal(CONFIG.FIRE_RATE, 4);
   assert.equal(CONFIG.TURN_SPEED, 90);
