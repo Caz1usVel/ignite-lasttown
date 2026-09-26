@@ -22,6 +22,12 @@ export function screenToWorldAngle(x, y, heading, fov = CONFIG.FOV) {
   return heading + phiDeg / (90 / (fov / 2));
 }
 
+// 遠くの敵が小さくて見つけにくいので、距離に応じて拡大する倍率。
+// 近い（距離0）で1.0倍、出現距離（SPAWN_DIST）で 1+FAR_SCALE 倍。描画と当たり判定の両方に同じ値を使う。
+export function visualScale(dist) {
+  return 1 + CONFIG.FAR_SCALE * clamp(dist / CONFIG.SPAWN_DIST, 0, 1);
+}
+
 // 1000×1000 の仮想エリアを、実画面の中央にレターボックスで置く（DOM専用）
 export function createViewport(canvas) {
   const S = CONFIG.VIRTUAL_SIZE;

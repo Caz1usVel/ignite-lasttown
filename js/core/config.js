@@ -26,6 +26,7 @@ export const CONFIG = Object.freeze({
   KNOCKBACK_RADIUS: 200,
   KNOCKBACK_DIST: 80,
   HITBOX_RATIO: 0.65,
+  FAR_SCALE: 0.6,       // 遠い敵ほど大きく描く（出現距離で 1+FAR_SCALE 倍、当たり判定も同じ倍率）
 
   DT_MAX: 0.05,
   DPR_MAX: 2,

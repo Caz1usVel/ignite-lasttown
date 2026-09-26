@@ -6,6 +6,8 @@ import { createTurret } from '../js/game/turret.js';
 import { createEnemy } from '../js/game/enemies.js';
 import { createBoss } from '../js/game/boss.js';
 import { mulberry32 } from '../js/core/util.js';
+import { visualScale } from '../js/core/view.js';
+import { CONFIG } from '../js/core/config.js';
 
 const rng = mulberry32(9);
 const mkState = () => ({ turret: createTurret(), bullets: [], enemies: [], boss: null, rng });
@@ -184,4 +186,36 @@ test('小数のダメージが積もっても、HP÷ダメージ回で倒せる�
   assert.equal(five.ev.length, 5);
   assert.equal(five.ev[4].type, 'kill');
   assert.equal(five.m.dead, true);
+});
+
+test('遠い敵は見た目と同じ倍率で当たり判定が広がる（近い敵は今までどおり）', () => {
+  // 遠い隕石(距離440)：半径 22 × visualScale × 0.65。弾は正面から少しずれた角度を通る
+  const far = mkState();
+  far.enemies.push(createEnemy('meteor', 0, rng, { dist: 440, speed: 0 }));
+  const scaleFar = visualScale(440);
+  const rHit = 22 * scaleFar * CONFIG.HITBOX_RATIO + CONFIG.BULLET_RADIUS; // 弾と敵の中心が離れていても当たる距離
+  const rOld = 22 * CONFIG.HITBOX_RATIO + CONFIG.BULLET_RADIUS;
+  // 画面上の横ずれ dx を作る角度：中心からの距離440、画面角 φ = 角度 × 90/35 なので dx ≈ 440 sin(φ)
+  const angleForDx = (dx) => (Math.asin(dx / 440) * 180 / Math.PI) * (35 / 90);
+  const dx = (rOld + rHit) / 2; // 旧判定では外れ、新判定では当たる位置
+  far.bullets.push(pbullet(angleForDx(dx), 400, 480, 0));
+  assert.equal(resolveBulletHits(far).length, 1);
+
+  // 近い隕石(距離100)では倍率がほぼ 1.13 なので、同じ dx（約 27）では当たらない
+  const near2 = mkState();
+  near2.enemies.push(createEnemy('meteor', 0, rng, { dist: 100, speed: 0 }));
+  const nearRHit = 22 * visualScale(100) * CONFIG.HITBOX_RATIO + CONFIG.BULLET_RADIUS;
+  const angleNear = (dx2) => (Math.asin(dx2 / 100) * 180 / Math.PI) * (35 / 90);
+  near2.bullets.push(pbullet(angleNear(nearRHit + 3), 60, 140, 0));
+  assert.equal(resolveBulletHits(near2).length, 0);
+});
+
+test('ボスの当たり判定は倍率を掛けない', () => {
+  const s = mkState();
+  s.boss = createBoss('bossA');
+  s.boss.dist = 380;
+  const rBoss = s.boss.radius * CONFIG.HITBOX_RATIO + CONFIG.BULLET_RADIUS;
+  const angleOff = (dx) => (Math.asin(dx / 380) * 180 / Math.PI) * (35 / 90);
+  s.bullets.push(pbullet(angleOff(rBoss + 4), 300, 460, 0)); // ボスの元の判定より少し外側 → 外れる
+  assert.equal(resolveBulletHits(s).length, 0);
 });

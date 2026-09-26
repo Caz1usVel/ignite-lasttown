@@ -1,7 +1,8 @@
-import { worldToScreen } from '../core/view.js';
+import { worldToScreen, visualScale } from '../core/view.js';
 import { drawBackground } from './background.js';
 import { drawFov, drawHeadingGauge } from './fov.js';
 import { drawTurret, drawEnemy, drawBoss, drawBullet, drawEffects, drawBossBar } from './entities.js';
+import { drawRadar } from './radar.js';
 
 export function drawPlayfield(g, vp, stars, state, fx, dt) {
   const t = state.turret;
@@ -12,7 +13,14 @@ export function drawPlayfield(g, vp, stars, state, fx, dt) {
   drawFov(g);
   for (const e of state.enemies) {
     const p = worldToScreen(e.angle, e.dist, t.heading, t.fov);
-    if (p.visible) drawEnemy(g, e, p.x, p.y, state.time);
+    if (!p.visible) continue;
+    // 遠くの敵ほど大きく描く（当たり判定も同じ倍率）
+    const k = visualScale(e.dist);
+    g.save();
+    g.translate(p.x, p.y);
+    g.scale(k, k);
+    drawEnemy(g, e, 0, 0, state.time);
+    g.restore();
   }
   const boss = state.boss && !state.boss.dead ? state.boss : null;
   if (boss) {
@@ -23,5 +31,6 @@ export function drawPlayfield(g, vp, stars, state, fx, dt) {
   drawTurret(g, t, state.time);
   drawEffects(g, fx);
   drawHeadingGauge(g, t.heading, t.fov);
+  drawRadar(g, state);
   if (boss) drawBossBar(g, boss);
 }

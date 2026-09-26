@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { worldToScreen } from '../core/view.js';
+import { worldToScreen, visualScale } from '../core/view.js';
 
 const KILL_EPS = 1e-9; // 小数ダメージの積み重ねで HP が 1e-16 ほど残っても倒したことにする
 const SWEEP_STEP = 12; // 弾の移動区間をこの間隔でサンプリングする
@@ -33,7 +33,9 @@ export function resolveBulletHits(state) {
         if (t.dead) continue;
         const q = worldToScreen(t.angle, t.dist, heading, fov);
         if (!q.visible) continue;
-        if (!circlesOverlap(p.x, p.y, b.radius, q.x, q.y, t.radius * CONFIG.HITBOX_RATIO)) continue;
+        // 見た目と同じ倍率で判定を広げる（ボスは元から大きいので倍率なし）
+        const hitRadius = t.radius * CONFIG.HITBOX_RATIO * (t === state.boss ? 1 : visualScale(t.dist));
+        if (!circlesOverlap(p.x, p.y, b.radius, q.x, q.y, hitRadius)) continue;
 
         t.hp -= damage;
         const killed = t.hp <= KILL_EPS;

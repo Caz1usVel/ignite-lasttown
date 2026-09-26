@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { worldToScreen, screenToWorldAngle } from '../js/core/view.js';
+import { worldToScreen, screenToWorldAngle, visualScale } from '../js/core/view.js';
+import { CONFIG } from '../js/core/config.js';
 
 const near = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) < eps, `${a} ≈ ${b}`);
 
@@ -45,4 +46,17 @@ test('FOVを広げると見える範囲と引き伸ばし倍率が変わる', ()
   const p = worldToScreen(43, 100, 0, 86);
   assert.equal(p.visible, true);
   near(p.x, 600);
+});
+
+test('visualScale：近いほど1.0倍、出現距離で 1+FAR_SCALE 倍、距離に対して単調増加', () => {
+  assert.equal(visualScale(0), 1);
+  near(visualScale(460), 1 + CONFIG.FAR_SCALE);
+  near(visualScale(230), 1 + CONFIG.FAR_SCALE / 2);
+  let prev = visualScale(0);
+  for (let d = 10; d <= 460; d += 10) {
+    const k = visualScale(d);
+    assert.ok(k > prev, `d=${d}`);
+    prev = k;
+  }
+  near(visualScale(9999), 1 + CONFIG.FAR_SCALE); // 出現距離より遠くても頭打ち
 });
