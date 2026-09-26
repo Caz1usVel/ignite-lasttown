@@ -29,4 +29,5 @@ export const CONFIG = Object.freeze({
 
   DT_MAX: 0.05,
   DPR_MAX: 2,
+  STAGE_COUNT: 7,
 });
