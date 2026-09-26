@@ -23,6 +23,9 @@ function readEntry(type, entry) {
     let group = null;
     if (pool.includes('formationDrone')) {
       if (!formation) throw new Error(`pool with formationDrone needs "formation" (${type})`);
+      if (Array.isArray(formation.count) && formation.count.length !== 2) {
+        throw new Error(`"count" array for formation of ${type} must have exactly 2 elements: ${JSON.stringify(formation.count)}`);
+      }
       group = readEntry('formationDrone', { every, count: formation.count, minSep: formation.minSep }).group;
     }
     return { every, group: null, pool, formationGroup: group };

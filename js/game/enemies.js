@@ -147,6 +147,7 @@ const ENEMY_INITS = {
   decoy(e, angle, rng, opts) {
     e.baseAngle = angle;
     e.swayT = 0;
+    if (opts.radius != null) e.radius = opts.radius;   // ボスDの偽像は、画面上の大きさをボスに合わせる
     e.style = opts.style ?? null;   // 描画の見た目（例：'bossD'）
     e.color = opts.color ?? null;
   },

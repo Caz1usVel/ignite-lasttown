@@ -7,6 +7,8 @@ import { resolveBulletHits } from '../js/game/collision.js';
 import { createTurret } from '../js/game/turret.js';
 import { mulberry32 } from '../js/core/util.js';
 import { CONFIG } from '../js/core/config.js';
+import { visualScale } from '../js/core/view.js';
+import { DECOY } from '../js/game/enemies.js';
 
 const DT = 1 / 60;
 const mkState = (seed = 21) => ({ enemies: [], boss: null, rng: mulberry32(seed), turret: createTurret() });
@@ -177,7 +179,7 @@ test('decoy モード：8 秒後に消して rest。撃たれて消えても待�
   ds[0].dead = true;                    // 撃たれて消えた
   step(b, s, 7.5);
   assert.equal(b.mode, 'decoy');        // まだ待つ
-  assert.equal(b.angle, a0);
+  assert.ok(Math.abs(b.angle - a0) <= DECOY.sway + EPS);   // 偽像と同じく、基準の角度のまわりで揺れる
   assert.equal(decoys(s).length, 1);
   step(b, s, 0.7);
   assert.equal(b.mode, 'rest');
@@ -383,8 +385,44 @@ test('待機中は angleRange の範囲で左右に往復する（decoy モー�
   assert.ok(Math.abs(b.angle) <= 50 + EPS);
   enterMode(b, s, 'decoy');
   const a1 = b.angle;
-  step(b, s, 2);
-  assert.equal(b.angle, a1);
+  let moved = false;
+  for (let i = 0; i < 120; i++) {
+    step(b, s, 1 / 60);
+    assert.ok(Math.abs(b.angle - a1) <= DECOY.sway + EPS);
+    if (b.angle !== a1) moved = true;
+  }
+  assert.ok(moved);                     // 完全に止まってはいない
+});
+
+test('偽像の大きさ：画面上（半径×visualScale）がボスの radius に揃う', () => {
+  const s = mkState(4);
+  const b = createBossD();
+  arrive(b, s);
+  enterMode(b, s, 'decoy');
+  assert.ok(Math.abs(BOSS_D_BASE.decoyRadius * visualScale(340) - BOSS_D_BASE.radius) < 1);
+  for (const d of decoys(s)) assert.equal(d.radius, BOSS_D_BASE.decoyRadius);
+});
+
+test('最終フェーズの召喚：突進中（boss.dist が小さい）でも、rest の距離 p.dist に出す', () => {
+  const s = mkState(6);
+  const b = createBossD();
+  arrive(b, s);
+  enterMode(b, s, 'dash');
+  b.hp = b.maxHp * b.p.finalRatio;
+  const DT = 1 / 60;
+  let i = 0;
+  for (; i < 60 * 10 && !(b.dashing && b.dist < 150); i++) { updateBossD(b, s, DT); b.hitCore = false; }
+  assert.ok(b.dashing && b.dist < 150, `dist ${b.dist}`);
+  assert.equal(b.final, true);
+  const before = minions(s).length;
+  b.finalSummonT = 0.001;
+  updateBossD(b, s, DT);
+  const added = minions(s).slice(before);
+  assert.equal(added.length, b.p.finalSummonCount);
+  for (const m of added) {
+    assert.equal(m.dist, b.p.dist);
+    assert.ok(Math.abs(m.speed - b.p.dist / b.p.minionApproach) < 1e-9);
+  }
 });
 
 test('updateBoss は bossD を更新する。ボスDに当てると damageTaken が増え、HPが減る', () => {

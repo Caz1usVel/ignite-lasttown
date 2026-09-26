@@ -55,6 +55,13 @@ test('pool：every に scale を掛ける', () => {
   assert.equal(state.enemies.length, 3);
 });
 
+test('validateStage：pool の formation.count は長さ 2 の配列だけ受け付ける', () => {
+  const mk = (count) => mkStage({ pool: { every: 2, pool: ['formationDrone'], formation: { count, minSep: 25 } } });
+  assert.throws(() => validateStage(mk([3, 4, 5])), /count/);
+  assert.throws(() => validateStage(mk([3])), /count/);
+  validateStage(mk([3, 4]));
+});
+
 test('pool：formationDrone が出たら、formation の設定で編隊（count 機）を出す', () => {
   const stage = mkStage({ pool: { every: 2, pool: ['formationDrone', 'meteor'], formation: { count: [3, 4], minSep: 25 } } });
   const state = { enemies: [], boss: null, rng: mulberry32(5) };

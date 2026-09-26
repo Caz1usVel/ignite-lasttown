@@ -92,6 +92,19 @@ test('吸収：閉じているシールドに当たった弾はダメージな�
   assert.equal(s.bullets[0].dead, true);
 });
 
+test('stepGame：block イベントでは、対象の flashT を設定しない', () => {
+  const stage = { id: 0, segments: [], spawnEnd: 1e9, boss: { type: 'bossA', params: {} } };
+  const s = createPlayState(stage, mulberry32(1));
+  s.time = 5;
+  const e = createEnemy('shielder', 0, s.rng, { dist: 400, speed: 0 });
+  e.shielded = true;
+  s.enemies.push(e);
+  s.bullets.push(bullet(0, 390, 395));
+  const ev = stepGame(s, DT, { turnAxis: 0, firing: false, aim: null, bulletSpeed: CONFIG.BULLET_SPEED_PC });
+  assert.ok(ev.some((x) => x.type === 'block' && x.target === e));
+  assert.equal(e.flashT, undefined);
+});
+
 test('吸収：開いているシールドは、普通に倒せる', () => {
   const s = mkCombat();
   const e = createEnemy('shielder', 0, rng, { dist: 200, speed: 0 });

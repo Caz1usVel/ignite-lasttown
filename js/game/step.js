@@ -27,7 +27,7 @@ export function stepGame(state, dt, controls) {
   updateBullets(state, dt);
 
   for (const ev of resolveBulletHits(state)) {
-    ev.target.flashT = state.time;
+    if (ev.type !== 'block') ev.target.flashT = state.time; // 吸収された弾では光らせない
     events.push(ev);
     if (ev.type !== 'kill') continue;
     if (ev.target === state.boss) {

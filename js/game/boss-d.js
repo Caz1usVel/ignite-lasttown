@@ -1,6 +1,6 @@
 import { CONFIG } from '../core/config.js';
 import { randInt, randRange } from '../core/util.js';
-import { createEnemy } from './enemies.js';
+import { createEnemy, DECOY } from './enemies.js';
 import { pickSpreadAngles } from './boss-a.js';
 import { createBossB, updateBossB } from './boss-b.js';
 
@@ -10,6 +10,7 @@ import { createBossB, updateBossB } from './boss-b.js';
 export const BOSS_D_BASE = Object.freeze({
   hp: 90,
   radius: 64,
+  decoyRadius: 44,       // 偽像の半径。遠近の拡大（visualScale(340)≒1.443）をかけるとボスの radius 64 に揃う
   dist: 340,
   moveSpeed: 28,
   angleRange: 50,
@@ -72,6 +73,7 @@ export function createBossD(params = {}) {
     decoys: [],
     decoyRefillT: 0,
     decoyLifeT: 0,
+    swayBase: 0,         // decoy モードに入ったときの角度（偽像と同じ揺れの中心）
     final: false,
     finalSummonT: 0,
     finalDashT: 0,
@@ -88,8 +90,8 @@ function summonVolley(boss, state, count) {
   const p = boss.p;
   for (const a of pickSpreadAngles(count, p.summonMinSep, state.rng)) {
     state.enemies.push(createEnemy('bossMinion', a, state.rng, {
-      dist: boss.dist,
-      speed: boss.dist / p.minionApproach,
+      dist: p.dist,
+      speed: p.dist / p.minionApproach,
     }));
   }
 }
@@ -129,7 +131,7 @@ function spawnDecoys(boss, state, n) {
   for (let i = 0; i < n; i++) {
     const a = pickFreeAngle(taken, p.decoyMinSep, -p.decoyRange, p.decoyRange, state.rng);
     taken.push(a);
-    const d = createEnemy('decoy', a, state.rng, { dist: p.dist, style: 'bossD', color: boss.color ?? FALLBACK_COLOR });
+    const d = createEnemy('decoy', a, state.rng, { dist: p.dist, style: 'bossD', radius: p.decoyRadius, color: boss.color ?? FALLBACK_COLOR });
     boss.decoys.push(d);
     state.enemies.push(d);
   }
@@ -171,6 +173,7 @@ export function enterMode(boss, state, mode) {
     startDash(boss);
   } else if (mode === 'decoy') {
     spawnDecoys(boss, state, p.decoyCount);
+    boss.swayBase = boss.angle;
     boss.decoyLifeT = p.decoyLifetime;
   } else {
     throw new Error(`unknown bossD mode: ${mode}`);
@@ -272,6 +275,8 @@ export function updateBossD(boss, state, dt) {
   if (boss.dashing) syncDash(boss, state, dt);
   // 待機の動き。decoy モードの間は、偽像と見分けがつかないよう動かない
   else if (boss.mode !== 'decoy') drift(boss, dt);
+  // decoy モードの間は、偽像と同じ揺れ方をして、動かないことで見分けられないようにする
+  else boss.angle = boss.swayBase + DECOY.sway * Math.sin(boss.t * DECOY.swayHz * Math.PI * 2);
 
   if (boss.final) {
     updateFinal(boss, state, dt);

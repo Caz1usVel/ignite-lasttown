@@ -41,7 +41,7 @@ js/game/boss-c.js   新規（§6）
 js/game/boss-d.js   新規（計画B・§7）
 js/game/boss.js     登録表 BOSSES、createBoss、updateBoss だけ。BOSS_A_BASE と pickSpreadAngles は再エクスポートする（既存の import を壊さない）
 ```
-- 登録表の各項目：`{ name, color, create, update }`。`color` は既定の色（`#rrggbb`）：`bossA '#8f7cff'`、`bossB '#c2418f'`、`bossC '#4fc3d9'`、`bossD '#e8c547'`
+- 登録表の各項目：`{ name, color, create, update }`。`color` は既定の色（`#rrggbb`）：`bossA '#8f7cff'`、`bossB '#c2418f'`、`bossC '#4fc3d9'`、`bossD '#ffd24a'`
 - `createBoss` は、作ったボスに `name` と `color`（`params.color ?? 登録表の color`）を付ける。`boss.p.color` はこれまでどおり `params` の値のまま（既定の色は入れない）
 - 描画とエフェクトは `boss.color` を使う（`boss.p.color ?? …` の分岐をやめる）
 - 描画は、`js/render/entities.js` の `drawBoss` を、種類→関数の表（`BOSS_DRAWERS`）で引く。表に無い種類は、マゼンタの目立つ代わりの図形
