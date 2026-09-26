@@ -90,3 +90,32 @@ test('createBoss：params の color が p.color に入り、基準値には colo
   assert.equal(createBoss('bossA', { color: '#ff8f6b' }).p.color, '#ff8f6b');
   assert.equal('color' in BOSS_A_BASE, false); // 基準値は書き換わらない
 });
+
+test('pickSpreadAngles：実現可能なら常に昇順・範囲内・minSep 以上（200シード × 1〜5機）', () => {
+  for (let count = 1; count <= 5; count++) {
+    for (let seed = 1; seed <= 200; seed++) {
+      const a = pickSpreadAngles(count, 25, mulberry32(seed));
+      assert.equal(a.length, count);
+      for (let i = 0; i < a.length; i++) {
+        assert.ok(a[i] >= -90 - 1e-9 && a[i] <= 90 + 1e-9, `angle ${a[i]}`);
+        if (i > 0) assert.ok(a[i] - a[i - 1] >= 25 - 1e-9, `gap ${a[i] - a[i - 1]}`);
+      }
+    }
+  }
+});
+
+test('pickSpreadAngles：5機・minSep 25 でも固定の等間隔に落ちず、配置がばらける', () => {
+  const sets = new Set();
+  for (let seed = 1; seed <= 200; seed++) {
+    const a = pickSpreadAngles(5, 25, mulberry32(seed));
+    assert.notDeepEqual(a.map((x) => Math.round(x * 1e6) / 1e6), [-72, -36, 0, 36, 72]);
+    sets.add(JSON.stringify(a));
+  }
+  assert.ok(sets.size >= 150, `distinct=${sets.size}`);
+});
+
+test('pickSpreadAngles：1機なら範囲内の角度を1つ返す', () => {
+  const a = pickSpreadAngles(1, 25, mulberry32(3));
+  assert.equal(a.length, 1);
+  assert.ok(a[0] >= -90 && a[0] <= 90);
+});

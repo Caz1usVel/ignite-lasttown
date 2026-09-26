@@ -47,14 +47,15 @@ export function createBoss(type, params = {}) {
 }
 
 export function pickSpreadAngles(count, minSep, rng, lo = -CONFIG.HEADING_LIMIT, hi = CONFIG.HEADING_LIMIT) {
-  for (let attempt = 0; attempt < 50; attempt++) {
-    const angles = [];
-    for (let i = 0; i < count; i++) angles.push(randRange(rng, lo, hi));
-    angles.sort((a, b) => a - b);
-    if (angles.every((a, i) => i === 0 || a - angles[i - 1] >= minSep)) return angles;
+  const slack = (hi - lo) - (count - 1) * minSep;
+  if (slack < 0) {
+    const step = (hi - lo) / count; // 物理的に不可能な条件のときだけ等間隔
+    return Array.from({ length: count }, (_, i) => lo + step * (i + 0.5));
   }
-  const step = (hi - lo) / count; // 条件を満たせないときは等間隔
-  return Array.from({ length: count }, (_, i) => lo + step * (i + 0.5));
+  // 余白 slack の中に一様に点を取り、i 番目に minSep * i を足す。取り得るすべての配置から一様に選べる。
+  const u = Array.from({ length: count }, () => randRange(rng, 0, slack));
+  u.sort((x, y) => x - y);
+  return u.map((v, i) => lo + v + i * minSep);
 }
 
 export function updateBoss(boss, state, dt) {
