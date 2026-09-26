@@ -6,6 +6,8 @@ import { createEnemy } from '../js/game/enemies.js';
 import { createBoss } from '../js/game/boss.js';
 import { STAGE1 } from '../js/data/stage1.js';
 import { STAGE2 } from '../js/data/stage2.js';
+import { STAGE3 } from '../js/data/stage3.js';
+import { STAGE4 } from '../js/data/stage4.js';
 import { worldToScreen } from '../js/core/view.js';
 import { mulberry32 } from '../js/core/util.js';
 import { CONFIG } from '../js/core/config.js';
@@ -89,7 +91,7 @@ test('何もしなければ1面はゲームオーバーになる', () => {
 // 自動操縦は狙いが完璧で、人間より強い。失敗した場合は、結果（到達時間・残機・ボスHP）を報告すること。
 function autoPilot(st) {
   const t = st.turret;
-  const cands = [...st.enemies, ...(st.boss && !st.boss.dead ? [st.boss] : [])];
+  const cands = [...st.enemies, ...(st.boss && !st.boss.dead && !st.boss.hidden ? [st.boss] : [])];
   if (!cands.length) return idle;
   const target = cands.reduce((a, b) => (b.dist < a.dist ? b : a));
   let aimAngle = target.angle;
@@ -114,6 +116,26 @@ test('自動操縦で2面をクリアできる（複数のシード）', () => {
     runUntil(s, autoPilot, (st) => st.outcome, 500, true);
     assert.equal(s.outcome, 'clear',
       `seed=${seed} time=${s.time.toFixed(1)} lives=${s.turret.lives} bossHp=${s.boss?.hp}`);
+    assert.ok(s.turret.lives >= 1);
+  }
+});
+
+test('自動操縦で3面をクリアできる（複数のシード）', () => {
+  for (const seed of [3, 4, 5, 6, 7]) {
+    const s = createPlayState(STAGE3, mulberry32(seed));
+    runUntil(s, autoPilot, (st) => st.outcome, 600, true);
+    assert.equal(s.outcome, 'clear',
+      `seed=${seed} time=${s.time.toFixed(1)} lives=${s.turret.lives} bossHp=${s.boss?.hp} phase=${s.boss?.phase}`);
+    assert.ok(s.turret.lives >= 1);
+  }
+});
+
+test('自動操縦で4面をクリアできる（複数のシード）', () => {
+  for (const seed of [3, 4, 5, 6, 7]) {
+    const s = createPlayState(STAGE4, mulberry32(seed));
+    runUntil(s, autoPilot, (st) => st.outcome, 700, true);
+    assert.equal(s.outcome, 'clear',
+      `seed=${seed} time=${s.time.toFixed(1)} lives=${s.turret.lives} bossHp=${s.boss?.hp} phase=${s.boss?.phase}`);
     assert.ok(s.turret.lives >= 1);
   }
 });

@@ -1,8 +1,10 @@
 import { STAGE1 } from './stage1.js';
 import { STAGE2 } from './stage2.js';
+import { STAGE3 } from './stage3.js';
+import { STAGE4 } from './stage4.js';
 
-// 面の登録。③b・③cで3〜7面のデータができたら、ここに1行ずつ足す。
-export const STAGES = Object.freeze({ 1: STAGE1, 2: STAGE2 });
+// 面の登録。③cで5〜7面のデータができたら、ここに1行ずつ足す。
+export const STAGES = Object.freeze({ 1: STAGE1, 2: STAGE2, 3: STAGE3, 4: STAGE4 });
 
 export function getStage(id) {
   return Object.prototype.hasOwnProperty.call(STAGES, id) ? STAGES[id] : null;
