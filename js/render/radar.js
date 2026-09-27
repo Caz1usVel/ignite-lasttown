@@ -41,6 +41,15 @@ function bossDot(g, e, inFov) {
   g.fill();
 }
 
+// 偽像はボスと同じ色で描かれるので、レーダーでは別の色にして見分けられるようにする（大きさは同じ）
+function decoyDot(g, e, inFov) {
+  const p = radarPoint(e.angle, e.dist);
+  g.fillStyle = inFov ? 'rgba(200,140,255,1)' : 'rgba(200,140,255,0.6)';
+  g.beginPath();
+  g.arc(p.x, p.y, 7, 0, Math.PI * 2);
+  g.fill();
+}
+
 export function drawRadar(g, state) {
   const { heading, fov } = state.turret;
   const { cx, cy, r } = RADAR;
@@ -76,8 +85,8 @@ export function drawRadar(g, state) {
   const inView = (angle) => Math.abs(angle - heading) <= fov / 2;
   for (const e of state.enemies) {
     if (e.dead) continue;
-    if (e.type === 'decoy') { // 本体と見分けがつかないように、ボスと同じ点で描く
-      bossDot(g, e, inView(e.angle));
+    if (e.type === 'decoy') { // レーダーでは、専用の色で見分けられるようにする
+      decoyDot(g, e, inView(e.angle));
       continue;
     }
     dot(g, e, inView(e.angle));

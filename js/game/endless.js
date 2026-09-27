@@ -11,7 +11,7 @@ import { BOSS_C_BASE } from './boss-c.js';
 // 同時に出る敵は MAX_ACTIVE のまま（ユーザーの指示）。難しくなるのは、出現頻度・速さ・ボスの強さ。
 const CONFIGS = {
   normal: { startLevel: 0, base: 2.6, decay: 0.9, floor: 0.9, bossEvery: 60 },
-  hard:   { startLevel: 3, base: 1.8, decay: 0.88, floor: 0.7, bossEvery: 60 },
+  hard:   { startLevel: 5, base: 1.8, decay: 0.88, floor: 0.7, bossEvery: 60 },
 };
 const NAMES = { normal: '通常エンドレス', hard: 'ハードエンドレス' };
 const BOSS_TYPES = ['bossA', 'bossB', 'bossC'];
@@ -49,31 +49,37 @@ export function speedMult(t) {
   return 1 + Math.min(0.5, (0.04 * t) / 60);
 }
 
-// ボスの強さ。level が上がるほど、HPが増え、アイデンティティ攻撃の数・頻度が上がる（上限・下限あり）
+// 5回の撃破ごとに1段階（tier）。0（初期）〜3（3段階目）で止まる（最終的に15回で上限）
+export function endlessTier(L) {
+  return Math.min(3, Math.floor(L / 5));
+}
+
+// ボスの強さ。tier（0〜3）が上がるほど、体力が+15%刻みで増え、識別攻撃の数・頻度が少しだけ上がる
 export function endlessBossParams(type, L) {
-  const hpk = 1 + 0.3 * L;
+  const tier = endlessTier(L);
+  const hpk = 1 + 0.15 * tier;
   switch (type) {
     case 'bossA': return {
       hp: Math.round(BOSS_A_BASE.hp * hpk),
-      summonCount: Math.min(9, 3 + L),
-      summonInterval: Math.max(3.5, BOSS_A_BASE.summonInterval * Math.pow(0.92, L)),
-      shotInterval: Math.max(2.5, BOSS_A_BASE.shotInterval * Math.pow(0.92, L)),
-      shotBurst: Math.min(6, 3 + Math.floor(L / 2)),
+      summonCount: BOSS_A_BASE.summonCount + tier,
+      summonInterval: BOSS_A_BASE.summonInterval * Math.pow(0.95, tier),
+      shotInterval: BOSS_A_BASE.shotInterval * Math.pow(0.95, tier),
+      shotBurst: BOSS_A_BASE.shotBurst + Math.floor(tier / 2),
     };
     case 'bossB': return {
       hp: Math.round(BOSS_B_BASE.hp * hpk),
-      dashInterval: Math.max(4, BOSS_B_BASE.dashInterval * Math.pow(0.9, L)),
-      dashCount: 1 + Math.min(2, Math.floor(L / 2)),
-      dashTime: Math.max(1.8, BOSS_B_BASE.dashTime * Math.pow(0.95, L)),
-      scatterInterval: Math.max(4, BOSS_B_BASE.scatterInterval * Math.pow(0.9, L)),
-      scatterCount: Math.min(11, BOSS_B_BASE.scatterCount + L),
+      dashInterval: BOSS_B_BASE.dashInterval * Math.pow(0.95, tier),
+      dashCount: BOSS_B_BASE.dashCount + Math.floor(tier / 2),
+      dashTime: BOSS_B_BASE.dashTime * Math.pow(0.97, tier),
+      scatterInterval: BOSS_B_BASE.scatterInterval * Math.pow(0.95, tier),
+      scatterCount: BOSS_B_BASE.scatterCount + tier,
     };
     case 'bossC': return {
       hp: Math.round(BOSS_C_BASE.hp * hpk),
-      decoyCount: Math.min(5, BOSS_C_BASE.decoyCount + Math.floor(L / 2)),
-      swapInterval: Math.max(3, BOSS_C_BASE.swapInterval * Math.pow(0.92, L)),
-      shieldInterval: Math.max(5, BOSS_C_BASE.shieldInterval * Math.pow(0.92, L)),
-      jamInterval: Math.max(4, BOSS_C_BASE.jamInterval * Math.pow(0.92, L)),
+      decoyCount: BOSS_C_BASE.decoyCount + Math.min(2, tier),
+      swapInterval: BOSS_C_BASE.swapInterval * Math.pow(0.95, tier),
+      shieldInterval: BOSS_C_BASE.shieldInterval * Math.pow(0.95, tier),
+      jamInterval: BOSS_C_BASE.jamInterval * Math.pow(0.95, tier),
     };
     default: throw new Error(`unknown endless boss type: ${type}`);
   }

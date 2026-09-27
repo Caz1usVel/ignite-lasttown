@@ -404,7 +404,7 @@ function drawDecoy(g, e, x, y, time, swapBlink) {
   g.save();
   g.translate(x, y);
   if (e.style === 'bossD') drawBossDBody(g, e.radius, e.color ?? COLORS.bossD, time);
-  else drawBossCBody(g, e.radius, COLORS.bossC, time, { swapBlink });
+  else drawBossCBody(g, e.radius, e.color ?? COLORS.bossC, time, { swapBlink });
   g.restore();
 }
 

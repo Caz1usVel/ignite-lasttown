@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createEndlessStage, endlessPool, endlessEvery, speedMult, endlessBossParams,
+  createEndlessStage, endlessPool, endlessEvery, speedMult, endlessBossParams, endlessTier,
 } from '../js/game/endless.js';
 import { createSpawner, updateSpawner } from '../js/game/spawner.js';
 import { createPlayState } from '../js/game/state.js';
@@ -24,7 +24,7 @@ test('createEndlessStage：通常とハードの設定', () => {
   assert.equal(h.id, 'endless-hard');
   assert.equal(h.name, 'ハードエンドレス');
   assert.equal(n.endless.startLevel, 0);
-  assert.equal(h.endless.startLevel, 3);
+  assert.equal(h.endless.startLevel, 5);
   assert.equal(n.endless.bossEvery, 60);
   assert.equal(n.spawnEnd, Infinity);
   assert.equal(n.boss, null);
@@ -64,38 +64,55 @@ test('敵の速さの倍率：1.0 から増え、+50% で止まる', () => {
   assert.equal(speedMult(100000), 1.5);
 });
 
-test('ボスの強さ：レベル0は基準値、レベルが上がると強く・速くなり、上限・下限で止まる', () => {
-  const a0 = endlessBossParams('bossA', 0);
-  assert.equal(a0.hp, 30);
-  assert.equal(a0.summonCount, 3);
-  assert.ok(Math.abs(a0.summonInterval - 7.5) < 1e-9);
-  const a5 = endlessBossParams('bossA', 5);
-  assert.ok(a5.hp > a0.hp && a5.summonCount === 8 && a5.summonInterval < a0.summonInterval);
-  const a99 = endlessBossParams('bossA', 99);
-  assert.equal(a99.summonCount, 9);
-  assert.equal(a99.summonInterval, 3.5);
-  assert.equal(a99.shotBurst, 6);
-  const b0 = endlessBossParams('bossB', 0);
-  assert.equal(b0.hp, 40);
-  assert.equal(b0.dashCount, 1);
-  assert.equal(endlessBossParams('bossB', 4).dashCount, 3);
-  assert.equal(endlessBossParams('bossB', 99).dashInterval, 4);
-  assert.equal(endlessBossParams('bossB', 99).dashTime, 1.8);
-  assert.equal(endlessBossParams('bossB', 99).scatterCount, 11);
-  const c0 = endlessBossParams('bossC', 0);
-  assert.equal(c0.hp, 45);
-  assert.equal(c0.decoyCount, 2);
-  assert.equal(endlessBossParams('bossC', 4).decoyCount, 4);
-  assert.equal(endlessBossParams('bossC', 99).decoyCount, 5);
-  assert.equal(endlessBossParams('bossC', 99).swapInterval, 3);
-  assert.equal(endlessBossParams('bossC', 99).shieldInterval, 5);
-  assert.equal(endlessBossParams('bossC', 99).jamInterval, 4);
+test('endlessTier：5回ごとに1段階、0〜3の4段階で止まる', () => {
+  assert.equal(endlessTier(0), 0);
+  assert.equal(endlessTier(4), 0);
+  assert.equal(endlessTier(5), 1);
+  assert.equal(endlessTier(9), 1);
+  assert.equal(endlessTier(10), 2);
+  assert.equal(endlessTier(14), 2);
+  assert.equal(endlessTier(15), 3);
+  assert.equal(endlessTier(20), 3);
+  assert.equal(endlessTier(9999), 3); // 上限で止まる
+});
+
+test('ボスの強さ：tierごとに、体力が+15%ずつ増え（3段階で最大+45%）、識別攻撃が少しだけ強くなる', () => {
+  for (const [type, base] of [['bossA', 30], ['bossB', 40], ['bossC', 45]]) {
+    const byTier = [0, 5, 10, 15].map((L) => endlessBossParams(type, L));
+    assert.deepEqual(byTier.map((p) => p.hp), [base, Math.round(base * 1.15), Math.round(base * 1.3), Math.round(base * 1.45)], type);
+    assert.equal(endlessBossParams(type, 999).hp, byTier[3].hp, `${type}: 上限を超えても変わらない`);
+    assert.deepEqual(endlessBossParams(type, 20).hp, byTier[3].hp, `${type}: L20 も tier3 のまま`);
+  }
+
+  const a = [0, 5, 10, 15].map((L) => endlessBossParams('bossA', L));
+  assert.deepEqual(a.map((p) => p.summonCount), [3, 4, 5, 6]);
+  assert.ok(a[0].summonInterval > a[3].summonInterval, 'summonInterval shortens');
+  assert.ok(a[0].shotInterval > a[3].shotInterval);
+  assert.deepEqual(a.map((p) => p.shotBurst), [3, 3, 4, 4]);
+
+  const b = [0, 5, 10, 15].map((L) => endlessBossParams('bossB', L));
+  assert.deepEqual(b.map((p) => p.dashCount), [1, 1, 2, 2]);
+  assert.deepEqual(b.map((p) => p.scatterCount), [5, 6, 7, 8]);
+  assert.ok(b[0].dashInterval > b[3].dashInterval);
+  assert.ok(b[0].dashTime > b[3].dashTime);
+  assert.ok(b[0].scatterInterval > b[3].scatterInterval);
+
+  const c = [0, 5, 10, 15].map((L) => endlessBossParams('bossC', L));
+  assert.deepEqual(c.map((p) => p.decoyCount), [2, 3, 4, 4]); // tier3でも4止まり（詰まらない範囲）
+  assert.ok(c[0].swapInterval > c[3].swapInterval);
+  assert.ok(c[0].shieldInterval > c[3].shieldInterval);
+  assert.ok(c[0].jamInterval > c[3].jamInterval);
   for (const type of ['bossA', 'bossB', 'bossC']) {
-    for (const L of [0, 3, 10, 99]) {
-      assert.ok(createBoss(type, endlessBossParams(type, L)), `${type} L${L}`); // 実際に作れる（色の指定は無い）
-      assert.equal('color' in endlessBossParams(type, L), false);
+    for (const L of [0, 5, 10, 15, 200]) {
+      assert.ok(createBoss(type, endlessBossParams(type, L)), `${type} L${L}`);
     }
   }
+});
+
+test('ハードエンドレスは、開始時点で tier1（撃破5回ぶん）から始まる', () => {
+  const s = createPlayState(S('hard'), mulberry32(1));
+  assert.equal(s.spawner.endless.bossLevel, 5);
+  assert.equal(endlessTier(s.spawner.endless.bossLevel), 1);
 });
 
 test('shuffled と activeCount は共通の場所にある', () => {
@@ -174,15 +191,15 @@ test('ボス撃破のとき、偽像と子機は消える（得点なし）', ()
   assert.equal(s.boss, null);
 });
 
-test('ボスのレベルが上がる：撃破のたびに level+1。ハードは3から', () => {
+test('ボスのレベルが上がる：撃破のたびに level+1。ハードは5から', () => {
   const s = createPlayState(S('hard'), mulberry32(1));
-  assert.equal(s.spawner.endless.bossLevel, 3);
-  s.boss = createBoss('bossA', endlessBossParams('bossA', 3));
+  assert.equal(s.spawner.endless.bossLevel, 5);
+  s.boss = createBoss('bossA', endlessBossParams('bossA', 5));
   s.spawner.endless.hadBoss = true;
   s.boss.dead = true;
   stepGame(s, DT, noInput);
   updateSpawner(s.spawner, s, DT);
-  assert.equal(s.spawner.endless.bossLevel, 4);
+  assert.equal(s.spawner.endless.bossLevel, 6);
   assert.equal(s.spawner.endless.bossTimer < 1, true);
 });
 

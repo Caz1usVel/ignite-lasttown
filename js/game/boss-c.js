@@ -61,7 +61,7 @@ function layout(boss, state) {
   boss.decoys = [];
   angles.forEach((a, i) => {
     if (i === real) return;
-    const d = createEnemy('decoy', a, state.rng, { dist: p.dist });
+    const d = createEnemy('decoy', a, state.rng, { dist: p.dist, color: boss.color });
     boss.decoys.push(d);
     state.enemies.push(d);
   });

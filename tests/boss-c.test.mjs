@@ -224,3 +224,12 @@ test('updateBoss は bossC を更新する。強化型の上書きが効く', ()
   assert.equal(decoysOf(s).length, 3);
   assert.equal(b.p.swapInterval, 4.5);
 });
+
+test('偽像は、本体（ボス）と同じ色で作られる', () => {
+  const s = mkState();
+  const b = createBoss('bossC', { color: '#ff9fd0' });
+  toIdle(b, s);
+  const decoys = s.enemies.filter((e) => e.type === 'decoy' && !e.dead);
+  assert.ok(decoys.length > 0);
+  for (const d of decoys) assert.equal(d.color, '#ff9fd0');
+});
