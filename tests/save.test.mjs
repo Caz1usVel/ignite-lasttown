@@ -164,6 +164,15 @@ test('tutorialSeen：既定は false。保存・読み込みで保たれ、v1か
   assert.equal(loadSave(oldV2).tutorialSeen, false);
 });
 
+test('tutorialSeen：進捗（クリア済みステージ or エンドレス記録）がある古いセーブは既に見たものとみなす', () => {
+  const clearedStage = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: { 1: { cleared: true, best: 100 } } }), setItem() {} };
+  assert.equal(loadSave(clearedStage).tutorialSeen, true);
+  const endlessBest = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {}, endless: { normal: { best: 500, time: 10 } } }), setItem() {} };
+  assert.equal(loadSave(endlessBest).tutorialSeen, true);
+  const noProgress = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: { 1: { cleared: false, best: 0 } } }), setItem() {} };
+  assert.equal(loadSave(noProgress).tutorialSeen, false);
+});
+
 test('selectedSkinId：既定は "default"。保存・読み込みで保たれ、壊れた値は既定に戻る', () => {
   const fresh = loadSave({ getItem: () => null, setItem() {} });
   assert.equal(fresh.selectedSkinId, 'default');

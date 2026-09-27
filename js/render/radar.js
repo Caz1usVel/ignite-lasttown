@@ -41,7 +41,8 @@ function bossDot(g, e, inFov) {
   g.fill();
 }
 
-// 偽像はボスと同じ色で描かれるので、レーダーでは別の色にして見分けられるようにする（大きさは同じ）
+// 偽像はボスと同じ色で描かれるので、レーダーでは別の色にして見分けられるようにする（大きさは同じ）。
+// ボスC・ボスD（総集編）のどちらの偽像も対象（両者とも視界撹乱＝偽像がアイデンティティ攻撃の一部のため）
 function decoyDot(g, e, inFov) {
   const p = radarPoint(e.angle, e.dist);
   g.fillStyle = inFov ? 'rgba(200,140,255,1)' : 'rgba(200,140,255,0.6)';

@@ -78,7 +78,13 @@ export function loadSave(storage = defaultStorage()) {
       return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless: defaultEndless(), tutorialSeen: d.tutorialSeen === true, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default' };
     }
     if (d?.version === SAVE_VERSION) {
-      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages: sanitizeStages(d.stages), endless: sanitizeEndless(d.endless), tutorialSeen: d.tutorialSeen === true, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default' };
+      const stages = sanitizeStages(d.stages);
+      const endless = sanitizeEndless(d.endless);
+      // 既存プレイヤー（このブランチより前のセーブ）は tutorialSeen が無いため false になり、
+      // クリア済みでもチュートリアルが強制表示されてしまう。進捗（クリア済みステージ or エンドレス記録）があれば
+      // 既に見たものとみなし、既存プレイヤーの体験を邪魔しない。新規プレイヤーは進捗が無いので影響しない。
+      const hasProgress = Object.values(stages).some((s) => s.cleared === true) || endless.normal.best > 0 || endless.hard.best > 0;
+      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless, tutorialSeen: d.tutorialSeen === true || hasProgress, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default' };
     }
     return defaults();
   } catch {

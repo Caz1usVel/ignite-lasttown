@@ -20,7 +20,7 @@ export const SKINS = Object.freeze([
   }),
   Object.freeze({
     id: 'endless-hard', name: '最終防衛仕様', desc: 'ハードエンドレスで1,000点以上を取ると使える。',
-    body: '#2b2f52', cheek: '#ff6b81', unlock: Object.freeze({ type: 'score', mode: 'hard', value: 1000 }),
+    body: '#3a3f68', cheek: '#ff6b81', unlock: Object.freeze({ type: 'score', mode: 'hard', value: 1000 }),
   }),
 ]);
 

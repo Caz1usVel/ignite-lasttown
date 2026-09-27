@@ -47,9 +47,8 @@ export function createSkinScene(app) {
       const unlocked = isSkinUnlocked(app.save, skin);
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'skin-swatch' + (skin.id === app.save.selectedSkinId ? ' active' : '');
+      btn.className = 'skin-swatch' + (skin.id === app.save.selectedSkinId ? ' active' : '') + (unlocked ? '' : ' locked');
       btn.dataset.id = skin.id;
-      btn.disabled = !unlocked;
       btn.style.background = skin.body;
       btn.setAttribute('aria-label', unlocked ? skin.name : `${skin.name}（未解放）`);
       btn.addEventListener('click', () => select(skin, unlocked));

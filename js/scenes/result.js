@@ -11,6 +11,7 @@ export function createResultScene(app) {
   let fx = createEffects();
   let countUp = { score: 0, kills: 0, targetScore: 0, targetKills: 0, t: 0 };
   const COUNT_TIME = 1.0; // 秒。カウントアップにかける時間
+  let celebrateTimer = null;
 
   dom.retryBtn.addEventListener('click', () => {
     // ステージ（エンドレスなら最初）からやり直す
@@ -23,6 +24,7 @@ export function createResultScene(app) {
 
   return {
     enter({ outcome, score, kills, mode, stageId, endless, time }) {
+      clearTimeout(celebrateTimer);
       last = { mode, stageId, endless: endless ?? null };
       const { newBest, newClear = false } = endless
         ? recordEndlessResult(app.save, endless, score, time ?? 0)
@@ -51,7 +53,7 @@ export function createResultScene(app) {
       dom.resultNewBest.classList.remove('celebrate');
       if (newBest) {
         // 更新した瞬間を、少し遅らせて祝う（カウントアップが終わる頃に）
-        setTimeout(() => {
+        celebrateTimer = setTimeout(() => {
           if (dom.resultScreen.classList.contains('hidden')) return; // 既に結果画面を離れていたら何もしない
           dom.resultNewBest.classList.add('celebrate');
           spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y - 120, '#ffd866', 40, Math.random);
@@ -60,6 +62,7 @@ export function createResultScene(app) {
       }
     },
     exit() {
+      clearTimeout(celebrateTimer);
       dom.resultScreen.classList.add('hidden');
       dom.resultDiaryNote.classList.add('hidden');
       dom.resultNewBest.classList.remove('celebrate');
