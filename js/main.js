@@ -10,6 +10,7 @@ import { createPlayScene } from './scenes/play.js';
 import { createStageSelectScene } from './scenes/stageselect.js';
 import { createResultScene } from './scenes/result.js';
 import { createPauseScene } from './scenes/pause.js';
+import { createEndlessQuitScene } from './scenes/endlessQuit.js';
 import { createPowerupScene } from './scenes/powerup.js';
 import { createDiaryScene } from './scenes/diary.js';
 
@@ -21,6 +22,7 @@ const IDS = [
   'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleDiaryBtn', 'titleSettingsBtn',
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
+  'endlessQuitScreen', 'endlessQuitScore', 'endlessQuitTime', 'endlessQuitResumeBtn', 'endlessQuitTitleBtn', 'endlessQuitRestartBtn',
   'resultScreen', 'resultTitle', 'resultScore', 'resultKills', 'resultBest', 'resultNewBest', 'resultDiaryNote',
   'endlessBtn', 'hardEndlessBtn', 'resultTimeLabel', 'resultTime',
   'nextStageBtn', 'retryBtn', 'resultStageSelectBtn',
@@ -50,6 +52,7 @@ app.scenes.stageselect = createStageSelectScene(app);
 app.scenes.play = createPlayScene(app);
 app.scenes.result = createResultScene(app);
 app.scenes.pause = createPauseScene(app);
+app.scenes.endlessQuit = createEndlessQuitScene(app);
 app.scenes.powerup = createPowerupScene(app);
 app.scenes.diary = createDiaryScene(app);
 

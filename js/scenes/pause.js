@@ -5,8 +5,14 @@ export function createPauseScene(app) {
   dom.resumeBtn.addEventListener('click', () => app.setScene('play', { resume: true }));
   dom.pauseSettingsBtn.addEventListener('click', () => app.settings.open());
   dom.pauseTitleBtn.addEventListener('click', () => {
-    // エンドレスは、途中でやめても、その時点のスコア・生存時間を記録する
-    if (bankEndlessRun(app.save, app.scenes.play.getRun())) app.persist();
+    const run = app.scenes.play.getRun();
+    if (run && run.endless && !run.outcome) {
+      // エンドレスの途中でやめようとしている：確認画面をはさむ（続ける／記録してやめる／最初から）
+      app.setScene('endlessQuit');
+      return;
+    }
+    // ステージ制、またはすでに決着しているエンドレスは、そのままタイトルへ（記録は結果画面が済ませている）
+    if (bankEndlessRun(app.save, run)) app.persist();
     app.setScene('title');
   });
 
