@@ -1,8 +1,10 @@
 import { bankEndlessRun } from '../core/progress.js';
 
 const INPUT_LOCK = 0.4; // 秒。画面が出た直後の連打（Esc/Pの連打など）で、意図せず押してしまうのを防ぐ
-const ARM_WINDOW = 3; // 秒。「最初からやり直す」は2回押さないと実行しない（連打での誤操作を防ぐ）
+const ARM_WINDOW = 3; // 秒。「記録せずにタイトルへ」は2回押さないと実行しない（連打での誤操作を防ぐ）
 const ARM_CONFIRM_DELAY = 0.35; // 秒。1回目を押した直後は、2回目を受け付けない（連打の勢いで2回目に化けるのを防ぐ）
+const DISCARD_LABEL = '記録せずにタイトルへ';
+const DISCARD_CONFIRM_LABEL = '本当に記録せずにやめる？（もう一度押す）';
 
 function formatTime(seconds) {
   const s = Math.floor(seconds);
@@ -11,7 +13,7 @@ function formatTime(seconds) {
 
 // ポーズから「タイトルへ」を選んだとき、エンドレスの途中なら、この確認画面をはさむ。
 // 「つづける」でこのまま続行、「記録してタイトルへ」で今の記録を残してやめる、
-// 「最初からやり直す」は2回押さないと実行しない（壊す操作なので、連打で誤って実行しない）。
+// 「記録せずにタイトルへ」は、今のスコアを保存せずにやめる（2回押さないと実行しない：壊す操作なので、連打で誤って実行しない）。
 export function createEndlessQuitScene(app) {
   const { dom } = app;
   let lock = 0;
@@ -23,8 +25,8 @@ export function createEndlessQuitScene(app) {
     armed = false;
     armTimer = 0;
     armLock = 0;
-    dom.endlessQuitRestartBtn.textContent = '最初からやり直す';
-    dom.endlessQuitRestartBtn.classList.remove('armed');
+    dom.endlessQuitDiscardBtn.textContent = DISCARD_LABEL;
+    dom.endlessQuitDiscardBtn.classList.remove('armed');
   }
 
   dom.endlessQuitResumeBtn.addEventListener('click', () => {
@@ -36,21 +38,19 @@ export function createEndlessQuitScene(app) {
     if (bankEndlessRun(app.save, app.scenes.play.getRun())) app.persist();
     app.setScene('title');
   });
-  dom.endlessQuitRestartBtn.addEventListener('click', () => {
+  dom.endlessQuitDiscardBtn.addEventListener('click', () => {
     if (lock > 0) return;
     if (!armed) {
       armed = true;
       armTimer = ARM_WINDOW;
       armLock = ARM_CONFIRM_DELAY;
-      dom.endlessQuitRestartBtn.textContent = '本当に最初からやり直す？（もう一度押す）';
-      dom.endlessQuitRestartBtn.classList.add('armed');
+      dom.endlessQuitDiscardBtn.textContent = DISCARD_CONFIRM_LABEL;
+      dom.endlessQuitDiscardBtn.classList.add('armed');
       return;
     }
     if (armLock > 0) return; // 構えた直後の連打で、そのまま確定させない
-    const run = app.scenes.play.getRun();
-    if (bankEndlessRun(app.save, run)) app.persist();
     disarm();
-    app.setScene('play', { endless: run?.endless ?? 'normal' }); // 記録は残したうえで、0から新しく始める
+    app.setScene('title'); // 記録は残さない（bankEndlessRun を呼ばない）
   });
 
   return {

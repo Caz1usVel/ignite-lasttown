@@ -25,7 +25,7 @@ const IDS = [
   'howtoScreen', 'howtoTitle', 'howtoBody', 'howtoPage', 'howtoPrevBtn', 'howtoNextBtn',
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
-  'endlessQuitScreen', 'endlessQuitScore', 'endlessQuitTime', 'endlessQuitResumeBtn', 'endlessQuitTitleBtn', 'endlessQuitRestartBtn',
+  'endlessQuitScreen', 'endlessQuitScore', 'endlessQuitTime', 'endlessQuitResumeBtn', 'endlessQuitTitleBtn', 'endlessQuitDiscardBtn',
   'resultScreen', 'resultTitle', 'resultScore', 'resultKills', 'resultBest', 'resultNewBest', 'resultDiaryNote',
   'endlessBtn', 'hardEndlessBtn', 'resultTimeLabel', 'resultTime',
   'nextStageBtn', 'retryBtn', 'resultStageSelectBtn',

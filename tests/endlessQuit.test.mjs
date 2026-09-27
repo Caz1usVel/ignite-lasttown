@@ -43,7 +43,7 @@ function mkApp(dom, { run, save } = {}) {
 
 const ENDLESS_QUIT_IDS = [
   'endlessQuitScreen', 'endlessQuitScore', 'endlessQuitTime',
-  'endlessQuitResumeBtn', 'endlessQuitTitleBtn', 'endlessQuitRestartBtn',
+  'endlessQuitResumeBtn', 'endlessQuitTitleBtn', 'endlessQuitDiscardBtn',
 ];
 
 test('endlessQuit：出た直後はロックされ、ボタンを押しても何も起きない', () => {
@@ -58,9 +58,9 @@ test('endlessQuit：出た直後はロックされ、ボタンを押しても何
   assert.equal(dom.endlessQuitTime.textContent, '0:42');
 
   // 連打：ロックされている間は、押しても何も起きない
-  for (let i = 0; i < 5; i++) dom.endlessQuitRestartBtn.click();
+  for (let i = 0; i < 5; i++) dom.endlessQuitDiscardBtn.click();
   assert.equal(app.setSceneCalls.length, 0);
-  assert.equal(dom.endlessQuitRestartBtn.classList.contains('armed'), false);
+  assert.equal(dom.endlessQuitDiscardBtn.classList.contains('armed'), false);
   dom.endlessQuitResumeBtn.click();
   dom.endlessQuitTitleBtn.click();
   assert.equal(app.setSceneCalls.length, 0);
@@ -89,7 +89,7 @@ test('endlessQuit：ロックが解けたら、つづける／記録してタイ
   assert.equal(app2.persisted, 1);
 });
 
-test('endlessQuit：「最初からやり直す」は2回押さないと実行されない。1回目はボタンの見た目が変わるだけ', () => {
+test('endlessQuit：「記録せずにタイトルへ」は2回押さないと実行されない。1回目はボタンの見た目が変わるだけ', () => {
   const dom = mkDom(ENDLESS_QUIT_IDS);
   const run = { endless: 'hard', score: 900, time: 300, outcome: null };
   const save = { endless: { normal: { best: 0, time: 0 }, hard: { best: 100, time: 20 } } };
@@ -98,23 +98,24 @@ test('endlessQuit：「最初からやり直す」は2回押さないと実行�
   scene.enter();
   scene.update(1);
 
-  const before = dom.endlessQuitRestartBtn.textContent;
-  dom.endlessQuitRestartBtn.click(); // 1回目：構える（実行しない）
+  const before = dom.endlessQuitDiscardBtn.textContent;
+  dom.endlessQuitDiscardBtn.click(); // 1回目：構える（実行しない）
   assert.equal(app.setSceneCalls.length, 0);
-  assert.equal(dom.endlessQuitRestartBtn.classList.contains('armed'), true);
-  assert.notEqual(dom.endlessQuitRestartBtn.textContent, before);
+  assert.equal(dom.endlessQuitDiscardBtn.classList.contains('armed'), true);
+  assert.notEqual(dom.endlessQuitDiscardBtn.textContent, before);
 
   // 連打（構えた直後に、間を置かず何度も押す）は、実行にならない
-  dom.endlessQuitRestartBtn.click();
-  dom.endlessQuitRestartBtn.click();
-  dom.endlessQuitRestartBtn.click();
+  dom.endlessQuitDiscardBtn.click();
+  dom.endlessQuitDiscardBtn.click();
+  dom.endlessQuitDiscardBtn.click();
   assert.equal(app.setSceneCalls.length, 0);
-  assert.equal(dom.endlessQuitRestartBtn.classList.contains('armed'), true); // 構えたままで、キャンセルもされない
+  assert.equal(dom.endlessQuitDiscardBtn.classList.contains('armed'), true); // 構えたままで、キャンセルもされない
 
   scene.update(1); // 一呼吸おく（連打の勢いが収まる）
-  dom.endlessQuitRestartBtn.click(); // ここでの2回目は、意図した押し直しなので実行する
-  assert.deepEqual(app.setSceneCalls.at(-1), { name: 'play', params: { endless: 'hard' } });
-  assert.deepEqual(save.endless.hard, { best: 900, time: 300 }); // やり直す前に、記録は残す
+  dom.endlessQuitDiscardBtn.click(); // ここでの2回目は、意図した押し直しなので実行する
+  assert.deepEqual(app.setSceneCalls.at(-1), { name: 'title', params: undefined });
+  assert.deepEqual(save.endless.hard, { best: 100, time: 20 }); // 記録せずにやめたので、更新されない
+  assert.equal(app.persisted, undefined); // 保存もされない
 });
 
 test('endlessQuit：構えたまま一定時間たつと、元の見た目に戻り、また1回目からになる', () => {
@@ -124,15 +125,15 @@ test('endlessQuit：構えたまま一定時間たつと、元の見た目に戻
   const scene = createEndlessQuitScene(app);
   scene.enter();
   scene.update(1);
-  dom.endlessQuitRestartBtn.click();
-  assert.equal(dom.endlessQuitRestartBtn.classList.contains('armed'), true);
+  dom.endlessQuitDiscardBtn.click();
+  assert.equal(dom.endlessQuitDiscardBtn.classList.contains('armed'), true);
 
   scene.update(10); // 構えている時間より、十分長く進める
-  assert.equal(dom.endlessQuitRestartBtn.classList.contains('armed'), false);
+  assert.equal(dom.endlessQuitDiscardBtn.classList.contains('armed'), false);
 
-  dom.endlessQuitRestartBtn.click(); // 時間切れのあとは、また1回目（実行しない）
+  dom.endlessQuitDiscardBtn.click(); // 時間切れのあとは、また1回目（実行しない）
   assert.equal(app.setSceneCalls.length, 0);
-  assert.equal(dom.endlessQuitRestartBtn.classList.contains('armed'), true);
+  assert.equal(dom.endlessQuitDiscardBtn.classList.contains('armed'), true);
 });
 
 test('endlessQuit：抜けるとロック・構えの状態がリセットされる', () => {
@@ -141,11 +142,11 @@ test('endlessQuit：抜けるとロック・構えの状態がリセットされ
   const scene = createEndlessQuitScene(app);
   scene.enter();
   scene.update(1);
-  dom.endlessQuitRestartBtn.click();
-  assert.equal(dom.endlessQuitRestartBtn.classList.contains('armed'), true);
+  dom.endlessQuitDiscardBtn.click();
+  assert.equal(dom.endlessQuitDiscardBtn.classList.contains('armed'), true);
   scene.exit();
   assert.equal(dom.endlessQuitScreen.classList.contains('hidden'), true);
-  assert.equal(dom.endlessQuitRestartBtn.classList.contains('armed'), false);
+  assert.equal(dom.endlessQuitDiscardBtn.classList.contains('armed'), false);
 });
 
 const PAUSE_IDS = ['pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn'];
