@@ -7,6 +7,8 @@ export const COLORS = {
   turret: '#bfe6ff',
   cheek: '#ffc2d1',
   barrel: '#ffd866',
+  accent: '#5fe3d0',
+  beaconDanger: '#ff4d4d',
   meteor: '#b08a6a',
   healMeteor: '#6fdc8c',
   drone: '#9be8ff',
@@ -47,31 +49,72 @@ function roundRectPath(g, x, y, w, h, r) {
   g.closePath();
 }
 
-export function drawTurret(g, turret, time, skin = null) {
+// 装甲のある回転式ガンタレット。旋回そのものは視界（FOV）側の表現なので、本体は常に正面向き。
+export function drawTurret(g, turret, time, skin = null, danger = false) {
   if (turret.invincible > 0 && Math.floor(time * 12) % 2 === 0) return; // 無敵中は点滅
-  const bodyColor = skin?.body ?? COLORS.turret;
-  const cheekColor = skin?.cheek ?? COLORS.cheek;
+  const armorColor = skin?.body ?? COLORS.turret;
+  const panelColor = skin?.cheek ?? COLORS.cheek;
+  const beaconColor = danger ? COLORS.beaconDanger : COLORS.accent; // 空の色と連動
   g.save();
   g.translate(CONFIG.CENTER_X, CONFIG.CENTER_Y);
 
-  const glow = g.createRadialGradient(0, 0, 10, 0, 0, 70);
-  glow.addColorStop(0, 'rgba(191,230,255,0.35)');
-  glow.addColorStop(1, 'rgba(191,230,255,0)');
+  const glowColor = danger ? '255,100,90' : '95,227,208';
+  const glow = g.createRadialGradient(0, 0, 10, 0, 0, 66);
+  glow.addColorStop(0, `rgba(${glowColor},0.3)`);
+  glow.addColorStop(1, `rgba(${glowColor},0)`);
   g.fillStyle = glow;
   g.beginPath();
-  g.arc(0, 0, 70, 0, Math.PI * 2);
+  g.arc(0, 0, 66, 0, Math.PI * 2);
   g.fill();
 
-  for (const fx of [-16, 16]) ellipse(g, fx, 24, 9, 6, lightenColor(bodyColor, -0.25)); // 足
-  g.fillStyle = COLORS.barrel; // 砲身（常に真上）
+  // 台座：防壁の上面にしっかり接地させる（接地影＋土台）
+  ellipse(g, 0, 34, 40, 10, 'rgba(0,0,0,0.35)');
+  g.fillStyle = lightenColor(armorColor, -0.55);
   g.beginPath();
-  roundRectPath(g, -7, -48, 14, 30, 6);
+  roundRectPath(g, -34, 18, 68, 18, 5);
   g.fill();
-  ellipse(g, 0, 0, 30, 27, bodyColor);                         // 体
-  ellipse(g, 0, 6, 18, 13, lightenColor(bodyColor, 0.5));      // おなか
-  for (const ex of [-10, 10]) ellipse(g, ex, -5, 3.5, 5, COLORS.eye);
-  for (const ex of [-9, 11]) ellipse(g, ex, -7, 1.4, 1.4, '#ffffff');
-  for (const cx of [-18, 18]) ellipse(g, cx, 3, 5, 3, cheekColor);
+
+  // 本体（装甲）
+  ellipse(g, 0, 8, 32, 22, lightenColor(armorColor, -0.2));  // 下部装甲
+  ellipse(g, 0, -2, 28, 20, armorColor);                     // 上部装甲
+  ellipse(g, 0, 6, 14, 8, panelColor);                       // 側面パネル（スキンの副配色）
+
+  // アクセントライン（シアン、本体に1本）
+  g.strokeStyle = COLORS.accent;
+  g.lineWidth = 2.5;
+  g.beginPath();
+  g.moveTo(-24, -4);
+  g.lineTo(24, -4);
+  g.stroke();
+
+  // 照準窓
+  ellipse(g, 0, -12, 7, 5.5, 'rgba(30,40,40,0.9)');
+  ellipse(g, 0, -12, 4.5, 3.5, hexToRgba(COLORS.accent, 0.7));
+
+  // 砲身（短め、常に真上）
+  g.fillStyle = COLORS.barrel;
+  g.beginPath();
+  roundRectPath(g, -6, -32, 12, 20, 4);
+  g.fill();
+  g.fillStyle = lightenColor(armorColor, -0.3); // 砲身の付け根の帯
+  g.beginPath();
+  roundRectPath(g, -9, -16, 18, 6, 3);
+  g.fill();
+
+  // アンテナとビーコン（通常はシアン、危険時は赤く点灯）
+  g.strokeStyle = lightenColor(armorColor, -0.4);
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(20, -14);
+  g.lineTo(27, -38);
+  g.stroke();
+  const pulse = 0.7 + 0.3 * Math.sin(time * 6);
+  g.fillStyle = hexToRgba(beaconColor, 0.35 * pulse);
+  g.beginPath();
+  g.arc(27, -38, 7, 0, Math.PI * 2);
+  g.fill();
+  ellipse(g, 27, -38, 3.2, 3.2, beaconColor);
+
   g.restore();
 }
 

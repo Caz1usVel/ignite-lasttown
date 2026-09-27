@@ -6,8 +6,10 @@ import { drawRadar } from './radar.js';
 
 export function drawPlayfield(g, vp, stars, state, fx, dt, skin) {
   const t = state.turret;
+  const boss = state.boss && !state.boss.dead ? state.boss : null;
+  const danger = Boolean(boss); // 危険時（ボス出現中）は赤空・ビーコン赤に切り替える
   vp.screenSpace(g);
-  drawBackground(g, stars, vp.cssW, vp.cssH, dt, -t.heading / 360);
+  drawBackground(g, stars, vp.cssW, vp.cssH, dt, -t.heading / 360, danger);
 
   vp.virtualSpace(g);
   drawFov(g);
@@ -24,13 +26,12 @@ export function drawPlayfield(g, vp, stars, state, fx, dt, skin) {
     drawEnemy(g, e, 0, 0, state.time);
     g.restore();
   }
-  const boss = state.boss && !state.boss.dead ? state.boss : null;
   if (boss) {
     const p = worldToScreen(boss.angle, boss.dist, t.heading, t.fov);
     if (p.visible) drawBoss(g, boss, p.x, p.y, state.time);
   }
   for (const b of state.bullets) drawBullet(g, b, t.heading, t.fov);
-  drawTurret(g, t, state.time, skin);
+  drawTurret(g, t, state.time, skin, danger);
   drawEffects(g, fx);
   drawHeadingGauge(g, t.heading, t.fov);
   drawRadar(g, state);
