@@ -4,7 +4,7 @@ import { drawFov, drawHeadingGauge } from './fov.js';
 import { drawTurret, drawEnemy, drawBoss, drawBullet, drawEffects, drawBossBar, drawJamNotice } from './entities.js';
 import { drawRadar } from './radar.js';
 
-export function drawPlayfield(g, vp, stars, state, fx, dt) {
+export function drawPlayfield(g, vp, stars, state, fx, dt, skin) {
   const t = state.turret;
   vp.screenSpace(g);
   drawBackground(g, stars, vp.cssW, vp.cssH, dt, -t.heading / 360);
@@ -30,7 +30,7 @@ export function drawPlayfield(g, vp, stars, state, fx, dt) {
     if (p.visible) drawBoss(g, boss, p.x, p.y, state.time);
   }
   for (const b of state.bullets) drawBullet(g, b, t.heading, t.fov);
-  drawTurret(g, t, state.time);
+  drawTurret(g, t, state.time, skin);
   drawEffects(g, fx);
   drawHeadingGauge(g, t.heading, t.fov);
   drawRadar(g, state);

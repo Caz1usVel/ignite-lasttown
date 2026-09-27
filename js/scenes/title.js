@@ -15,6 +15,7 @@ export function createTitleScene(app) {
   });
   dom.titleHowtoBtn.addEventListener('click', () => app.setScene('howto', { forced: false }));
   dom.titleDiaryBtn.addEventListener('click', () => app.setScene('diary'));
+  dom.titleSkinBtn.addEventListener('click', () => app.setScene('skin'));
   dom.titleSettingsBtn.addEventListener('click', () => app.settings.open());
 
   return {

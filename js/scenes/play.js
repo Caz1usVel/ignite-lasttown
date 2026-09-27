@@ -8,6 +8,7 @@ import { ENEMY_DEFS } from '../game/enemies.js';
 import { createEffects, spawnBurst, spawnPopup, updateEffects } from '../game/effects.js';
 import { drawPlayfield } from '../render/playfield.js';
 import { COLORS } from '../render/entities.js';
+import { selectedSkin } from '../data/skins.js';
 
 const HINTS = {
   solo: 'A/D・←→ で旋回　マウスで狙ってクリック（長押しで連射）',
@@ -145,7 +146,7 @@ export function createPlayScene(app) {
       }
     },
     render(g, dt) {
-      drawPlayfield(g, app.viewport, app.stars, state, fx, dt);
+      drawPlayfield(g, app.viewport, app.stars, state, fx, dt, selectedSkin(app.save));
     },
     getState() {
       return state;

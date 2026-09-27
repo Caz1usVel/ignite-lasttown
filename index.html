@@ -41,6 +41,7 @@
       <button class="btn btn-sub" id="startDuoBtn">ふたりで（PC）</button>
       <button class="btn btn-sub" id="titleHowtoBtn">遊び方</button>
       <button class="btn btn-sub" id="titleDiaryBtn">日記</button>
+      <button class="btn btn-sub" id="titleSkinBtn">見た目</button>
       <button class="link-btn" id="titleSettingsBtn">設定</button>
     </div>
   </div>
@@ -129,6 +130,18 @@
     <div id="diaryList" class="diary-list"></div>
     <p id="diaryText" class="diary-text">読みたい日記を選んでください</p>
     <button class="link-btn" id="diaryBackBtn">もどる</button>
+  </div>
+
+  <div id="skinScreen" class="overlay hidden">
+    <h2>見た目を選ぶ</h2>
+    <div id="skinList" class="skin-list"></div>
+    <canvas id="skinPreviewCanvas" width="160" height="170" class="skin-preview-canvas"></canvas>
+    <p id="skinPreviewName" class="skin-preview-name"></p>
+    <p id="skinPreviewDesc" class="skin-preview-desc"></p>
+    <div class="btn-col">
+      <button class="btn" id="skinSelectBtn">これにする</button>
+      <button class="link-btn" id="skinBackBtn">もどる</button>
+    </div>
   </div>
 
   <div id="settingsScreen" class="overlay hidden">

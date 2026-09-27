@@ -14,13 +14,14 @@ import { createEndlessQuitScene } from './scenes/endlessQuit.js';
 import { createPowerupScene } from './scenes/powerup.js';
 import { createDiaryScene } from './scenes/diary.js';
 import { createHowtoScene } from './scenes/howto.js';
+import { createSkinScene } from './scenes/skin.js';
 
 const IDS = [
   'stage', 'game',
   'hud', 'hudLives', 'hudScore', 'hudPowerups', 'hudTime', 'pauseBtn', 'hint',
   'powerupScreen', 'offerCard0', 'offerCard1',
   'touchControls', 'turnLeftBtn', 'turnRightBtn',
-  'titleScreen', 'titleLogo', 'titleProgress', 'startSoloBtn', 'startDuoBtn', 'titleHowtoBtn', 'titleDiaryBtn', 'titleSettingsBtn',
+  'titleScreen', 'titleLogo', 'titleProgress', 'startSoloBtn', 'startDuoBtn', 'titleHowtoBtn', 'titleDiaryBtn', 'titleSkinBtn', 'titleSettingsBtn',
   'howtoScreen', 'howtoTitle', 'howtoBody', 'howtoPage', 'howtoPrevBtn', 'howtoNextBtn',
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
@@ -29,6 +30,7 @@ const IDS = [
   'endlessBtn', 'hardEndlessBtn', 'resultTimeLabel', 'resultTime',
   'nextStageBtn', 'retryBtn', 'resultStageSelectBtn',
   'diaryScreen', 'diaryList', 'diaryText', 'diaryBackBtn',
+  'skinScreen', 'skinList', 'skinPreviewCanvas', 'skinPreviewName', 'skinPreviewDesc', 'skinSelectBtn', 'skinBackBtn',
   'settingsScreen', 'bgmVol', 'seVol', 'muteBtn', 'settingsBackBtn',
 ];
 const dom = Object.fromEntries(IDS.map((id) => [id, document.getElementById(id)]));
@@ -58,6 +60,7 @@ app.scenes.endlessQuit = createEndlessQuitScene(app);
 app.scenes.powerup = createPowerupScene(app);
 app.scenes.diary = createDiaryScene(app);
 app.scenes.howto = createHowtoScene(app);
+app.scenes.skin = createSkinScene(app);
 
 let current = null;
 function setScene(name, params) {

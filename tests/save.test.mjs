@@ -11,7 +11,7 @@ const throwingStorage = {
   getItem() { throw new Error('denied'); },
   setItem() { throw new Error('denied'); },
 };
-const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, tutorialSeen: false };
+const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, tutorialSeen: false, selectedSkinId: 'default' };
 const put = (st, obj) => st.setItem(SAVE_KEY, JSON.stringify(obj));
 
 test('何も無ければ既定値（v2）', () => {
@@ -162,4 +162,17 @@ test('tutorialSeen：既定は false。保存・読み込みで保たれ、v1か
   assert.equal(loadSave(v1).tutorialSeen, false);
   const oldV2 = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {} }), setItem() {} }; // tutorialSeen の欄が無い古いセーブ
   assert.equal(loadSave(oldV2).tutorialSeen, false);
+});
+
+test('selectedSkinId：既定は "default"。保存・読み込みで保たれ、壊れた値は既定に戻る', () => {
+  const fresh = loadSave({ getItem: () => null, setItem() {} });
+  assert.equal(fresh.selectedSkinId, 'default');
+  const mem = {};
+  const storage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
+  const data = loadSave(storage);
+  data.selectedSkinId = 'stage1';
+  writeSave(data, storage);
+  assert.equal(loadSave(storage).selectedSkinId, 'stage1');
+  const broken = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {}, selectedSkinId: 123 }), setItem() {} };
+  assert.equal(loadSave(broken).selectedSkinId, 'default');
 });

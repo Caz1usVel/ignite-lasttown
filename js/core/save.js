@@ -11,7 +11,7 @@ function defaultEndless() {
 }
 
 function defaults() {
-  return { version: SAVE_VERSION, settings: { ...DEFAULT_SETTINGS }, stages: {}, endless: defaultEndless(), tutorialSeen: false };
+  return { version: SAVE_VERSION, settings: { ...DEFAULT_SETTINGS }, stages: {}, endless: defaultEndless(), tutorialSeen: false, selectedSkinId: 'default' };
 }
 
 function sanitizeEndless(raw) {
@@ -75,10 +75,10 @@ export function loadSave(storage = defaultStorage()) {
       // v1 → v2：設定を引き継ぎ、highScore は1面の最高スコアにする（v1にクリアの記録は無いので未クリア）
       const stages = {};
       if (Number.isFinite(d.highScore) && d.highScore > 0) stages['1'] = { cleared: false, best: d.highScore };
-      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless: defaultEndless(), tutorialSeen: d.tutorialSeen === true };
+      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless: defaultEndless(), tutorialSeen: d.tutorialSeen === true, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default' };
     }
     if (d?.version === SAVE_VERSION) {
-      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages: sanitizeStages(d.stages), endless: sanitizeEndless(d.endless), tutorialSeen: d.tutorialSeen === true };
+      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages: sanitizeStages(d.stages), endless: sanitizeEndless(d.endless), tutorialSeen: d.tutorialSeen === true, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default' };
     }
     return defaults();
   } catch {

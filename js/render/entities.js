@@ -47,8 +47,10 @@ function roundRectPath(g, x, y, w, h, r) {
   g.closePath();
 }
 
-export function drawTurret(g, turret, time) {
+export function drawTurret(g, turret, time, skin = null) {
   if (turret.invincible > 0 && Math.floor(time * 12) % 2 === 0) return; // 無敵中は点滅
+  const bodyColor = skin?.body ?? COLORS.turret;
+  const cheekColor = skin?.cheek ?? COLORS.cheek;
   g.save();
   g.translate(CONFIG.CENTER_X, CONFIG.CENTER_Y);
 
@@ -60,16 +62,16 @@ export function drawTurret(g, turret, time) {
   g.arc(0, 0, 70, 0, Math.PI * 2);
   g.fill();
 
-  for (const fx of [-16, 16]) ellipse(g, fx, 24, 9, 6, lightenColor(COLORS.turret, -0.25)); // 足
+  for (const fx of [-16, 16]) ellipse(g, fx, 24, 9, 6, lightenColor(bodyColor, -0.25)); // 足
   g.fillStyle = COLORS.barrel; // 砲身（常に真上）
   g.beginPath();
   roundRectPath(g, -7, -48, 14, 30, 6);
   g.fill();
-  ellipse(g, 0, 0, 30, 27, COLORS.turret);                         // 体
-  ellipse(g, 0, 6, 18, 13, lightenColor(COLORS.turret, 0.5));      // おなか
+  ellipse(g, 0, 0, 30, 27, bodyColor);                         // 体
+  ellipse(g, 0, 6, 18, 13, lightenColor(bodyColor, 0.5));      // おなか
   for (const ex of [-10, 10]) ellipse(g, ex, -5, 3.5, 5, COLORS.eye);
   for (const ex of [-9, 11]) ellipse(g, ex, -7, 1.4, 1.4, '#ffffff');
-  for (const cx of [-18, 18]) ellipse(g, cx, 3, 5, 3, COLORS.cheek);
+  for (const cx of [-18, 18]) ellipse(g, cx, 3, 5, 3, cheekColor);
   g.restore();
 }
 
