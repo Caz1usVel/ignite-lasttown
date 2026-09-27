@@ -13,13 +13,15 @@ import { createPauseScene } from './scenes/pause.js';
 import { createEndlessQuitScene } from './scenes/endlessQuit.js';
 import { createPowerupScene } from './scenes/powerup.js';
 import { createDiaryScene } from './scenes/diary.js';
+import { createHowtoScene } from './scenes/howto.js';
 
 const IDS = [
   'stage', 'game',
   'hud', 'hudLives', 'hudScore', 'hudPowerups', 'hudTime', 'pauseBtn', 'hint',
   'powerupScreen', 'offerCard0', 'offerCard1',
   'touchControls', 'turnLeftBtn', 'turnRightBtn',
-  'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleDiaryBtn', 'titleSettingsBtn',
+  'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleHowtoBtn', 'titleDiaryBtn', 'titleSettingsBtn',
+  'howtoScreen', 'howtoTitle', 'howtoBody', 'howtoPage', 'howtoPrevBtn', 'howtoNextBtn',
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
   'endlessQuitScreen', 'endlessQuitScore', 'endlessQuitTime', 'endlessQuitResumeBtn', 'endlessQuitTitleBtn', 'endlessQuitRestartBtn',
@@ -55,6 +57,7 @@ app.scenes.pause = createPauseScene(app);
 app.scenes.endlessQuit = createEndlessQuitScene(app);
 app.scenes.powerup = createPowerupScene(app);
 app.scenes.diary = createDiaryScene(app);
+app.scenes.howto = createHowtoScene(app);
 
 let current = null;
 function setScene(name, params) {
@@ -104,5 +107,6 @@ document.addEventListener('visibilitychange', () => {
   lastTime = null;
 });
 
-setScene('title');
+if (!save.tutorialSeen) setScene('howto', { forced: true });
+else setScene('title');
 requestAnimationFrame(loop);

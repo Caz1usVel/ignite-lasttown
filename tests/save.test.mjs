@@ -11,7 +11,7 @@ const throwingStorage = {
   getItem() { throw new Error('denied'); },
   setItem() { throw new Error('denied'); },
 };
-const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } } };
+const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, tutorialSeen: false };
 const put = (st, obj) => st.setItem(SAVE_KEY, JSON.stringify(obj));
 
 test('何も無ければ既定値（v2）', () => {
@@ -147,4 +147,19 @@ test('エンドレスの記録：既定は 0。保存・読み込みで保たれ
   assert.deepEqual(loadSave(v1).endless, { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } });
   const v2old = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: { 1: { cleared: true, best: 5 } } }), setItem() {} };
   assert.deepEqual(loadSave(v2old).endless.normal, { best: 0, time: 0 });
+});
+
+test('tutorialSeen：既定は false。保存・読み込みで保たれ、v1からの移行でも false になる', () => {
+  const fresh = loadSave({ getItem: () => null, setItem() {} });
+  assert.equal(fresh.tutorialSeen, false);
+  const mem = {};
+  const storage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
+  const data = loadSave(storage);
+  data.tutorialSeen = true;
+  writeSave(data, storage);
+  assert.equal(loadSave(storage).tutorialSeen, true);
+  const v1 = { getItem: () => JSON.stringify({ version: 1, settings: {} }), setItem() {} };
+  assert.equal(loadSave(v1).tutorialSeen, false);
+  const oldV2 = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {} }), setItem() {} }; // tutorialSeen の欄が無い古いセーブ
+  assert.equal(loadSave(oldV2).tutorialSeen, false);
 });

@@ -309,3 +309,6 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
 .diary-list button:disabled { opacity: 0.4; cursor: default; }
 .diary-list button.active { border-color: var(--ember); }
 .diary-text { max-width: 520px; min-height: 8em; padding: 14px 18px; border-radius: 14px; background: rgba(10, 14, 39, 0.75); white-space: pre-line; line-height: 1.8; text-align: left; }
+.howto-body { max-width: 520px; min-height: 6em; padding: 14px 18px; border-radius: 14px; background: rgba(10, 14, 39, 0.75); white-space: pre-line; line-height: 1.8; text-align: left; }
+.howto-page { color: var(--text-dim); margin: 0; }
+.howto-nav-row { display: flex; gap: 16px; align-items: center; }
