@@ -1,6 +1,8 @@
 import { DIARY, isDiaryUnlocked } from '../data/diary.js';
 import { drawBackground } from '../render/background.js';
 
+const pad = (n) => String(n).padStart(2, '0');
+
 export function createDiaryScene(app) {
   const { dom } = app;
   dom.diaryBackBtn.addEventListener('click', () => app.setScene('title'));
@@ -8,6 +10,7 @@ export function createDiaryScene(app) {
   function build() {
     dom.diaryList.replaceChildren();
     dom.diaryText.textContent = '読みたい日記を選んでください';
+    dom.diaryPageCount.textContent = `--/${pad(DIARY.length)}`;
     for (const d of DIARY) {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -18,6 +21,7 @@ export function createDiaryScene(app) {
         for (const other of dom.diaryList.children) other.classList.remove('active');
         btn.classList.add('active');
         dom.diaryText.textContent = d.body;
+        dom.diaryPageCount.textContent = `${pad(d.stage)}/${pad(DIARY.length)}`;
       });
       dom.diaryList.append(btn);
     }

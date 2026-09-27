@@ -6,7 +6,7 @@
 <title>防衛砲台（仮）</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Klee+One:wght@400;600&family=Shippori+Mincho:wght@500;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -125,11 +125,23 @@
     </div>
   </div>
 
-  <div id="diaryScreen" class="overlay hidden">
-    <h2>日記</h2>
-    <div id="diaryList" class="diary-list"></div>
-    <p id="diaryText" class="diary-text">読みたい日記を選んでください</p>
-    <button class="link-btn" id="diaryBackBtn">もどる</button>
+  <div id="diaryScreen" class="overlay hidden diary-overlay">
+    <div class="diary-topbar">
+      <button class="link-btn diary-back" id="diaryBackBtn">◀ もどる</button>
+      <span id="diaryPageCount" class="diary-pagecount">--/07</span>
+    </div>
+    <div class="diary-book">
+      <div class="diary-page diary-page-left">
+        <div class="diary-ink diary-ink-tl"></div>
+        <h3 class="diary-toc-heading">目次</h3>
+        <div id="diaryList" class="diary-list"></div>
+      </div>
+      <div class="diary-spine"><span class="diary-ribbon"></span></div>
+      <div class="diary-page diary-page-right">
+        <div class="diary-ink diary-ink-br"></div>
+        <p id="diaryText" class="diary-text">読みたい日記を選んでください</p>
+      </div>
+    </div>
   </div>
 
   <div id="skinScreen" class="overlay hidden">

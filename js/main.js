@@ -29,7 +29,7 @@ const IDS = [
   'resultScreen', 'resultTitle', 'resultScore', 'resultKills', 'resultBest', 'resultNewBest', 'resultDiaryNote',
   'endlessBtn', 'hardEndlessBtn', 'resultTimeLabel', 'resultTime',
   'nextStageBtn', 'retryBtn', 'resultStageSelectBtn',
-  'diaryScreen', 'diaryList', 'diaryText', 'diaryBackBtn',
+  'diaryScreen', 'diaryList', 'diaryText', 'diaryBackBtn', 'diaryPageCount',
   'skinScreen', 'skinList', 'skinPreviewCanvas', 'skinPreviewName', 'skinPreviewDesc', 'skinSelectBtn', 'skinBackBtn',
   'settingsScreen', 'bgmVol', 'seVol', 'muteBtn', 'settingsBackBtn',
 ];
