@@ -1,10 +1,16 @@
 import { drawBackground } from '../render/background.js';
 import { recordResult, nextPlayableStage, recordEndlessResult } from '../core/progress.js';
+import { createEffects, spawnBurst, updateEffects } from '../game/effects.js';
+import { drawEffects } from '../render/entities.js';
+import { CONFIG } from '../core/config.js';
 
 export function createResultScene(app) {
   const { dom } = app;
   let last = { mode: 'solo', stageId: 1, endless: null };
   let nextId = null;
+  let fx = createEffects();
+  let countUp = { score: 0, kills: 0, targetScore: 0, targetKills: 0, t: 0 };
+  const COUNT_TIME = 1.0; // 秒。カウントアップにかける時間
 
   dom.retryBtn.addEventListener('click', () => {
     // ステージ（エンドレスなら最初）からやり直す
@@ -31,8 +37,6 @@ export function createResultScene(app) {
         const s = Math.floor(time ?? 0);
         dom.resultTime.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
       }
-      dom.resultScore.textContent = score.toLocaleString();
-      dom.resultKills.textContent = kills.toLocaleString();
       dom.resultBest.textContent = (endless ? app.save.endless[endless].best : app.save.stages[stageId].best).toLocaleString();
       dom.resultNewBest.classList.toggle('hidden', !newBest);
       dom.resultDiaryNote.classList.toggle('hidden', !newClear);
@@ -40,16 +44,40 @@ export function createResultScene(app) {
       dom.hud.classList.add('hidden');
       dom.hint.classList.add('hidden');
       dom.resultScreen.classList.remove('hidden');
+      fx = createEffects();
+      countUp = { score: 0, kills: 0, targetScore: score, targetKills: kills, t: 0 };
+      dom.resultScore.textContent = '0';
+      dom.resultKills.textContent = '0';
+      dom.resultNewBest.classList.remove('celebrate');
+      if (newBest) {
+        // 更新した瞬間を、少し遅らせて祝う（カウントアップが終わる頃に）
+        setTimeout(() => {
+          if (dom.resultScreen.classList.contains('hidden')) return; // 既に結果画面を離れていたら何もしない
+          dom.resultNewBest.classList.add('celebrate');
+          spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y - 120, '#ffd866', 40, Math.random);
+          spawnBurst(fx, CONFIG.CENTER_X, CONFIG.CENTER_Y - 120, '#ff9ecb', 24, Math.random);
+        }, COUNT_TIME * 1000);
+      }
     },
     exit() {
       dom.resultScreen.classList.add('hidden');
       dom.resultDiaryNote.classList.add('hidden');
+      dom.resultNewBest.classList.remove('celebrate');
     },
-    update() {},
+    update(dt) {
+      countUp.t = Math.min(COUNT_TIME, countUp.t + dt);
+      const k = COUNT_TIME > 0 ? countUp.t / COUNT_TIME : 1;
+      const ease = 1 - Math.pow(1 - k, 3); // 徐々に減速する
+      dom.resultScore.textContent = Math.round(countUp.targetScore * ease).toLocaleString();
+      dom.resultKills.textContent = Math.round(countUp.targetKills * ease).toLocaleString();
+      updateEffects(fx, dt);
+    },
     render(g, dt) {
       const vp = app.viewport;
       vp.screenSpace(g);
       drawBackground(g, app.stars, vp.cssW, vp.cssH, dt);
+      vp.virtualSpace(g);
+      drawEffects(g, fx);
     },
   };
 }

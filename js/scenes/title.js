@@ -1,4 +1,4 @@
-import { GAME_TITLE } from '../core/config.js';
+import { GAME_TITLE, CONFIG } from '../core/config.js';
 import { drawBackground } from '../render/background.js';
 
 export function createTitleScene(app) {
@@ -22,6 +22,7 @@ export function createTitleScene(app) {
       dom.hud.classList.add('hidden');
       dom.hint.classList.add('hidden');
       dom.touchControls.classList.add('hidden');
+      dom.titleProgress.textContent = progressLine(app.save);
       dom.titleScreen.classList.remove('hidden');
       app.audio.playBgm(null);
     },
@@ -35,4 +36,16 @@ export function createTitleScene(app) {
       drawBackground(g, app.stars, vp.cssW, vp.cssH, dt);
     },
   };
+}
+
+// これまでの記録を、短い1行にまとめる（実績が無ければ、その旨を出す）
+function progressLine(save) {
+  const cleared = Object.values(save.stages ?? {}).filter((s) => s.cleared).length;
+  const parts = [];
+  if (cleared > 0) parts.push(`ステージ ${cleared}/${CONFIG.STAGE_COUNT} クリア`);
+  const normalBest = save.endless?.normal?.best ?? 0;
+  if (normalBest > 0) parts.push(`通常エンドレス 最高 ${normalBest.toLocaleString()}`);
+  const hardBest = save.endless?.hard?.best ?? 0;
+  if (hardBest > 0) parts.push(`ハード 最高 ${hardBest.toLocaleString()}`);
+  return parts.length > 0 ? `これまでの記録：${parts.join('　')}` : '';
 }

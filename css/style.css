@@ -83,6 +83,7 @@ h2 {
   color: var(--star-gold);
 }
 p.tagline { color: var(--text-dim); margin: 0 0 20px; }
+.title-progress { color: var(--star-gold); font-size: 0.9rem; margin: -8px 0 12px; min-height: 1.2em; }
 .best { color: var(--text-dim); margin: 12px 0 0; }
 
 .btn-col {
@@ -211,6 +212,11 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
 .result-stats dt { color: var(--text-dim); text-align: right; }
 .result-stats dd { margin: 0; text-align: left; font-weight: 800; }
 .new-best { color: var(--star-gold); font-weight: 800; margin: 0; }
+.new-best.celebrate { animation: celebrate-pulse 0.9s ease-in-out 2; }
+@keyframes celebrate-pulse {
+  0%, 100% { transform: scale(1); text-shadow: 0 0 0 rgba(255, 216, 102, 0); }
+  50% { transform: scale(1.15); text-shadow: 0 0 18px rgba(255, 216, 102, 0.9); }
+}
 
 .slider-row {
   display: flex;

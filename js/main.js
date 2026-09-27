@@ -20,7 +20,7 @@ const IDS = [
   'hud', 'hudLives', 'hudScore', 'hudPowerups', 'hudTime', 'pauseBtn', 'hint',
   'powerupScreen', 'offerCard0', 'offerCard1',
   'touchControls', 'turnLeftBtn', 'turnRightBtn',
-  'titleScreen', 'titleLogo', 'startSoloBtn', 'startDuoBtn', 'titleHowtoBtn', 'titleDiaryBtn', 'titleSettingsBtn',
+  'titleScreen', 'titleLogo', 'titleProgress', 'startSoloBtn', 'startDuoBtn', 'titleHowtoBtn', 'titleDiaryBtn', 'titleSettingsBtn',
   'howtoScreen', 'howtoTitle', 'howtoBody', 'howtoPage', 'howtoPrevBtn', 'howtoNextBtn',
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
