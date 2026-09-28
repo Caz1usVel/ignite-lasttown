@@ -5,8 +5,8 @@ import { CODE_TO_SKIN } from '../js/data/codes.js';
 
 const mkSave = (over = {}) => ({ stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, selectedSkinId: 'default', redeemedCodes: [], ...over });
 
-test('SKINS：9件。1件目は既定（unlock.type=="default"）で、色を持つ。凍結されている', () => {
-  assert.equal(SKINS.length, 9);
+test('SKINS：11件。1件目は既定（unlock.type=="default"）で、色を持つ。凍結されている', () => {
+  assert.equal(SKINS.length, 11);
   assert.equal(Object.isFrozen(SKINS), true);
   const def = SKINS[0];
   assert.equal(def.unlock.type, 'default');
@@ -133,6 +133,23 @@ test('violet-thunder：白いアクセント・専用の演出フラグを持つ
   assert.deepEqual(redeemCode(save, code.replace('-', '').toLowerCase()), { status: 'ok', skinId: 'violet-thunder' });
   assert.deepEqual(save.redeemedCodes, [code]);
   assert.equal(isSkinUnlocked(save, skin), true);
+});
+
+test('frostbite-silver・celestial-gold：専用の演出フラグを持つ。コードはハイフン無し・小文字でも通る', () => {
+  for (const [id, fxKey] of [['frostbite-silver', 'frostbiteSilver'], ['celestial-gold', 'celestialGold']]) {
+    const skin = SKINS.find((s) => s.id === id);
+    assert.ok(skin, `${id} が存在する`);
+    assert.equal(skin.unlock.type, 'code');
+    assert.ok(/^#[0-9a-f]{6}$/i.test(skin.accent), id);
+    assert.equal(skin.fx[fxKey], true);
+
+    const code = Object.entries(CODE_TO_SKIN).find(([, sid]) => sid === id)[0];
+    assert.match(code, /^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+    const save = mkSave();
+    assert.deepEqual(redeemCode(save, code.replace('-', '').toLowerCase()), { status: 'ok', skinId: id });
+    assert.deepEqual(save.redeemedCodes, [code]);
+    assert.equal(isSkinUnlocked(save, skin), true);
+  }
 });
 
 test('CODE_TO_SKIN：すべてのコードが8文字・4文字-4文字のハイフン区切りで、対応するスキンが実在する', () => {

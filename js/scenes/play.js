@@ -10,6 +10,14 @@ import { drawPlayfield } from '../render/playfield.js';
 import { COLORS } from '../render/entities.js';
 import { selectedSkin } from '../data/skins.js';
 
+// 特別スキンの専用演出（skin.fx のキー）ごとの、命中・撃破・スコア表示の色
+const SKIN_FX_EFFECT_COLORS = {
+  crimsonVanguard: { hit: '#ffb347', kill: '#ff3d5a', popup: '#ffd24a' },
+  violetThunder: { hit: '#e8e8ff', kill: '#b18cff', popup: '#e8e8ff' },
+  frostbiteSilver: { hit: '#eaf6ff', kill: '#8fd9f0', popup: '#eaf6ff' },
+  celestialGold: { hit: '#fff6d6', kill: '#ffe27a', popup: '#ffe27a' },
+};
+
 const HINTS = {
   solo: 'A/D・←→ で旋回　マウスで狙ってクリック（長押しで連射）',
   duo: '1P：A/D・←→ で旋回　／　2P：マウスで狙って発射',
@@ -40,12 +48,12 @@ export function createPlayScene(app) {
   }
 
   function handleEvents(events) {
-    // クリムゾン・ヴァンガード（仮称）は命中・撃破の閃光を紅金に、ヴァイオレット・サンダー（仮称）は紫白の電撃スパークにする
+    // 特別スキン装備時は、命中・撃破の閃光・スコア表示の色をそのスキンの演出に合わせる（SKIN_FX_EFFECT_COLORS）
     const skinFx = selectedSkin(app.save)?.fx ?? {};
-    const vanguard = skinFx.crimsonVanguard === true;
-    const thunder = skinFx.violetThunder === true;
-    const hitColor = vanguard ? '#ffb347' : thunder ? '#e8e8ff' : '#fff6c8';
-    const killColor = vanguard ? '#ff3d5a' : thunder ? '#b18cff' : '#ffd866';
+    const fxKey = Object.keys(SKIN_FX_EFFECT_COLORS).find((k) => skinFx[k] === true);
+    const fxColors = fxKey ? SKIN_FX_EFFECT_COLORS[fxKey] : null;
+    const hitColor = fxColors?.hit ?? '#fff6c8';
+    const killColor = fxColors?.kill ?? '#ffd866';
     for (const ev of events) {
       switch (ev.type) {
         case 'fire':
@@ -62,7 +70,7 @@ export function createPlayScene(app) {
           const score = isBoss ? target.p.score : ENEMY_DEFS[target.type].score;
           if (isBoss) audio.se.bossKill(); else audio.se.kill();
           spawnBurst(fx, ev.x, ev.y, isBoss ? (target.color ?? COLORS.boss) : killColor, isBoss ? 60 : 12);
-          if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, vanguard ? '#ffd24a' : thunder ? '#e8e8ff' : '#ffd866');
+          if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, fxColors?.popup ?? '#ffd866');
           break;
         }
         case 'heal':

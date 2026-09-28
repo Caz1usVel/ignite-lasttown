@@ -46,6 +46,20 @@ export const SKINS = Object.freeze([
     unlock: Object.freeze({ type: 'code' }),
     fx: Object.freeze({ violetThunder: true }),
   }),
+  Object.freeze({
+    id: 'frostbite-silver', name: 'フロストバイト・シルバー（仮称）',
+    desc: 'サブスク限定の特別な見た目。銀白〜氷青の装甲に薄い霜の結晶模様、常時漂う冷気の白い霧、呼吸するように明滅する氷青のビーコン、氷の欠片の弾。',
+    body: '#cfe8f5', cheek: '#eaf6ff', accent: '#8fd9f0',
+    unlock: Object.freeze({ type: 'code' }),
+    fx: Object.freeze({ frostbiteSilver: true }),
+  }),
+  Object.freeze({
+    id: 'celestial-gold', name: 'セレスティアル・ゴールド（仮称）',
+    desc: 'サブスク限定の特別な見た目。輝く金色の装甲に放射状の光の筋、縁から常時舞い上がる金色の光の粒、明滅せず安定発光するビーコン、星形の弾。',
+    body: '#ffd75e', cheek: '#fff3c4', accent: '#fff6d6',
+    unlock: Object.freeze({ type: 'code' }),
+    fx: Object.freeze({ celestialGold: true }),
+  }),
 ]);
 
 export function isSkinUnlocked(save, skin) {
