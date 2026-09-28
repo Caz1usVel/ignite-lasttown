@@ -74,6 +74,37 @@ test('残機0でゲームオーバー、その後は進まない', () => {
   assert.equal(s.time, t);
 });
 
+test('エンドレスでボスが出現する瞬間、残っている雑魚を消し、bossIncomingを出し、突入演出の間だけボスの行動を止める', () => {
+  const stage = { id: 'test-endless', endless: { kind: 'normal', base: 2.6, decay: 0.9, floor: 0.9, bossEvery: 0.1 }, segments: [], spawnEnd: Infinity, boss: null };
+  const s = createPlayState(stage, mulberry32(1));
+  s.enemies.push(createEnemy('meteor', 0, s.rng, { dist: 300, speed: 0 }));
+
+  let seenIncoming = false;
+  let sawBoss = false;
+  for (let i = 0; i < 60 && !seenIncoming; i++) {
+    const ev = stepGame(s, DT, idle);
+    if (ev.some((e) => e.type === 'bossIncoming')) seenIncoming = true;
+  }
+  assert.equal(seenIncoming, true);
+  assert.ok(s.boss); // ボスは出現している
+  assert.equal(s.enemies.length, 0); // 出現していた雑魚は消えている
+  assert.ok(s.bossFreeze > 0);
+  assert.equal(s.boss.dist, CONFIG.SPAWN_DIST); // 突入演出の間は、ボスの行動（移動）が止まっている
+
+  // 突入演出の時間が経つまでは、ボスは動かない
+  for (let i = 0; i < Math.round((CONFIG.BOSS_INTRO_FREEZE - DT) / DT); i++) {
+    stepGame(s, DT, idle);
+    sawBoss = sawBoss || s.boss.dist !== CONFIG.SPAWN_DIST;
+  }
+  assert.equal(sawBoss, false);
+  assert.ok(s.bossFreeze > 0);
+
+  // 突入演出が終わると、以後はボスの行動（移動）が始まる
+  for (let i = 0; i < 10 && s.boss.dist === CONFIG.SPAWN_DIST; i++) stepGame(s, DT, idle);
+  assert.equal(s.bossFreeze, 0);
+  assert.ok(s.boss.dist < CONFIG.SPAWN_DIST);
+});
+
 test('ボス撃破でクリア、スコア5000', () => {
   const s = createPlayState(EMPTY_STAGE, mulberry32(1));
   s.boss = createBoss('bossA', { hp: 1, drift: 0 });

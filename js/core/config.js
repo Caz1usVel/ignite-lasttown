@@ -33,6 +33,7 @@ export const CONFIG = Object.freeze({
   FAR_SCALE: 0.6,       // 遠い敵ほど大きく描く（出現距離で 1+FAR_SCALE 倍、当たり判定も同じ倍率）
   SHOT_PENALTY: 50,     // 敵の弾が中心に届いたときの減点（残機は減らない。スコアは0未満にならない）
   JAM_TIME: 1.5,        // 妨害電波が届いたとき、攻撃できなくなる時間（秒）
+  BOSS_INTRO_FREEZE: 3.3, // ボス出現時、突入演出（警告表示・突入音2連続）の間だけボスの行動を止める時間（秒）
 
   DT_MAX: 0.05,
   DPR_MAX: 2,

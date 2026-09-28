@@ -9,6 +9,7 @@ export function createPlayState(stage, rng = Math.random) {
     bullets: [],
     enemies: [],
     boss: null,
+    bossFreeze: 0, // >0の間、ボス出現直後の突入演出として、ボスの行動を止める（秒。js/game/step.js）
     spawner: createSpawner(stage),
     score: 0,
     kills: 0,

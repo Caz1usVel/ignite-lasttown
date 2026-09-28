@@ -22,9 +22,21 @@ export function stepGame(state, dt, controls) {
     events.push({ type: 'fire', angle });
   }
 
+  const hadBoss = Boolean(state.boss);
   updateSpawner(state.spawner, state, dt);
+  if (!hadBoss && state.boss) {
+    // ボスが今のフレームで出現した：残っている雑魚を消し、通知イベントを出す。
+    // 突入演出（警告表示・突入音2連続）の間は、ボスの行動を止める（このタイマー自身で戻る。演出の再生は見た目・音だけの話なので、
+    // ゲーム進行はここで決めた一定時間で自己完結させ、シーン側の音声再生完了を待たない）
+    for (const e of state.enemies) e.dead = true;
+    removeDead(state.enemies);
+    state.bossFreeze = CONFIG.BOSS_INTRO_FREEZE;
+    events.push({ type: 'bossIncoming' });
+  } else if (state.bossFreeze > 0) {
+    state.bossFreeze = Math.max(0, state.bossFreeze - dt);
+  }
   updateEnemies(state, dt);
-  if (state.boss && !state.boss.dead) updateBoss(state.boss, state, dt);
+  if (state.boss && !state.boss.dead && state.bossFreeze <= 0) updateBoss(state.boss, state, dt);
   updateBullets(state, dt);
 
   for (const ev of resolveBulletHits(state)) {

@@ -91,6 +91,13 @@ export function createPlayScene(app) {
           spawnBurst(fx, CONFIG.CENTER_X, 300, '#ffd866', 40);
           spawnPopup(fx, CONFIG.CENTER_X, 260, 'ボス撃破！', '#ffd866');
           break;
+        case 'bossIncoming':
+          // ボス出現の合図：警告表示を出し、突入音を1回鳴らし終えてからもう1回鳴らす
+          // （ボスの行動を止める時間そのものは js/game/step.js の bossFreeze が一定時間で自己完結する）
+          spawnBurst(fx, CONFIG.CENTER_X, 300, '#ff6b6b', 40);
+          spawnPopup(fx, CONFIG.CENTER_X, 260, '⚠ ボス接近！', '#ff6b6b');
+          audio.se.bossAlert(() => audio.se.bossAlert());
+          break;
         case 'clear':
           audio.se.clear();
           endTimer = END_DELAY;
