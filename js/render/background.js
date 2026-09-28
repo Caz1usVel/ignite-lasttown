@@ -1,5 +1,6 @@
 // 荒野の背景（防壁の上から見た構図）。画面全体（CSSピクセル空間）に描く。
 // 関数名・app.stars という呼び名は前作（星空）から引き継いだままだが、内容は荒野の装飾（岩・枯れ木・廃墟）。
+// 旋回しても背景は動かさない（固定した1枚の絵）。向きは砲身の傾きで表す（entities.js の drawTurret）。
 export function createStarfield(rng = Math.random, count = 22) {
   return {
     time: 0,
@@ -23,8 +24,8 @@ export function createStarfield(rng = Math.random, count = 22) {
   };
 }
 
-// shift：旋回に合わせた横スクロール量（画面幅に対する割合）。danger：赤空に切り替える（例：ボス出現中）
-export function drawBackground(g, scenery, w, h, dt, shift = 0, danger = false) {
+// danger：赤空に切り替える（例：ボス出現中）
+export function drawBackground(g, scenery, w, h, dt, danger = false) {
   scenery.time += dt;
   const horizonY = h * 0.5;
   const groundY = h * 0.86; // このY以下が防壁の通路面
@@ -50,7 +51,7 @@ export function drawBackground(g, scenery, w, h, dt, shift = 0, danger = false) 
   // 崩れた高層建造物のシルエット（地平線の少し奥、薄く）
   g.fillStyle = 'rgba(10,10,20,0.4)';
   for (const r of scenery.ruins) {
-    const x = (((r.x + shift * 0.05) % 1) + 1) % 1 * w;
+    const x = r.x * w;
     const rw = r.w * w, rh = r.h * h;
     g.beginPath();
     g.moveTo(x, horizonY);
@@ -75,7 +76,7 @@ export function drawBackground(g, scenery, w, h, dt, shift = 0, danger = false) 
   g.strokeStyle = 'rgba(30,22,12,0.35)';
   g.lineWidth = 1.5;
   for (const c of scenery.cracks) {
-    const x = (((c.x + shift * 0.3) % 1) + 1) % 1 * w;
+    const x = c.x * w;
     const y = horizonY + c.y * (groundY - horizonY);
     const len = c.len * w;
     g.beginPath();
@@ -87,8 +88,7 @@ export function drawBackground(g, scenery, w, h, dt, shift = 0, danger = false) 
   // 枯れ木・岩（奥ほど小さく、手前ほど大きく。既存の遠近表現と同じ考え方）
   const sorted = [...scenery.props].sort((a, b) => b.depth - a.depth);
   for (const p of sorted) {
-    const parallax = shift * (1 - p.depth) * 0.6;
-    const x = (((p.x + parallax) % 1) + 1) % 1 * w;
+    const x = p.x * w;
     const y = horizonY + (1 - p.depth) * (groundY - horizonY) * 0.92;
     const size = (h * 0.05) * (0.4 + (1 - p.depth) * 1.1) * p.scale;
     if (p.kind === 'rock') {

@@ -9,7 +9,7 @@ export function drawPlayfield(g, vp, stars, state, fx, dt, skin) {
   const boss = state.boss && !state.boss.dead ? state.boss : null;
   const danger = Boolean(boss); // 危険時（ボス出現中）は赤空・ビーコン赤に切り替える
   vp.screenSpace(g);
-  drawBackground(g, stars, vp.cssW, vp.cssH, dt, -t.heading / 360, danger);
+  drawBackground(g, stars, vp.cssW, vp.cssH, dt, danger); // 旋回しても背景は動かさない（向きは砲身の傾きで表す）
 
   vp.virtualSpace(g);
   drawFov(g);

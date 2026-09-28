@@ -1,5 +1,5 @@
 import { CONFIG } from '../core/config.js';
-import { lightenColor, hexToRgba } from '../core/util.js';
+import { lightenColor, hexToRgba, DEG } from '../core/util.js';
 import { worldToScreen } from '../core/view.js';
 
 // 図形ベースの簡易デフォルメ（前作の drawPlayer の作り方を踏襲）。AI生成画像は使わない。
@@ -74,8 +74,17 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   roundRectPath(g, -34, 18, 68, 18, 5);
   g.fill();
 
-  // 本体（装甲）
-  ellipse(g, 0, 8, 32, 22, lightenColor(armorColor, -0.2));  // 下部装甲
+  // 下部装甲（固定、旋回では動かない）
+  ellipse(g, 0, 8, 32, 22, lightenColor(armorColor, -0.2));
+
+  // 旋回ヘッド：砲身・照準窓・ビーコンなどは、旋回角度（-90〜+90度）に応じて左右に傾く。
+  // 背景は動かさず、向きはこの傾きだけで表す。
+  const HEAD_PIVOT_Y = 6; // 下部装甲との境目あたりを中心に傾ける
+  g.save();
+  g.translate(0, HEAD_PIVOT_Y);
+  g.rotate((turret.heading ?? 0) * DEG);
+  g.translate(0, -HEAD_PIVOT_Y);
+
   ellipse(g, 0, -2, 28, 20, armorColor);                     // 上部装甲
   ellipse(g, 0, 6, 14, 8, panelColor);                       // 側面パネル（スキンの副配色）
 
@@ -91,7 +100,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   ellipse(g, 0, -12, 7, 5.5, 'rgba(30,40,40,0.9)');
   ellipse(g, 0, -12, 4.5, 3.5, hexToRgba(COLORS.accent, 0.7));
 
-  // 砲身（短め、常に真上）
+  // 砲身（短め、旋回ヘッドと一緒に傾く）
   g.fillStyle = COLORS.barrel;
   g.beginPath();
   roundRectPath(g, -6, -32, 12, 20, 4);
@@ -115,6 +124,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.fill();
   ellipse(g, 27, -38, 3.2, 3.2, beaconColor);
 
+  g.restore(); // 旋回ヘッド
   g.restore();
 }
 
