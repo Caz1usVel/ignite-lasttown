@@ -410,6 +410,19 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
 .skin-preview-canvas { background: rgba(255,255,255,0.05); border-radius: 16px; margin: 8px 0; }
 .skin-preview-name { font-weight: 800; color: var(--star-gold); margin: 0; }
 .skin-preview-desc { font-size: 0.85rem; color: var(--text-dim); max-width: 320px; margin: 0 0 8px; text-align: center; }
+.skin-code-row { display: flex; gap: 8px; align-items: center; }
+.skin-code-input {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  width: 160px;
+}
+.skin-code-input::placeholder { color: var(--text-dim); }
+.skin-code-status { font-size: 0.85rem; color: var(--star-gold); min-height: 1.2em; margin: 0; }
 .diary-text {
   position: relative;
   margin: 0;

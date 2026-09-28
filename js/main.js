@@ -31,6 +31,7 @@ const IDS = [
   'nextStageBtn', 'retryBtn', 'resultStageSelectBtn',
   'diaryScreen', 'diaryList', 'diaryText', 'diaryBackBtn', 'diaryPageCount',
   'skinScreen', 'skinList', 'skinPreviewCanvas', 'skinPreviewName', 'skinPreviewDesc', 'skinSelectBtn', 'skinBackBtn',
+  'skinCodeInput', 'skinCodeRedeemBtn', 'skinCodeStatus',
   'settingsScreen', 'bgmVol', 'seVol', 'muteBtn', 'settingsBackBtn',
 ];
 const dom = Object.fromEntries(IDS.map((id) => [id, document.getElementById(id)]));

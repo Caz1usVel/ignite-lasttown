@@ -11,7 +11,18 @@ function defaultEndless() {
 }
 
 function defaults() {
-  return { version: SAVE_VERSION, settings: { ...DEFAULT_SETTINGS }, stages: {}, endless: defaultEndless(), tutorialSeen: false, selectedSkinId: 'default' };
+  return { version: SAVE_VERSION, settings: { ...DEFAULT_SETTINGS }, stages: {}, endless: defaultEndless(), tutorialSeen: false, selectedSkinId: 'default', redeemedCodes: [] };
+}
+
+// 配布コードで解放したスキンの記録。コードごとに個別に持つ（1件ずつ、文字列のみ、重複なし）。
+function sanitizeRedeemedCodes(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const c of raw) {
+    if (typeof c === 'string' && c.length > 0 && c.length <= 40 && !out.includes(c)) out.push(c);
+    if (out.length >= 200) break; // 際限なく増やさない
+  }
+  return out;
 }
 
 function sanitizeEndless(raw) {
@@ -75,7 +86,7 @@ export function loadSave(storage = defaultStorage()) {
       // v1 → v2：設定を引き継ぎ、highScore は1面の最高スコアにする（v1にクリアの記録は無いので未クリア）
       const stages = {};
       if (Number.isFinite(d.highScore) && d.highScore > 0) stages['1'] = { cleared: false, best: d.highScore };
-      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless: defaultEndless(), tutorialSeen: d.tutorialSeen === true, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default' };
+      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless: defaultEndless(), tutorialSeen: d.tutorialSeen === true, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default', redeemedCodes: [] };
     }
     if (d?.version === SAVE_VERSION) {
       const stages = sanitizeStages(d.stages);
@@ -84,7 +95,7 @@ export function loadSave(storage = defaultStorage()) {
       // クリア済みでもチュートリアルが強制表示されてしまう。進捗（クリア済みステージ or エンドレス記録）があれば
       // 既に見たものとみなし、既存プレイヤーの体験を邪魔しない。新規プレイヤーは進捗が無いので影響しない。
       const hasProgress = Object.values(stages).some((s) => s.cleared === true) || endless.normal.best > 0 || endless.hard.best > 0;
-      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless, tutorialSeen: d.tutorialSeen === true || hasProgress, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default' };
+      return { version: SAVE_VERSION, settings: sanitizeSettings(d.settings), stages, endless, tutorialSeen: d.tutorialSeen === true || hasProgress, selectedSkinId: typeof d.selectedSkinId === 'string' ? d.selectedSkinId : 'default', redeemedCodes: sanitizeRedeemedCodes(d.redeemedCodes) };
     }
     return defaults();
   } catch {

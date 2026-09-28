@@ -11,7 +11,7 @@ const throwingStorage = {
   getItem() { throw new Error('denied'); },
   setItem() { throw new Error('denied'); },
 };
-const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, tutorialSeen: false, selectedSkinId: 'default' };
+const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, tutorialSeen: false, selectedSkinId: 'default', redeemedCodes: [] };
 const put = (st, obj) => st.setItem(SAVE_KEY, JSON.stringify(obj));
 
 test('何も無ければ既定値（v2）', () => {
@@ -184,4 +184,26 @@ test('selectedSkinId：既定は "default"。保存・読み込みで保たれ�
   assert.equal(loadSave(storage).selectedSkinId, 'stage1');
   const broken = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {}, selectedSkinId: 123 }), setItem() {} };
   assert.equal(loadSave(broken).selectedSkinId, 'default');
+});
+
+test('redeemedCodes：既定は空の配列。保存・読み込みで保たれ、壊れた値や重複・多すぎる値は整える', () => {
+  const fresh = loadSave({ getItem: () => null, setItem() {} });
+  assert.deepEqual(fresh.redeemedCodes, []);
+  const mem = {};
+  const storage = { getItem: (k) => mem[k] ?? null, setItem: (k, v) => { mem[k] = v; } };
+  const data = loadSave(storage);
+  data.redeemedCodes = ['TESTCODE1', 'TESTCODE2'];
+  writeSave(data, storage);
+  assert.deepEqual(loadSave(storage).redeemedCodes, ['TESTCODE1', 'TESTCODE2']);
+  const notArray = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {}, redeemedCodes: 'TESTCODE1' }), setItem() {} };
+  assert.deepEqual(loadSave(notArray).redeemedCodes, []);
+  const withJunk = {
+    getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {}, redeemedCodes: ['A', 'A', 123, null, 'B', 'x'.repeat(50)] }),
+    setItem() {},
+  };
+  assert.deepEqual(loadSave(withJunk).redeemedCodes, ['A', 'B']); // 重複・不正な型・長すぎる文字列は除く
+  const many = { getItem: () => JSON.stringify({ version: 2, settings: {}, stages: {}, redeemedCodes: Array.from({ length: 300 }, (_, i) => `C${i}`) }), setItem() {} };
+  assert.equal(loadSave(many).redeemedCodes.length, 200); // 際限なく増やさない
+  const v1 = { getItem: () => JSON.stringify({ version: 1, settings: {} }), setItem() {} };
+  assert.deepEqual(loadSave(v1).redeemedCodes, []);
 });

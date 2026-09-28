@@ -1,4 +1,4 @@
-import { SKINS, isSkinUnlocked } from '../data/skins.js';
+import { SKINS, isSkinUnlocked, redeemCode } from '../data/skins.js';
 import { CONFIG } from '../core/config.js';
 import { drawTurret } from '../render/entities.js';
 import { drawBackground } from '../render/background.js';
@@ -27,6 +27,7 @@ export function createSkinScene(app) {
       const label = u.mode === 'hard' ? 'ハードエンドレス' : '通常エンドレス';
       return `${label}で ${u.value.toLocaleString()} 点以上を取ると使えます。`;
     }
+    if (u.type === 'code') return '配布コードを入力すると使えます。';
     return '';
   }
 
@@ -66,9 +67,31 @@ export function createSkinScene(app) {
   });
   dom.skinBackBtn.addEventListener('click', () => app.setScene('title'));
 
+  dom.skinCodeRedeemBtn.addEventListener('click', () => {
+    const raw = dom.skinCodeInput.value;
+    dom.skinCodeInput.value = '';
+    const result = redeemCode(app.save, raw);
+    if (result.status === 'empty') return;
+    if (result.status === 'unknown') {
+      dom.skinCodeStatus.textContent = 'そのコードは見つかりませんでした';
+      return;
+    }
+    const skin = SKINS.find((s) => s.id === result.skinId);
+    if (result.status === 'already') {
+      dom.skinCodeStatus.textContent = `「${skin?.name ?? ''}」はすでに解放済みです`;
+      return;
+    }
+    app.persist();
+    dom.skinCodeStatus.textContent = `「${skin?.name ?? ''}」を解放しました！`;
+    build(); // 解放されたスキンを選べるように、一覧を作り直す
+    if (skin) select(skin, true);
+  });
+
   return {
     enter() {
       build();
+      dom.skinCodeStatus.textContent = '';
+      dom.skinCodeInput.value = '';
       const current = SKINS.find((s) => s.id === app.save.selectedSkinId) ?? SKINS[0];
       select(current, isSkinUnlocked(app.save, current));
       dom.hud.classList.add('hidden');

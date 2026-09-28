@@ -49,6 +49,35 @@ function roundRectPath(g, x, y, w, h, r) {
   g.closePath();
 }
 
+// 角を斜めに落とした八角形（装甲の台座など、丸くない・機械的な見た目に使う）
+function octagon(g, cx, cy, w, h, color) {
+  const cut = Math.min(w, h) * 0.4;
+  g.fillStyle = color;
+  g.beginPath();
+  g.moveTo(cx - w + cut, cy - h);
+  g.lineTo(cx + w - cut, cy - h);
+  g.lineTo(cx + w, cy - h + cut);
+  g.lineTo(cx + w, cy + h - cut);
+  g.lineTo(cx + w - cut, cy + h);
+  g.lineTo(cx - w + cut, cy + h);
+  g.lineTo(cx - w, cy + h - cut);
+  g.lineTo(cx - w, cy - h + cut);
+  g.closePath();
+  g.fill();
+}
+
+// 菱形のランプ（丸いアンテナ球の代わり。点灯色を切り替えて使う）
+function diamond(g, cx, cy, w, h, color) {
+  g.fillStyle = color;
+  g.beginPath();
+  g.moveTo(cx, cy - h);
+  g.lineTo(cx + w, cy);
+  g.lineTo(cx, cy + h);
+  g.lineTo(cx - w, cy);
+  g.closePath();
+  g.fill();
+}
+
 // 装甲のある回転式ガンタレット。旋回そのものは視界（FOV）側の表現なので、本体は常に正面向き。
 export function drawTurret(g, turret, time, skin = null, danger = false) {
   if (turret.invincible > 0 && Math.floor(time * 12) % 2 === 0) return; // 無敵中は点滅
@@ -59,72 +88,82 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.translate(CONFIG.CENTER_X, CONFIG.CENTER_Y);
 
   const glowColor = danger ? '255,100,90' : '95,227,208';
-  const glow = g.createRadialGradient(0, 0, 10, 0, 0, 66);
-  glow.addColorStop(0, `rgba(${glowColor},0.3)`);
+  const glow = g.createRadialGradient(0, -10, 10, 0, -10, 60);
+  glow.addColorStop(0, `rgba(${glowColor},0.28)`);
   glow.addColorStop(1, `rgba(${glowColor},0)`);
   g.fillStyle = glow;
   g.beginPath();
-  g.arc(0, 0, 66, 0, Math.PI * 2);
+  g.arc(0, -10, 60, 0, Math.PI * 2);
   g.fill();
 
-  // 台座：防壁の上面にしっかり接地させる（接地影＋土台）
-  ellipse(g, 0, 34, 40, 10, 'rgba(0,0,0,0.35)');
-  g.fillStyle = lightenColor(armorColor, -0.55);
+  // 接地影
+  ellipse(g, 0, 34, 40, 9, 'rgba(0,0,0,0.35)');
+
+  // 土台・本体：角ばった装甲。ここから下は、旋回しても一切動かない。
+  octagon(g, 0, 22, 34, 14, lightenColor(armorColor, -0.55)); // 台座
+  g.fillStyle = lightenColor(armorColor, -0.15);
   g.beginPath();
-  roundRectPath(g, -34, 18, 68, 18, 5);
+  roundRectPath(g, -30, 2, 60, 24, 3); // 下段の装甲
+  g.fill();
+  g.fillStyle = armorColor;
+  g.beginPath();
+  roundRectPath(g, -26, -14, 52, 20, 3); // 上段の装甲
   g.fill();
 
-  // 下部装甲（固定、旋回では動かない）
-  ellipse(g, 0, 8, 32, 22, lightenColor(armorColor, -0.2));
+  // 側面パネル（スキンの副配色。角ばった帯で、顔のようには見えない形にする）
+  g.fillStyle = panelColor;
+  g.beginPath();
+  roundRectPath(g, -20, 6, 40, 8, 2);
+  g.fill();
 
-  // 旋回ヘッド：砲身・照準窓・ビーコンなどは、旋回角度（-90〜+90度）に応じて左右に傾く。
-  // 背景は動かさず、向きはこの傾きだけで表す。
-  const HEAD_PIVOT_Y = 6; // 下部装甲との境目あたりを中心に傾ける
-  g.save();
-  g.translate(0, HEAD_PIVOT_Y);
-  g.rotate((turret.heading ?? 0) * DEG);
-  g.translate(0, -HEAD_PIVOT_Y);
-
-  ellipse(g, 0, -2, 28, 20, armorColor);                     // 上部装甲
-  ellipse(g, 0, 6, 14, 8, panelColor);                       // 側面パネル（スキンの副配色）
-
-  // アクセントライン（シアン、本体に1本）
+  // アクセントライン（シアン、本体に固定で1本）
   g.strokeStyle = COLORS.accent;
   g.lineWidth = 2.5;
   g.beginPath();
-  g.moveTo(-24, -4);
-  g.lineTo(24, -4);
+  g.moveTo(-26, -6);
+  g.lineTo(26, -6);
   g.stroke();
 
-  // 照準窓
-  ellipse(g, 0, -12, 7, 5.5, 'rgba(30,40,40,0.9)');
-  ellipse(g, 0, -12, 4.5, 3.5, hexToRgba(COLORS.accent, 0.7));
-
-  // 砲身（短め、旋回ヘッドと一緒に傾く）
-  g.fillStyle = COLORS.barrel;
-  g.beginPath();
-  roundRectPath(g, -6, -32, 12, 20, 4);
-  g.fill();
-  g.fillStyle = lightenColor(armorColor, -0.3); // 砲身の付け根の帯
-  g.beginPath();
-  roundRectPath(g, -9, -16, 18, 6, 3);
-  g.fill();
-
-  // アンテナとビーコン（通常はシアン、危険時は赤く点灯）
-  g.strokeStyle = lightenColor(armorColor, -0.4);
-  g.lineWidth = 2;
-  g.beginPath();
-  g.moveTo(20, -14);
-  g.lineTo(27, -38);
-  g.stroke();
+  // ビーコン（丸いアンテナ球ではなく、本体に固定した菱形のランプ。通常はシアン、危険時は赤く点灯）
   const pulse = 0.7 + 0.3 * Math.sin(time * 6);
-  g.fillStyle = hexToRgba(beaconColor, 0.35 * pulse);
+  g.fillStyle = hexToRgba(beaconColor, 0.32 * pulse);
   g.beginPath();
-  g.arc(27, -38, 7, 0, Math.PI * 2);
+  g.arc(20, -10, 8, 0, Math.PI * 2); // 光の暈
   g.fill();
-  ellipse(g, 27, -38, 3.2, 3.2, beaconColor);
+  diamond(g, 20, -10, 5, 5, beaconColor);
 
-  g.restore(); // 旋回ヘッド
+  // 旋回する砲：砲身と照準窓だけが、旋回角度（-90〜+90度）に応じて左右に振れる。
+  // 土台・本体・アクセントライン・ビーコンは、ここから上の save/restore の外なので回転しない。
+  const PIVOT_Y = -8; // 上段の装甲の上端あたりを中心に振る
+  g.save();
+  g.translate(0, PIVOT_Y);
+  g.rotate((turret.heading ?? 0) * DEG);
+  g.translate(0, -PIVOT_Y);
+
+  g.fillStyle = lightenColor(armorColor, -0.35); // 取り付け部（角ばった小さな台座）
+  g.beginPath();
+  roundRectPath(g, -10, -18, 20, 10, 2);
+  g.fill();
+
+  g.fillStyle = 'rgba(20,30,30,0.9)'; // 照準窓（角ばったスリット）
+  g.beginPath();
+  roundRectPath(g, -6, -24, 12, 7, 1.5);
+  g.fill();
+  g.fillStyle = hexToRgba(COLORS.accent, 0.75);
+  g.beginPath();
+  roundRectPath(g, -4, -23, 8, 5, 1);
+  g.fill();
+
+  g.fillStyle = COLORS.barrel; // 砲身（短く太い、角ばった箱）
+  g.beginPath();
+  roundRectPath(g, -7, -42, 14, 22, 2);
+  g.fill();
+  g.fillStyle = lightenColor(COLORS.barrel, -0.3); // 銃口
+  g.beginPath();
+  roundRectPath(g, -7, -42, 14, 4, 1);
+  g.fill();
+
+  g.restore(); // 旋回する砲
   g.restore();
 }
 
