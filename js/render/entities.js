@@ -115,6 +115,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.save();
   g.translate(CONFIG.CENTER_X, CONFIG.CENTER_Y);
 
+  // 周囲のグロー・接地影：完全固定（transformを一切持たない静的な要素。旋回では動かさない）
   const glowColor = danger ? '255,100,90' : '95,227,208';
   const glow = g.createRadialGradient(0, -10, 10, 0, -10, 60);
   glow.addColorStop(0, `rgba(${glowColor},0.28)`);
@@ -123,19 +124,10 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.beginPath();
   g.arc(0, -10, 60, 0, Math.PI * 2);
   g.fill();
+  ellipse(g, 0, 34, 40, 9, 'rgba(0,0,0,0.35)'); // 接地影
 
-  // 接地影（照明的な表現なので、旋回では動かさない）
-  ellipse(g, 0, 34, 40, 9, 'rgba(0,0,0,0.35)');
-
-  // 砲台全体：土台・本体・砲身・照準窓・アクセントライン・ビーコンを1つのグループとして、
-  // 接地している底面の中心（このY）を軸に、旋回角度（-90〜+90度）でその場を回転させる。
-  // 背景（防壁・荒野・地平線）は別レイヤーで固定のまま動かさない。
-  const PIVOT_Y = 34;
-  g.save();
-  g.translate(0, PIVOT_Y);
-  g.rotate((turret.heading ?? 0) * DEG);
-  g.translate(0, -PIVOT_Y);
-
+  // 土台（完全固定）：角ばった台座・下段の装甲・首元のパネル。ここに、側面パネル・アクセントライン・
+  // ビーコンも乗せる（頭部の回転には巻き込まない、目立たない大きさにする）。
   octagon(g, 0, 22, 34, 14, lightenColor(armorColor, -0.55), trimColor); // 台座
   g.fillStyle = lightenColor(armorColor, -0.15);
   g.beginPath();
@@ -143,7 +135,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.fill();
   g.fillStyle = armorColor;
   g.beginPath();
-  roundRectPath(g, -26, -14, 52, 20, 3); // 上段の装甲
+  roundRectPath(g, -22, -14, 44, 16, 3); // 首元（ドーム状の頭部を受ける、固定のパネル）
   g.fill();
   if (trimColor) { // 金縁（クリムゾン・ヴァンガード（仮称）専用。それ以外のスキンは縁取りしない）
     g.strokeStyle = trimColor;
@@ -151,58 +143,76 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
     g.stroke();
   }
 
-  // 側面パネル（スキンの副配色。角ばった帯で、顔のようには見えない形にする）
+  // 側面パネル（スキンの副配色。目立たない小さな帯）
   g.fillStyle = panelColor;
   g.beginPath();
-  roundRectPath(g, -20, 6, 40, 8, 2);
+  roundRectPath(g, -13, -4, 26, 5, 2);
   g.fill();
 
-  // アクセントライン（通常はシアン。クリムゾン・ヴァンガードは紅で、常時発光させる）
+  // アクセントライン（通常はシアン。クリムゾン・ヴァンガードは紅で、常時発光させる。目立たない長さに縮小）
   g.strokeStyle = accentColor;
-  g.lineWidth = 2.5;
+  g.lineWidth = 2;
   if (vanguard) {
     g.shadowColor = accentColor;
     g.shadowBlur = 8 + 4 * Math.sin(time * 4);
   }
   g.beginPath();
-  g.moveTo(-26, -6);
-  g.lineTo(26, -6);
+  g.moveTo(-18, -9);
+  g.lineTo(18, -9);
   g.stroke();
   g.shadowBlur = 0;
 
-  // ビーコン（丸いアンテナ球ではなく、菱形のランプ）
+  // ビーコン（丸いアンテナ球ではなく、菱形のランプ。土台に固定）
   g.fillStyle = hexToRgba(beaconColor, 0.32 * pulse);
   g.beginPath();
-  g.arc(20, -10, danger && vanguard ? 11 : 8, 0, Math.PI * 2); // 光の暈
+  g.arc(16, -9, danger && vanguard ? 10 : 7, 0, Math.PI * 2); // 光の暈
   g.fill();
-  diamond(g, 20, -10, 5, 5, beaconColor);
+  diamond(g, 16, -9, 4.5, 4.5, beaconColor);
 
-  g.fillStyle = lightenColor(armorColor, -0.35); // 砲の取り付け部（角ばった小さな台座）
+  // 頭部（丸みのあるドーム）＋砲身＋照準窓：この一式だけを、ドームの中心（transform-origin）を軸に、
+  // 旋回角度（-90〜+90度）でその場を回転させる。箱型ではなくドームなので、大きく傾いても
+  // 「倒れた」印象にならず、旋回として見える。
+  const DOME_CY = -14; // ドームの底面（首元パネルの上端）＝回転の軸
+  const DOME_R = 17;
+  g.save();
+  g.translate(0, DOME_CY);
+  g.rotate((turret.heading ?? 0) * DEG);
+  g.translate(0, -DOME_CY);
+
+  g.fillStyle = armorColor;
   g.beginPath();
-  roundRectPath(g, -10, -18, 20, 10, 2);
+  g.arc(0, DOME_CY, DOME_R, Math.PI, 0); // 上半分の半円（ドーム）。closePath で底面が直線になる
+  g.closePath();
   g.fill();
+  if (trimColor) {
+    g.strokeStyle = trimColor;
+    g.lineWidth = 1.2;
+    g.stroke();
+  }
+  ellipse(g, 0, DOME_CY - DOME_R * 0.35, DOME_R * 0.75, DOME_R * 0.35, lightenColor(armorColor, 0.25)); // ハイライト
 
+  const domeTopY = DOME_CY - DOME_R;
   g.fillStyle = 'rgba(20,30,30,0.9)'; // 照準窓（角ばったスリット）
   g.beginPath();
-  roundRectPath(g, -6, -24, 12, 7, 1.5);
+  roundRectPath(g, -6, domeTopY - 5, 12, 7, 1.5);
   g.fill();
   g.fillStyle = hexToRgba(accentColor, 0.75);
   g.beginPath();
-  roundRectPath(g, -4, -23, 8, 5, 1);
+  roundRectPath(g, -4, domeTopY - 4, 8, 5, 1);
   g.fill();
 
   g.fillStyle = COLORS.barrel; // 砲身（短く太い、角ばった箱）
   g.beginPath();
-  roundRectPath(g, -7, -42, 14, 22, 2);
+  roundRectPath(g, -7, domeTopY - 20, 14, 20, 2);
   g.fill();
   g.fillStyle = lightenColor(COLORS.barrel, -0.3); // 銃口
   g.beginPath();
-  roundRectPath(g, -7, -42, 14, 4, 1);
+  roundRectPath(g, -7, domeTopY - 20, 14, 4, 1);
   g.fill();
 
-  if (vanguard) drawEmberParticles(g, time, 0, -18); // 砲身の付け根から立ち上る金の粒子
+  if (vanguard) drawEmberParticles(g, time, 0, domeTopY); // 砲身の付け根から立ち上る金の粒子
 
-  g.restore(); // 砲台全体
+  g.restore(); // 頭部（ドーム＋砲身＋照準窓）
   g.restore();
 }
 
