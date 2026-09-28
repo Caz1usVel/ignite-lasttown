@@ -34,6 +34,7 @@ export function createDiaryScene(app) {
       dom.hint.classList.add('hidden');
       dom.touchControls.classList.add('hidden');
       dom.diaryScreen.classList.remove('hidden');
+      app.audio.playBgm('bgm/diary.mp3');
     },
     exit() {
       dom.diaryScreen.classList.add('hidden');

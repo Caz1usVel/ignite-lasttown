@@ -8,6 +8,27 @@ export function createAudio(settings) {
   bgm.loop = true;
   let bgmSrc = null;
 
+  // 発射音（大砲発射.mp3を短く切り出したもの）を、音声ファイルから鳴らす。
+  // 読み込みが終わるまで（または失敗したときは）合成音にフォールバックする。
+  let shootBuffer = null;
+  let shootBufferPromise = null;
+  function loadShootBuffer() {
+    if (shootBufferPromise || !ctx) return;
+    shootBufferPromise = fetch('se/shoot.mp3')
+      .then((r) => r.arrayBuffer())
+      .then((buf) => ctx.decodeAudioData(buf))
+      .then((decoded) => { shootBuffer = decoded; })
+      .catch(() => {}); // 読み込めなくても、合成音のフォールバックで足りる
+  }
+  function playShootBuffer() {
+    if (!ctx || !shootBuffer || ctx.state !== 'running') return false;
+    const src = ctx.createBufferSource();
+    src.buffer = shootBuffer;
+    src.connect(master);
+    src.start();
+    return true;
+  }
+
   function applyVolumes() {
     if (master) master.gain.value = settings.muted ? 0 : settings.seVol;
     bgm.volume = settings.muted ? 0 : settings.bgmVol;
@@ -40,6 +61,7 @@ export function createAudio(settings) {
         master = ctx.createGain();
         master.connect(ctx.destination);
         applyVolumes();
+        loadShootBuffer();
       }
       if (ctx.state !== 'running') ctx.resume();
       if (bgmSrc && bgm.paused) bgm.play().catch(() => {});
@@ -60,7 +82,7 @@ export function createAudio(settings) {
       bgm.play().catch(() => {});
     },
     se: {
-      shoot: () => tone(880, 0.06, { type: 'square', gain: 0.05, slideTo: 440 }),
+      shoot: () => { if (!playShootBuffer()) tone(880, 0.06, { type: 'square', gain: 0.05, slideTo: 440 }); },
       hit: () => tone(520, 0.05, { type: 'triangle', gain: 0.12 }),
       kill: () => {
         tone(660, 0.07, { type: 'triangle', gain: 0.16 });

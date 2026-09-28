@@ -125,6 +125,7 @@ export function createPlayScene(app) {
       dom.touchControls.classList.add('hidden');
     },
     update(dt) {
+      audio.playBgm(state.boss && !state.boss.dead ? 'bgm/boss.mp3' : 'bgm/stage.mp3');
       dom.touchControls.classList.toggle('hidden', !input.isTouch());
       const tap = input.takeTap();
       const held = input.isFiring();

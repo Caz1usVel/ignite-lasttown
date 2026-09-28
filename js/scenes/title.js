@@ -25,7 +25,7 @@ export function createTitleScene(app) {
       dom.touchControls.classList.add('hidden');
       dom.titleProgress.textContent = progressLine(app.save);
       dom.titleScreen.classList.remove('hidden');
-      app.audio.playBgm(null);
+      app.audio.playBgm('bgm/title.mp3');
     },
     exit() {
       dom.titleScreen.classList.add('hidden');

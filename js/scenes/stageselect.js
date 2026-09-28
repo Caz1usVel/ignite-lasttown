@@ -57,7 +57,7 @@ export function createStageSelectScene(app) {
       dom.hint.classList.add('hidden');
       dom.touchControls.classList.add('hidden');
       dom.stageSelectScreen.classList.remove('hidden');
-      app.audio.playBgm(null);
+      app.audio.playBgm('bgm/title.mp3'); // タイトルと同じ曲を継続する（同じ曲名なら再生し直さない）
     },
     exit() {
       dom.stageSelectScreen.classList.add('hidden');
