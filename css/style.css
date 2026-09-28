@@ -438,6 +438,8 @@ p.tagline { color: var(--text-dim); margin: 0 0 20px; }
   .diary-ribbon { top: 50%; left: -6px; transform: translateY(-50%) rotate(90deg); }
   .diary-page-right { max-height: 46vh; overflow-y: auto; }
 }
-.howto-body { max-width: 520px; min-height: 6em; padding: 14px 18px; border-radius: 14px; background: rgba(10, 14, 39, 0.75); white-space: pre-line; line-height: 1.8; text-align: left; }
+.howto-diagram { width: 260px; max-width: 80vw; }
+.howto-diagram svg { width: 100%; height: auto; display: block; }
+.howto-body { max-width: 520px; max-height: 48vh; overflow-y: auto; padding: 14px 18px; border-radius: 14px; background: rgba(10, 14, 39, 0.75); white-space: pre-line; line-height: 1.8; text-align: left; }
 .howto-page { color: var(--text-dim); margin: 0; }
 .howto-nav-row { display: flex; gap: 16px; align-items: center; }

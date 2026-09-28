@@ -6,4 +6,5 @@ export const CODE_TO_SKIN = Object.freeze({
   'K3H7-QX2M': 'code-crimson',
   'P9R4-VB6L': 'code-violet',
   'ZF8K-3RTN': 'crimson-vanguard',
+  'H6D2-YK9P': 'violet-thunder',
 });

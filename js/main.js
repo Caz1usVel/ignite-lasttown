@@ -22,7 +22,7 @@ const IDS = [
   'powerupScreen', 'offerCard0', 'offerCard1',
   'touchControls', 'turnLeftBtn', 'turnRightBtn',
   'titleScreen', 'titleLogo', 'titleProgress', 'startSoloBtn', 'startDuoBtn', 'titleHowtoBtn', 'titleDiaryBtn', 'titleSkinBtn', 'titleSettingsBtn',
-  'howtoScreen', 'howtoTitle', 'howtoBody', 'howtoPage', 'howtoPrevBtn', 'howtoNextBtn',
+  'howtoScreen', 'howtoTitle', 'howtoDiagram', 'howtoBody', 'howtoPage', 'howtoPrevBtn', 'howtoNextBtn',
   'stageSelectScreen', 'stageGrid', 'stageBackBtn',
   'pauseScreen', 'resumeBtn', 'pauseSettingsBtn', 'pauseTitleBtn',
   'endlessQuitScreen', 'endlessQuitScore', 'endlessQuitTime', 'endlessQuitResumeBtn', 'endlessQuitTitleBtn', 'endlessQuitDiscardBtn',

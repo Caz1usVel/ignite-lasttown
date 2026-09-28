@@ -40,10 +40,12 @@ export function createPlayScene(app) {
   }
 
   function handleEvents(events) {
-    // クリムゾン・ヴァンガード（仮称）装備時は、命中・撃破の閃光も紅金にする
-    const vanguard = selectedSkin(app.save)?.fx?.crimsonVanguard === true;
-    const hitColor = vanguard ? '#ffb347' : '#fff6c8';
-    const killColor = vanguard ? '#ff3d5a' : '#ffd866';
+    // クリムゾン・ヴァンガード（仮称）は命中・撃破の閃光を紅金に、ヴァイオレット・サンダー（仮称）は紫白の電撃スパークにする
+    const skinFx = selectedSkin(app.save)?.fx ?? {};
+    const vanguard = skinFx.crimsonVanguard === true;
+    const thunder = skinFx.violetThunder === true;
+    const hitColor = vanguard ? '#ffb347' : thunder ? '#e8e8ff' : '#fff6c8';
+    const killColor = vanguard ? '#ff3d5a' : thunder ? '#b18cff' : '#ffd866';
     for (const ev of events) {
       switch (ev.type) {
         case 'fire':
@@ -60,7 +62,7 @@ export function createPlayScene(app) {
           const score = isBoss ? target.p.score : ENEMY_DEFS[target.type].score;
           if (isBoss) audio.se.bossKill(); else audio.se.kill();
           spawnBurst(fx, ev.x, ev.y, isBoss ? (target.color ?? COLORS.boss) : killColor, isBoss ? 60 : 12);
-          if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, vanguard ? '#ffd24a' : '#ffd866');
+          if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, vanguard ? '#ffd24a' : thunder ? '#e8e8ff' : '#ffd866');
           break;
         }
         case 'heal':

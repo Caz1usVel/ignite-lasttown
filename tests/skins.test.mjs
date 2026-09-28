@@ -5,8 +5,8 @@ import { CODE_TO_SKIN } from '../js/data/codes.js';
 
 const mkSave = (over = {}) => ({ stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, selectedSkinId: 'default', redeemedCodes: [], ...over });
 
-test('SKINS：8件。1件目は既定（unlock.type=="default"）で、色を持つ。凍結されている', () => {
-  assert.equal(SKINS.length, 8);
+test('SKINS：9件。1件目は既定（unlock.type=="default"）で、色を持つ。凍結されている', () => {
+  assert.equal(SKINS.length, 9);
   assert.equal(Object.isFrozen(SKINS), true);
   const def = SKINS[0];
   assert.equal(def.unlock.type, 'default');
@@ -117,6 +117,21 @@ test('crimson-vanguard：金縁・紅いアクセント・専用の演出フラ�
   const save = mkSave();
   assert.deepEqual(redeemCode(save, code.replace('-', '').toLowerCase()), { status: 'ok', skinId: 'crimson-vanguard' });
   assert.deepEqual(save.redeemedCodes, [code]); // 記録は元の（ハイフン付き）コードの形にそろえる
+  assert.equal(isSkinUnlocked(save, skin), true);
+});
+
+test('violet-thunder：白いアクセント・専用の演出フラグを持つ。コードはハイフン無し・小文字でも通る', () => {
+  const skin = SKINS.find((s) => s.id === 'violet-thunder');
+  assert.ok(skin, 'violet-thunder が存在する');
+  assert.equal(skin.unlock.type, 'code');
+  assert.ok(/^#[0-9a-f]{6}$/i.test(skin.accent));
+  assert.equal(skin.fx.violetThunder, true);
+
+  const code = Object.entries(CODE_TO_SKIN).find(([, id]) => id === 'violet-thunder')[0];
+  assert.match(code, /^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+  const save = mkSave();
+  assert.deepEqual(redeemCode(save, code.replace('-', '').toLowerCase()), { status: 'ok', skinId: 'violet-thunder' });
+  assert.deepEqual(save.redeemedCodes, [code]);
   assert.equal(isSkinUnlocked(save, skin), true);
 });
 

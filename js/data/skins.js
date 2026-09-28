@@ -39,6 +39,13 @@ export const SKINS = Object.freeze([
     unlock: Object.freeze({ type: 'code' }),
     fx: Object.freeze({ crimsonVanguard: true }),
   }),
+  Object.freeze({
+    id: 'violet-thunder', name: 'ヴァイオレット・サンダー（仮称）',
+    desc: 'サブスク限定の特別な見た目。藍紫の装甲に白い稲妻ライン、間欠的に弾ける電気の火花、不規則に明滅するビーコン、ジグザグの稲妻弾。',
+    body: '#2a1a4d', cheek: '#8f7cff', accent: '#f0f0ff',
+    unlock: Object.freeze({ type: 'code' }),
+    fx: Object.freeze({ violetThunder: true }),
+  }),
 ]);
 
 export function isSkinUnlocked(save, skin) {

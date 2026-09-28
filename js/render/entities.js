@@ -87,6 +87,32 @@ function drawEmberParticles(g, time, x, y) {
   }
 }
 
+// 本体周りに間欠的に弾ける、電気の火花（ヴァイオレット・サンダー（仮称）専用）。
+// 持続する状態を持たず、time だけから計算する：出現位置ごとに違う周期・位相の三角波を使い、
+// ほとんどの時間は非表示、短い間だけ「パチッ」と光ることで、常時ではなく間欠的に見せる。
+function drawSparkBursts(g, time, x, y) {
+  const N = 4;
+  for (let i = 0; i < N; i++) {
+    const cycle = 0.9 + i * 0.37;
+    const cycleIndex = Math.floor(time / cycle);
+    const phase = (time / cycle) % 1;
+    if (phase > 0.08) continue; // 火花が見えるのは、周期のごく短い間だけ
+    const flash = 1 - phase / 0.08;
+    const angle = i * 1.7 + cycleIndex * 2.3; // 発生ごとに、向きも変わって見える
+    const dist = 22 + (i % 2) * 6;
+    const px = x + Math.cos(angle) * dist;
+    const py = y + Math.sin(angle) * dist * 0.6;
+    g.strokeStyle = hexToRgba('#f0f0ff', flash);
+    g.lineWidth = 1.5;
+    g.beginPath();
+    g.moveTo(px - 3, py - 3);
+    g.lineTo(px + 2, py);
+    g.lineTo(px - 1, py + 1);
+    g.lineTo(px + 3, py + 3);
+    g.stroke();
+  }
+}
+
 // 菱形のランプ（丸いアンテナ球の代わり。点灯色を切り替えて使う）
 function diamond(g, cx, cy, w, h, color) {
   g.fillStyle = color;
@@ -107,11 +133,16 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   const trimColor = skin?.trim ?? null;
   const accentColor = skin?.accent ?? COLORS.accent;
   const vanguard = skin?.fx?.crimsonVanguard === true; // クリムゾン・ヴァンガード（仮称）の専用演出
+  const thunder = skin?.fx?.violetThunder === true; // ヴァイオレット・サンダー（仮称）の専用演出
   // ビーコン：通常はシアン（この特別スキンだけ金）。危険時は赤（この特別スキンだけ、より強い紅で速く点滅）
   const beaconNormal = vanguard ? '#ffcf4d' : accentColor;
   const beaconDanger = vanguard ? '#ff1f3d' : COLORS.beaconDanger;
   const beaconColor = danger ? beaconDanger : beaconNormal;
-  const pulse = 0.7 + 0.3 * Math.sin(time * (danger && vanguard ? 12 : 6));
+  // ヴァイオレット・サンダーのビーコンは、一定間隔ではなく稲妻のように不規則に明滅する
+  // （周期の違う2つの波を掛け合わせ、状態を持たずに不規則な点灯パターンを作る）
+  const pulse = thunder
+    ? 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(time * 23.7)) * (0.5 + 0.5 * Math.sin(time * 5.3 + 2.1))
+    : 0.7 + 0.3 * Math.sin(time * (danger && vanguard ? 12 : 6));
   g.save();
   g.translate(CONFIG.CENTER_X, CONFIG.CENTER_Y);
 
@@ -149,18 +180,30 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   roundRectPath(g, -13, -4, 26, 5, 2);
   g.fill();
 
-  // アクセントライン（通常はシアン。クリムゾン・ヴァンガードは紅で、常時発光させる。目立たない長さに縮小）
+  // アクセントライン（通常はシアン。クリムゾン・ヴァンガードは紅で常時発光。ヴァイオレット・サンダーは
+  // 白い稲妻模様のジグザグ線で常時発光。目立たない長さに縮小）
   g.strokeStyle = accentColor;
   g.lineWidth = 2;
-  if (vanguard) {
+  if (vanguard || thunder) {
     g.shadowColor = accentColor;
     g.shadowBlur = 8 + 4 * Math.sin(time * 4);
   }
   g.beginPath();
-  g.moveTo(-18, -9);
-  g.lineTo(18, -9);
+  if (thunder) {
+    g.moveTo(-18, -9);
+    g.lineTo(-9, -6);
+    g.lineTo(-3, -11);
+    g.lineTo(5, -6);
+    g.lineTo(1, -11);
+    g.lineTo(18, -9);
+  } else {
+    g.moveTo(-18, -9);
+    g.lineTo(18, -9);
+  }
   g.stroke();
   g.shadowBlur = 0;
+
+  if (thunder) drawSparkBursts(g, time, 0, -6); // 本体周りに、間欠的に弾ける電気の火花
 
   // ビーコン（丸いアンテナ球ではなく、菱形のランプ。土台に固定）
   g.fillStyle = hexToRgba(beaconColor, 0.32 * pulse);
@@ -798,8 +841,38 @@ export function drawBullet(g, b, heading, fov, skin = null) {
   if (!head.visible) return;
   const tail = worldToScreen(b.angle, Math.max(0, b.dist - 22), heading, fov);
   const vanguard = skin?.fx?.crimsonVanguard === true;
+  const thunder = skin?.fx?.violetThunder === true;
   g.save();
-  if (vanguard) {
+  if (thunder) {
+    // ジグザグの稲妻型の弾。進行方向に垂直な向きへ振れさせてジグザグを作り、
+    // 主の稲妻本体の外側にもう1本、薄紫の細いアークを纏わせる（ヴァイオレット・サンダー（仮称）専用）
+    const dx = head.x - tail.x, dy = head.y - tail.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;
+    const steps = 4;
+    const zigzagPath = (jagSign) => {
+      g.beginPath();
+      g.moveTo(tail.x, tail.y);
+      for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        const px = tail.x + dx * t, py = tail.y + dy * t;
+        const jag = (i % 2 === 0 ? 1 : -1) * jagSign;
+        g.lineTo(px + nx * jag, py + ny * jag);
+      }
+      g.lineTo(head.x, head.y);
+    };
+    g.lineCap = 'round';
+    g.strokeStyle = 'rgba(177,140,255,0.6)'; // 外側の細いアーク
+    g.lineWidth = 1.5;
+    zigzagPath(-6);
+    g.stroke();
+    g.strokeStyle = '#e8e8ff'; // 稲妻本体
+    g.lineWidth = 3;
+    g.shadowColor = '#b18cff';
+    g.shadowBlur = 12;
+    zigzagPath(4);
+    g.stroke();
+  } else if (vanguard) {
     // 紅と金のグラデーションで燃える彗星のような弾（クリムゾン・ヴァンガード（仮称）専用）
     const grad = g.createLinearGradient(tail.x, tail.y, head.x, head.y);
     grad.addColorStop(0, 'rgba(200,30,50,0)');
