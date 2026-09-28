@@ -5,8 +5,8 @@ import { CODE_TO_SKIN } from '../js/data/codes.js';
 
 const mkSave = (over = {}) => ({ stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, selectedSkinId: 'default', redeemedCodes: [], ...over });
 
-test('SKINS：7件。1件目は既定（unlock.type=="default"）で、色を持つ。凍結されている', () => {
-  assert.equal(SKINS.length, 7);
+test('SKINS：8件。1件目は既定（unlock.type=="default"）で、色を持つ。凍結されている', () => {
+  assert.equal(SKINS.length, 8);
   assert.equal(Object.isFrozen(SKINS), true);
   const def = SKINS[0];
   assert.equal(def.unlock.type, 'default');
@@ -102,4 +102,27 @@ test('redeemCode：大文字・小文字・前後の空白を無視する。別�
   const skinBObj = SKINS.find((s) => s.id === skinB);
   assert.equal(isSkinUnlocked(save, skinAObj), true);
   assert.equal(isSkinUnlocked(save, skinBObj), true);
+});
+
+test('crimson-vanguard：金縁・紅いアクセント・専用の演出フラグを持つ。コードはハイフン無し・小文字でも通る', () => {
+  const skin = SKINS.find((s) => s.id === 'crimson-vanguard');
+  assert.ok(skin, 'crimson-vanguard が存在する');
+  assert.equal(skin.unlock.type, 'code');
+  assert.ok(/^#[0-9a-f]{6}$/i.test(skin.trim));
+  assert.ok(/^#[0-9a-f]{6}$/i.test(skin.accent));
+  assert.equal(skin.fx.crimsonVanguard, true);
+
+  const code = Object.entries(CODE_TO_SKIN).find(([, id]) => id === 'crimson-vanguard')[0];
+  assert.match(code, /^[A-Z0-9]{4}-[A-Z0-9]{4}$/); // 8文字、4文字-4文字のハイフン区切り
+  const save = mkSave();
+  assert.deepEqual(redeemCode(save, code.replace('-', '').toLowerCase()), { status: 'ok', skinId: 'crimson-vanguard' });
+  assert.deepEqual(save.redeemedCodes, [code]); // 記録は元の（ハイフン付き）コードの形にそろえる
+  assert.equal(isSkinUnlocked(save, skin), true);
+});
+
+test('CODE_TO_SKIN：すべてのコードが8文字・4文字-4文字のハイフン区切りで、対応するスキンが実在する', () => {
+  for (const [code, skinId] of Object.entries(CODE_TO_SKIN)) {
+    assert.match(code, /^[A-Z0-9]{4}-[A-Z0-9]{4}$/, code);
+    assert.ok(SKINS.some((s) => s.id === skinId), `${code} -> ${skinId}`);
+  }
 });

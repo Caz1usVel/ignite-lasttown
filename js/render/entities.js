@@ -50,9 +50,8 @@ function roundRectPath(g, x, y, w, h, r) {
 }
 
 // 角を斜めに落とした八角形（装甲の台座など、丸くない・機械的な見た目に使う）
-function octagon(g, cx, cy, w, h, color) {
+function octagon(g, cx, cy, w, h, color, strokeColor = null) {
   const cut = Math.min(w, h) * 0.4;
-  g.fillStyle = color;
   g.beginPath();
   g.moveTo(cx - w + cut, cy - h);
   g.lineTo(cx + w - cut, cy - h);
@@ -63,7 +62,29 @@ function octagon(g, cx, cy, w, h, color) {
   g.lineTo(cx - w, cy + h - cut);
   g.lineTo(cx - w, cy - h + cut);
   g.closePath();
+  g.fillStyle = color;
   g.fill();
+  if (strokeColor) {
+    g.strokeStyle = strokeColor;
+    g.lineWidth = 1.5;
+    g.stroke();
+  }
+}
+
+// 砲身の付け根から常時立ち上る、金色の粒子（クリムゾン・ヴァンガード専用）。持続する状態を持たず、time だけから計算する。
+function drawEmberParticles(g, time, x, y) {
+  const N = 5;
+  for (let i = 0; i < N; i++) {
+    const phase = (time * 0.6 + i / N) % 1;
+    const px = x + Math.sin(phase * Math.PI * 2 * 1.3 + i * 2.1) * 5;
+    const py = y - phase * 26;
+    const alpha = 1 - phase;
+    const size = 1.4 + (1 - phase) * 1.6;
+    g.fillStyle = hexToRgba('#ffcf4d', 0.75 * alpha);
+    g.beginPath();
+    g.arc(px, py, size, 0, Math.PI * 2);
+    g.fill();
+  }
 }
 
 // 菱形のランプ（丸いアンテナ球の代わり。点灯色を切り替えて使う）
@@ -83,7 +104,14 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   if (turret.invincible > 0 && Math.floor(time * 12) % 2 === 0) return; // 無敵中は点滅
   const armorColor = skin?.body ?? COLORS.turret;
   const panelColor = skin?.cheek ?? COLORS.cheek;
-  const beaconColor = danger ? COLORS.beaconDanger : COLORS.accent; // 空の色と連動
+  const trimColor = skin?.trim ?? null;
+  const accentColor = skin?.accent ?? COLORS.accent;
+  const vanguard = skin?.fx?.crimsonVanguard === true; // クリムゾン・ヴァンガード（仮称）の専用演出
+  // ビーコン：通常はシアン（この特別スキンだけ金）。危険時は赤（この特別スキンだけ、より強い紅で速く点滅）
+  const beaconNormal = vanguard ? '#ffcf4d' : accentColor;
+  const beaconDanger = vanguard ? '#ff1f3d' : COLORS.beaconDanger;
+  const beaconColor = danger ? beaconDanger : beaconNormal;
+  const pulse = 0.7 + 0.3 * Math.sin(time * (danger && vanguard ? 12 : 6));
   g.save();
   g.translate(CONFIG.CENTER_X, CONFIG.CENTER_Y);
 
@@ -108,7 +136,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.rotate((turret.heading ?? 0) * DEG);
   g.translate(0, -PIVOT_Y);
 
-  octagon(g, 0, 22, 34, 14, lightenColor(armorColor, -0.55)); // 台座
+  octagon(g, 0, 22, 34, 14, lightenColor(armorColor, -0.55), trimColor); // 台座
   g.fillStyle = lightenColor(armorColor, -0.15);
   g.beginPath();
   roundRectPath(g, -30, 2, 60, 24, 3); // 下段の装甲
@@ -117,6 +145,11 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.beginPath();
   roundRectPath(g, -26, -14, 52, 20, 3); // 上段の装甲
   g.fill();
+  if (trimColor) { // 金縁（クリムゾン・ヴァンガード（仮称）専用。それ以外のスキンは縁取りしない）
+    g.strokeStyle = trimColor;
+    g.lineWidth = 1.5;
+    g.stroke();
+  }
 
   // 側面パネル（スキンの副配色。角ばった帯で、顔のようには見えない形にする）
   g.fillStyle = panelColor;
@@ -124,19 +157,23 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   roundRectPath(g, -20, 6, 40, 8, 2);
   g.fill();
 
-  // アクセントライン（シアン、本体に1本）
-  g.strokeStyle = COLORS.accent;
+  // アクセントライン（通常はシアン。クリムゾン・ヴァンガードは紅で、常時発光させる）
+  g.strokeStyle = accentColor;
   g.lineWidth = 2.5;
+  if (vanguard) {
+    g.shadowColor = accentColor;
+    g.shadowBlur = 8 + 4 * Math.sin(time * 4);
+  }
   g.beginPath();
   g.moveTo(-26, -6);
   g.lineTo(26, -6);
   g.stroke();
+  g.shadowBlur = 0;
 
-  // ビーコン（丸いアンテナ球ではなく、菱形のランプ。通常はシアン、危険時は赤く点灯）
-  const pulse = 0.7 + 0.3 * Math.sin(time * 6);
+  // ビーコン（丸いアンテナ球ではなく、菱形のランプ）
   g.fillStyle = hexToRgba(beaconColor, 0.32 * pulse);
   g.beginPath();
-  g.arc(20, -10, 8, 0, Math.PI * 2); // 光の暈
+  g.arc(20, -10, danger && vanguard ? 11 : 8, 0, Math.PI * 2); // 光の暈
   g.fill();
   diamond(g, 20, -10, 5, 5, beaconColor);
 
@@ -149,7 +186,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.beginPath();
   roundRectPath(g, -6, -24, 12, 7, 1.5);
   g.fill();
-  g.fillStyle = hexToRgba(COLORS.accent, 0.75);
+  g.fillStyle = hexToRgba(accentColor, 0.75);
   g.beginPath();
   roundRectPath(g, -4, -23, 8, 5, 1);
   g.fill();
@@ -162,6 +199,8 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.beginPath();
   roundRectPath(g, -7, -42, 14, 4, 1);
   g.fill();
+
+  if (vanguard) drawEmberParticles(g, time, 0, -18); // 砲身の付け根から立ち上る金の粒子
 
   g.restore(); // 砲台全体
   g.restore();
@@ -749,20 +788,39 @@ export function drawBoss(g, boss, x, y, time) {
   else drawUnknown(g, { radius: boss.radius ?? 56 }, x, y);
 }
 
-export function drawBullet(g, b, heading, fov) {
+export function drawBullet(g, b, heading, fov, skin = null) {
   const head = worldToScreen(b.angle, b.dist, heading, fov);
   if (!head.visible) return;
   const tail = worldToScreen(b.angle, Math.max(0, b.dist - 22), heading, fov);
+  const vanguard = skin?.fx?.crimsonVanguard === true;
   g.save();
-  g.strokeStyle = COLORS.bullet;
-  g.lineWidth = 5;
-  g.lineCap = 'round';
-  g.shadowColor = '#ffd866';
-  g.shadowBlur = 10;
-  g.beginPath();
-  g.moveTo(tail.x, tail.y);
-  g.lineTo(head.x, head.y);
-  g.stroke();
+  if (vanguard) {
+    // 紅と金のグラデーションで燃える彗星のような弾（クリムゾン・ヴァンガード（仮称）専用）
+    const grad = g.createLinearGradient(tail.x, tail.y, head.x, head.y);
+    grad.addColorStop(0, 'rgba(200,30,50,0)');
+    grad.addColorStop(0.5, '#c81e3a');
+    grad.addColorStop(1, '#ffd24a');
+    g.strokeStyle = grad;
+    g.lineWidth = 6;
+    g.lineCap = 'round';
+    g.shadowColor = '#ffb347';
+    g.shadowBlur = 14;
+    g.beginPath();
+    g.moveTo(tail.x, tail.y);
+    g.lineTo(head.x, head.y);
+    g.stroke();
+    ellipse(g, head.x, head.y, 4, 4, '#fff3c4'); // 燃える先端
+  } else {
+    g.strokeStyle = COLORS.bullet;
+    g.lineWidth = 5;
+    g.lineCap = 'round';
+    g.shadowColor = '#ffd866';
+    g.shadowBlur = 10;
+    g.beginPath();
+    g.moveTo(tail.x, tail.y);
+    g.lineTo(head.x, head.y);
+    g.stroke();
+  }
   g.restore();
 }
 

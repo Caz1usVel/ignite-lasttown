@@ -30,7 +30,7 @@ export function drawPlayfield(g, vp, stars, state, fx, dt, skin) {
     const p = worldToScreen(boss.angle, boss.dist, t.heading, t.fov);
     if (p.visible) drawBoss(g, boss, p.x, p.y, state.time);
   }
-  for (const b of state.bullets) drawBullet(g, b, t.heading, t.fov);
+  for (const b of state.bullets) drawBullet(g, b, t.heading, t.fov, skin);
   drawTurret(g, t, state.time, skin, danger);
   drawEffects(g, fx);
   drawHeadingGauge(g, t.heading, t.fov);

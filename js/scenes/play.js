@@ -40,6 +40,10 @@ export function createPlayScene(app) {
   }
 
   function handleEvents(events) {
+    // クリムゾン・ヴァンガード（仮称）装備時は、命中・撃破の閃光も紅金にする
+    const vanguard = selectedSkin(app.save)?.fx?.crimsonVanguard === true;
+    const hitColor = vanguard ? '#ffb347' : '#fff6c8';
+    const killColor = vanguard ? '#ff3d5a' : '#ffd866';
     for (const ev of events) {
       switch (ev.type) {
         case 'fire':
@@ -47,7 +51,7 @@ export function createPlayScene(app) {
           break;
         case 'hit':
           audio.se.hit();
-          spawnBurst(fx, ev.x, ev.y, '#fff6c8', 4);
+          spawnBurst(fx, ev.x, ev.y, hitColor, 4);
           break;
         case 'kill': {
           // エンドレスでは、同じフレームで state.boss が null になる。対象そのものから、ボスかどうかを決める
@@ -55,8 +59,8 @@ export function createPlayScene(app) {
           const isBoss = !ENEMY_DEFS[target.type];
           const score = isBoss ? target.p.score : ENEMY_DEFS[target.type].score;
           if (isBoss) audio.se.bossKill(); else audio.se.kill();
-          spawnBurst(fx, ev.x, ev.y, isBoss ? (target.color ?? COLORS.boss) : '#ffd866', isBoss ? 60 : 12);
-          if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, '#ffd866');
+          spawnBurst(fx, ev.x, ev.y, isBoss ? (target.color ?? COLORS.boss) : killColor, isBoss ? 60 : 12);
+          if (score > 0) spawnPopup(fx, ev.x, ev.y - 10, `+${score}`, vanguard ? '#ffd24a' : '#ffd866');
           break;
         }
         case 'heal':

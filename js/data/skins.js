@@ -2,6 +2,7 @@ import { isHardEndlessUnlocked } from '../core/progress.js';
 import { CODE_TO_SKIN } from './codes.js';
 
 // 砲台の見た目（装甲・側面パネルの色だけを変える）。前作の「スキン」機能を、この作品向けに簡略化したもの。
+// trim（金縁）・accent（アクセントラインの色）・fx は、特別な演出を持つスキンだけが使う（無ければ既定の見た目のまま）。
 export const SKINS = Object.freeze([
   Object.freeze({
     id: 'default', name: '既定', desc: '最初から使える、いつもの見た目。',
@@ -31,6 +32,13 @@ export const SKINS = Object.freeze([
     id: 'code-violet', name: '深紫迷彩', desc: '配布コードで解放される、特別な見た目。',
     body: '#4a2e6b', cheek: '#b98fe0', unlock: Object.freeze({ type: 'code' }),
   }),
+  Object.freeze({
+    id: 'crimson-vanguard', name: 'クリムゾン・ヴァンガード（仮称）',
+    desc: 'サブスク限定の特別な見た目。黒地に金縁の装甲、常時発光する紅いライン、砲身から立ち上る金の粒子、燃える彗星のような弾。',
+    body: '#181818', cheek: '#caa33b', trim: '#d4af37', accent: '#c81e3a',
+    unlock: Object.freeze({ type: 'code' }),
+    fx: Object.freeze({ crimsonVanguard: true }),
+  }),
 ]);
 
 export function isSkinUnlocked(save, skin) {
@@ -54,12 +62,23 @@ export function selectedSkin(save) {
   return getSkin(save, save.selectedSkinId);
 }
 
+// 大文字化してハイフン・空白を取り除いた形で比較する（コードを空白付き・ハイフン無しで入力しても通るように）
+function normalizeCode(raw) {
+  return String(raw ?? '').trim().toUpperCase().replace(/[\s-]+/g, '');
+}
+
+// 正規化した文字列 → 元のコード（CODE_TO_SKIN のキー）。解放の記録には、元のコードをそのまま使う。
+const NORMALIZED_TO_CODE = Object.fromEntries(
+  Object.keys(CODE_TO_SKIN).map((code) => [normalizeCode(code), code]),
+);
+
 // コードを解放する（呼び出し側が persist する）。コードごとに個別管理（単一の解放フラグではない）。
 export function redeemCode(save, rawCode) {
-  const code = String(rawCode ?? '').trim().toUpperCase();
-  if (!code) return { status: 'empty' };
+  const normalized = normalizeCode(rawCode);
+  if (!normalized) return { status: 'empty' };
+  const code = NORMALIZED_TO_CODE[normalized];
+  if (!code) return { status: 'unknown' };
   const skinId = CODE_TO_SKIN[code];
-  if (!skinId) return { status: 'unknown' };
   save.redeemedCodes ??= [];
   if (save.redeemedCodes.includes(code)) return { status: 'already', skinId };
   save.redeemedCodes.push(code);
