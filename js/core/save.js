@@ -4,7 +4,8 @@ import { CONFIG } from './config.js';
 export const SAVE_KEY = 'td_save_v1';
 export const SAVE_VERSION = 2;
 
-const DEFAULT_SETTINGS = Object.freeze({ muted: false, bgmVol: 0.6, seVol: 0.7 });
+// 初期値（基準となる音量）。スライダーの可変範囲（0〜1）自体は変えず、既定の位置だけ下げてある
+const DEFAULT_SETTINGS = Object.freeze({ muted: false, bgmVol: 0.25, seVol: 0.3 });
 
 function defaultEndless() {
   return { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } };

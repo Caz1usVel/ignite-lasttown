@@ -11,7 +11,7 @@ const throwingStorage = {
   getItem() { throw new Error('denied'); },
   setItem() { throw new Error('denied'); },
 };
-const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.6, seVol: 0.7 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, tutorialSeen: false, selectedSkinId: 'default', redeemedCodes: [] };
+const DEFAULTS = { version: 2, settings: { muted: false, bgmVol: 0.25, seVol: 0.3 }, stages: {}, endless: { normal: { best: 0, time: 0 }, hard: { best: 0, time: 0 } }, tutorialSeen: false, selectedSkinId: 'default', redeemedCodes: [] };
 const put = (st, obj) => st.setItem(SAVE_KEY, JSON.stringify(obj));
 
 test('何も無ければ既定値（v2）', () => {
@@ -35,7 +35,7 @@ test('足りない設定項目は既定値で補う', () => {
   put(st, { version: 2, settings: { muted: true }, stages: {} });
   const d = loadSave(st);
   assert.equal(d.settings.muted, true);
-  assert.equal(d.settings.seVol, 0.7);
+  assert.equal(d.settings.seVol, 0.3);
 });
 
 test('v1 からの移行：設定を引き継ぎ、highScore は1面の最高スコアになる（未クリア）', () => {
@@ -119,8 +119,8 @@ test('数値でない音量は既定値になる', () => {
   const st = memStorage();
   put(st, { version: 2, settings: { bgmVol: 'loud', seVol: null }, stages: {} });
   const d = loadSave(st);
-  assert.equal(d.settings.bgmVol, 0.6);
-  assert.equal(d.settings.seVol, 0.7);
+  assert.equal(d.settings.bgmVol, 0.25);
+  assert.equal(d.settings.seVol, 0.3);
 });
 
 test('真偽値でない muted は既定値になる', () => {
