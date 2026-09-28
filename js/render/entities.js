@@ -179,27 +179,22 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.rotate((turret.heading ?? 0) * DEG);
   g.translate(0, -DOME_CY);
 
+  // 完全な円（半円ではない）：どの旋回角度でも同じ見た目になり、扇形に欠けて見えることが無い
   g.fillStyle = armorColor;
   g.beginPath();
-  g.arc(0, DOME_CY, DOME_R, Math.PI, 0); // 上半分の半円（ドーム）。closePath で底面が直線になる
-  g.closePath();
+  g.arc(0, DOME_CY, DOME_R, 0, Math.PI * 2);
   g.fill();
   if (trimColor) {
     g.strokeStyle = trimColor;
     g.lineWidth = 1.2;
     g.stroke();
   }
-  ellipse(g, 0, DOME_CY - DOME_R * 0.35, DOME_R * 0.75, DOME_R * 0.35, lightenColor(armorColor, 0.25)); // ハイライト
-
+  // 内側の模様も、円に合わせて同心円にする（ハイライトの円＋中央寄りの丸い照準窓）
+  ellipse(g, 0, DOME_CY, DOME_R * 0.62, DOME_R * 0.62, lightenColor(armorColor, 0.18));
   const domeTopY = DOME_CY - DOME_R;
-  g.fillStyle = 'rgba(20,30,30,0.9)'; // 照準窓（角ばったスリット）
-  g.beginPath();
-  roundRectPath(g, -6, domeTopY - 5, 12, 7, 1.5);
-  g.fill();
-  g.fillStyle = hexToRgba(accentColor, 0.75);
-  g.beginPath();
-  roundRectPath(g, -4, domeTopY - 4, 8, 5, 1);
-  g.fill();
+  const windowCY = DOME_CY - DOME_R * 0.4;
+  ellipse(g, 0, windowCY, DOME_R * 0.32, DOME_R * 0.32, 'rgba(20,30,30,0.9)'); // 照準窓（丸）
+  ellipse(g, 0, windowCY, DOME_R * 0.2, DOME_R * 0.2, hexToRgba(accentColor, 0.75));
 
   g.fillStyle = COLORS.barrel; // 砲身（短く太い、角ばった箱）
   g.beginPath();
