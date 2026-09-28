@@ -4,6 +4,9 @@ import { clamp } from './util.js';
 export function createAudio(settings) {
   let ctx = null;
   let master = null;
+  // iOS SafariはBGM要素の.volumeへの書き込みを無視する仕様（ハード音量ボタンでしか変えられない）ため、
+  // BGMの音量制御はゲインノード（bgmGain）経由で行い、<audio>要素の.volume/.mutedには触れない
+  let bgmGain = null;
   const bgm = new Audio();
   bgm.loop = true;
   let bgmSrc = null;
@@ -31,7 +34,7 @@ export function createAudio(settings) {
 
   function applyVolumes() {
     if (master) master.gain.value = settings.muted ? 0 : settings.seVol;
-    bgm.volume = settings.muted ? 0 : settings.bgmVol;
+    if (bgmGain) bgmGain.gain.value = settings.muted ? 0 : settings.bgmVol;
   }
 
   function tone(freq, duration, { type = 'sine', gain = 0.28, delay = 0, slideTo = null } = {}) {
@@ -60,6 +63,11 @@ export function createAudio(settings) {
         ctx = new AC();
         master = ctx.createGain();
         master.connect(ctx.destination);
+        bgmGain = ctx.createGain();
+        bgmGain.connect(ctx.destination);
+        // createMediaElementSourceは同じ要素に対して1回しか呼べないため、ctx生成時にここで1度だけ作る
+        const bgmSource = ctx.createMediaElementSource(bgm);
+        bgmSource.connect(bgmGain);
         applyVolumes();
         loadShootBuffer();
       }
