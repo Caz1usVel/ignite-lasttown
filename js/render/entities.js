@@ -96,10 +96,18 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.arc(0, -10, 60, 0, Math.PI * 2);
   g.fill();
 
-  // 接地影
+  // 接地影（照明的な表現なので、旋回では動かさない）
   ellipse(g, 0, 34, 40, 9, 'rgba(0,0,0,0.35)');
 
-  // 土台・本体：角ばった装甲。ここから下は、旋回しても一切動かない。
+  // 砲台全体：土台・本体・砲身・照準窓・アクセントライン・ビーコンを1つのグループとして、
+  // 接地している底面の中心（このY）を軸に、旋回角度（-90〜+90度）でその場を回転させる。
+  // 背景（防壁・荒野・地平線）は別レイヤーで固定のまま動かさない。
+  const PIVOT_Y = 34;
+  g.save();
+  g.translate(0, PIVOT_Y);
+  g.rotate((turret.heading ?? 0) * DEG);
+  g.translate(0, -PIVOT_Y);
+
   octagon(g, 0, 22, 34, 14, lightenColor(armorColor, -0.55)); // 台座
   g.fillStyle = lightenColor(armorColor, -0.15);
   g.beginPath();
@@ -116,7 +124,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   roundRectPath(g, -20, 6, 40, 8, 2);
   g.fill();
 
-  // アクセントライン（シアン、本体に固定で1本）
+  // アクセントライン（シアン、本体に1本）
   g.strokeStyle = COLORS.accent;
   g.lineWidth = 2.5;
   g.beginPath();
@@ -124,7 +132,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.lineTo(26, -6);
   g.stroke();
 
-  // ビーコン（丸いアンテナ球ではなく、本体に固定した菱形のランプ。通常はシアン、危険時は赤く点灯）
+  // ビーコン（丸いアンテナ球ではなく、菱形のランプ。通常はシアン、危険時は赤く点灯）
   const pulse = 0.7 + 0.3 * Math.sin(time * 6);
   g.fillStyle = hexToRgba(beaconColor, 0.32 * pulse);
   g.beginPath();
@@ -132,15 +140,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.fill();
   diamond(g, 20, -10, 5, 5, beaconColor);
 
-  // 旋回する砲：砲身と照準窓だけが、旋回角度（-90〜+90度）に応じて左右に振れる。
-  // 土台・本体・アクセントライン・ビーコンは、ここから上の save/restore の外なので回転しない。
-  const PIVOT_Y = -8; // 上段の装甲の上端あたりを中心に振る
-  g.save();
-  g.translate(0, PIVOT_Y);
-  g.rotate((turret.heading ?? 0) * DEG);
-  g.translate(0, -PIVOT_Y);
-
-  g.fillStyle = lightenColor(armorColor, -0.35); // 取り付け部（角ばった小さな台座）
+  g.fillStyle = lightenColor(armorColor, -0.35); // 砲の取り付け部（角ばった小さな台座）
   g.beginPath();
   roundRectPath(g, -10, -18, 20, 10, 2);
   g.fill();
@@ -163,7 +163,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   roundRectPath(g, -7, -42, 14, 4, 1);
   g.fill();
 
-  g.restore(); // 旋回する砲
+  g.restore(); // 砲台全体
   g.restore();
 }
 
