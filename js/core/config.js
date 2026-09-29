@@ -1,5 +1,5 @@
 // プロトタイプ検証で確定したパラメータと、①の初期値。数値はここだけで持つ。
-export const GAME_TITLE = '防衛砲台（仮）';
+export const GAME_TITLE = '迎撃せよ、最後の街から';
 
 export const CONFIG = Object.freeze({
   VIRTUAL_SIZE: 1000,

@@ -87,7 +87,7 @@ function drawEmberParticles(g, time, x, y) {
   }
 }
 
-// 本体周りに間欠的に弾ける、電気の火花（ヴァイオレット・サンダー（仮称）専用）。
+// 本体周りに間欠的に弾ける、電気の火花（ヴァイオレット・サンダー専用）。
 // 持続する状態を持たず、time だけから計算する：出現位置ごとに違う周期・位相の三角波を使い、
 // ほとんどの時間は非表示、短い間だけ「パチッ」と光ることで、常時ではなく間欠的に見せる。
 function drawSparkBursts(g, time, x, y) {
@@ -113,7 +113,7 @@ function drawSparkBursts(g, time, x, y) {
   }
 }
 
-// 本体周りをゆっくり漂う、冷気の白い霧（フロストバイト・シルバー（仮称）専用）。
+// 本体周りをゆっくり漂う、冷気の白い霧（フロストバイト・シルバー専用）。
 // 上昇や点滅ではなく、緩やかな円軌道でゆらゆらと漂う動きにする（時間だけから計算する、状態は持たない）。
 function drawFrostMist(g, time, x, y) {
   const N = 3;
@@ -132,7 +132,7 @@ function drawFrostMist(g, time, x, y) {
   }
 }
 
-// 本体の縁からふわりと舞い上がる、金色の光の粒（セレスティアル・ゴールド（仮称）専用）。
+// 本体の縁からふわりと舞い上がる、金色の光の粒（セレスティアル・ゴールド専用）。
 // クリムゾン・ヴァンガードの粒子より遅く、左右にゆらぎながら漂うようにする（時間だけから計算する、状態は持たない）。
 function drawGoldMotes(g, time, x, y) {
   const N = 5;
@@ -184,10 +184,10 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   const panelColor = skin?.cheek ?? COLORS.cheek;
   const trimColor = skin?.trim ?? null;
   const accentColor = skin?.accent ?? COLORS.accent;
-  const vanguard = skin?.fx?.crimsonVanguard === true; // クリムゾン・ヴァンガード（仮称）の専用演出
-  const thunder = skin?.fx?.violetThunder === true; // ヴァイオレット・サンダー（仮称）の専用演出
-  const frost = skin?.fx?.frostbiteSilver === true; // フロストバイト・シルバー（仮称）の専用演出
-  const gold = skin?.fx?.celestialGold === true; // セレスティアル・ゴールド（仮称）の専用演出
+  const vanguard = skin?.fx?.crimsonVanguard === true; // クリムゾン・ヴァンガードの専用演出
+  const thunder = skin?.fx?.violetThunder === true; // ヴァイオレット・サンダーの専用演出
+  const frost = skin?.fx?.frostbiteSilver === true; // フロストバイト・シルバーの専用演出
+  const gold = skin?.fx?.celestialGold === true; // セレスティアル・ゴールドの専用演出
   // ビーコン：通常はシアン（この特別スキンだけ金）。危険時は赤（この特別スキンだけ、より強い紅で速く点滅）
   const beaconNormal = vanguard ? '#ffcf4d' : accentColor;
   const beaconDanger = vanguard ? '#ff1f3d' : COLORS.beaconDanger;
@@ -225,7 +225,7 @@ export function drawTurret(g, turret, time, skin = null, danger = false) {
   g.beginPath();
   roundRectPath(g, -22, -14, 44, 16, 3); // 首元（ドーム状の頭部を受ける、固定のパネル）
   g.fill();
-  if (trimColor) { // 金縁（クリムゾン・ヴァンガード（仮称）専用。それ以外のスキンは縁取りしない）
+  if (trimColor) { // 金縁（クリムゾン・ヴァンガード専用。それ以外のスキンは縁取りしない）
     g.strokeStyle = trimColor;
     g.lineWidth = 1.5;
     g.stroke();
@@ -919,7 +919,7 @@ export function drawBullet(g, b, heading, fov, skin = null) {
   const gold = skin?.fx?.celestialGold === true;
   g.save();
   if (frost) {
-    // 尖った氷の欠片。飛翔中に薄い白霧の尾を引く（フロストバイト・シルバー（仮称）専用）
+    // 尖った氷の欠片。飛翔中に薄い白霧の尾を引く（フロストバイト・シルバー専用）
     g.strokeStyle = 'rgba(235,247,255,0.35)';
     g.lineWidth = 4;
     g.lineCap = 'round';
@@ -939,7 +939,7 @@ export function drawBullet(g, b, heading, fov, skin = null) {
     g.closePath();
     g.fill();
   } else if (gold) {
-    // 星形に輝く弾。飛翔中に淡いきらめきの尾を引く（セレスティアル・ゴールド（仮称）専用）
+    // 星形に輝く弾。飛翔中に淡いきらめきの尾を引く（セレスティアル・ゴールド専用）
     g.strokeStyle = 'rgba(255,246,214,0.4)';
     g.lineWidth = 3;
     g.lineCap = 'round';
@@ -953,7 +953,7 @@ export function drawBullet(g, b, heading, fov, skin = null) {
     drawSparkleStar(g, head.x, head.y, 6, '#fff3c4');
   } else if (thunder) {
     // ジグザグの稲妻型の弾。進行方向に垂直な向きへ振れさせてジグザグを作り、
-    // 主の稲妻本体の外側にもう1本、薄紫の細いアークを纏わせる（ヴァイオレット・サンダー（仮称）専用）
+    // 主の稲妻本体の外側にもう1本、薄紫の細いアークを纏わせる（ヴァイオレット・サンダー専用）
     const dx = head.x - tail.x, dy = head.y - tail.y;
     const len = Math.hypot(dx, dy) || 1;
     const nx = -dy / len, ny = dx / len;
@@ -981,7 +981,7 @@ export function drawBullet(g, b, heading, fov, skin = null) {
     zigzagPath(4);
     g.stroke();
   } else if (vanguard) {
-    // 紅と金のグラデーションで燃える彗星のような弾（クリムゾン・ヴァンガード（仮称）専用）
+    // 紅と金のグラデーションで燃える彗星のような弾（クリムゾン・ヴァンガード専用）
     const grad = g.createLinearGradient(tail.x, tail.y, head.x, head.y);
     grad.addColorStop(0, 'rgba(200,30,50,0)');
     grad.addColorStop(0.5, '#c81e3a');
