@@ -36,7 +36,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir _site
-          cp -r index.html css js _site/
+          cp -r index.html css js bgm se _site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

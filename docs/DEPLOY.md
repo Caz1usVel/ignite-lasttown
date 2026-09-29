@@ -23,4 +23,4 @@
 
 ## 公開しないもの
 
-`docs/`、`tests/`、`tools/`、`.superpowers/` は、公開用の `_site` にコピーしない（ワークフローの `cp` の対象は `index.html`、`css`、`js` だけ）。
+`docs/`、`tests/`、`tools/`、`.superpowers/` は、公開用の `_site` にコピーしない（ワークフローの `cp` の対象は `index.html`、`css`、`js`、`bgm`、`se` だけ）。
