@@ -25,10 +25,13 @@ test('isSkinUnlocked：既定は常に解放。stageClear・allClear・score の
   const def = SKINS.find((s) => s.unlock.type === 'default');
   assert.equal(isSkinUnlocked(mkSave(), def), true);
 
-  const stageSkin = SKINS.find((s) => s.unlock.type === 'stageClear');
-  const n = stageSkin.unlock.stage;
-  assert.equal(isSkinUnlocked(mkSave(), stageSkin), false);
-  assert.equal(isSkinUnlocked(mkSave({ stages: { [n]: { cleared: true, best: 1 } } }), stageSkin), true);
+  const stageSkins = SKINS.filter((s) => s.unlock.type === 'stageClear');
+  assert.ok(stageSkins.length >= 2, 'ステージクリアで解放するスキンが2つ以上ある');
+  for (const stageSkin of stageSkins) {
+    const n = stageSkin.unlock.stage;
+    assert.equal(isSkinUnlocked(mkSave(), stageSkin), false, stageSkin.id);
+    assert.equal(isSkinUnlocked(mkSave({ stages: { [n]: { cleared: true, best: 1 } } }), stageSkin), true, stageSkin.id);
+  }
 
   const allSkin = SKINS.find((s) => s.unlock.type === 'allClear');
   const notAll = mkSave({ stages: { 1: { cleared: true, best: 1 }, 2: { cleared: true, best: 1 } } });

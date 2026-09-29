@@ -13,8 +13,8 @@ export const SKINS = Object.freeze([
     body: '#ffd9a0', cheek: '#ffb3c6', unlock: Object.freeze({ type: 'stageClear', stage: 1 }),
   }),
   Object.freeze({
-    id: 'allclear', name: '迎撃仕様', desc: '全7面をクリアすると使える。',
-    body: '#ffe27a', cheek: '#ff9ecb', unlock: Object.freeze({ type: 'allClear' }),
+    id: 'allclear', name: '歴戦仕様', desc: '全7面をクリアすると使える。',
+    body: '#5a6b3f', cheek: '#a89968', trim: '#2b2b2b', unlock: Object.freeze({ type: 'allClear' }),
   }),
   Object.freeze({
     id: 'endless-normal', name: '耐久カラー', desc: '通常エンドレスで3,000点以上を取ると使える。',
@@ -25,12 +25,12 @@ export const SKINS = Object.freeze([
     body: '#3a3f68', cheek: '#ff6b81', unlock: Object.freeze({ type: 'score', mode: 'hard', value: 1000 }),
   }),
   Object.freeze({
-    id: 'code-crimson', name: '緋色迷彩', desc: '配布コードで解放される、特別な見た目。',
-    body: '#8a2e2e', cheek: '#e0a56b', unlock: Object.freeze({ type: 'code' }),
+    id: 'code-crimson', name: '緋色迷彩', desc: '3面をクリアすると使える。',
+    body: '#8a2e2e', cheek: '#e0a56b', unlock: Object.freeze({ type: 'stageClear', stage: 3 }),
   }),
   Object.freeze({
-    id: 'code-violet', name: '深紫迷彩', desc: '配布コードで解放される、特別な見た目。',
-    body: '#4a2e6b', cheek: '#b98fe0', unlock: Object.freeze({ type: 'code' }),
+    id: 'code-violet', name: '深紫迷彩', desc: '5面をクリアすると使える。',
+    body: '#4a2e6b', cheek: '#b98fe0', unlock: Object.freeze({ type: 'stageClear', stage: 5 }),
   }),
   Object.freeze({
     id: 'crimson-vanguard', name: 'クリムゾン・ヴァンガード（仮称）',
