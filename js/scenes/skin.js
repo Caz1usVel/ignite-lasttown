@@ -27,7 +27,6 @@ export function createSkinScene(app) {
       const label = u.mode === 'hard' ? 'ハードエンドレス' : '通常エンドレス';
       return `${label}で ${u.value.toLocaleString()} 点以上を取ると使えます。`;
     }
-    if (u.type === 'code') return '配布コードを入力すると使えます。';
     return '';
   }
 
@@ -46,6 +45,7 @@ export function createSkinScene(app) {
     dom.skinList.replaceChildren();
     for (const skin of SKINS) {
       const unlocked = isSkinUnlocked(app.save, skin);
+      if (skin.unlock.type === 'code' && !unlocked) continue; // 配布コード限定スキンは、コードを入れるまでアイコンごと隠す
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'skin-swatch' + (skin.id === app.save.selectedSkinId ? ' active' : '') + (unlocked ? '' : ' locked');
